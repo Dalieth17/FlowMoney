@@ -33,10 +33,17 @@ a{color:inherit}
   background:rgba(31,77,58,.08);border:1px solid rgba(31,77,58,.16);padding:7px 11px;border-radius:999px;align-self:flex-start}
 .offline-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--pine);animation:pulse 2.6s ease-out infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(31,77,58,.4)}70%{box-shadow:0 0 0 7px rgba(31,77,58,0)}100%{box-shadow:0 0 0 0 rgba(31,77,58,0)}}
-.side-foot{margin-top:auto;padding:12px 8px 0;border-top:1px solid var(--line-soft)}
-.side-foot button{background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;padding:6px 0;text-align:left}
-.side-foot button:hover{color:var(--clay)}
-.side-foot .ver{font-size:11.5px;color:var(--muted);margin-top:8px;opacity:.7}
+.side-foot{margin-top:auto;padding:12px 6px 0;border-top:1px solid var(--line-soft)}
+.user-card{display:flex;align-items:center;gap:10px;padding:4px 4px 10px}
+.user-av{width:36px;height:36px;border-radius:50%;background:rgba(31,77,58,.1);color:var(--pine);display:grid;place-items:center;flex:0 0 auto}
+.user-av svg{width:20px;height:20px}
+.user-meta{min-width:0}
+.user-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-email{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-actions{display:flex;gap:8px;flex-wrap:wrap}
+.side-actions button{flex:1;background:var(--card);border:1px solid var(--line-soft);color:var(--ink-soft);font-size:12px;font-weight:600;cursor:pointer;padding:8px 6px;border-radius:9px;white-space:nowrap}
+.side-actions #reset-data:hover{border-color:var(--sage);color:var(--pine)}
+.side-actions #logout:hover{border-color:rgba(194,90,68,.4);color:var(--clay)}
 
 .main{display:flex;flex-direction:column;min-width:0}
 .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:20px;padding:16px 32px;

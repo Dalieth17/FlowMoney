@@ -45,10 +45,20 @@
         <span class="lbl">Reportes</span>
       </a>
     </nav>
-    <span class="offline-pill"><span class="dot"></span>Sin conexión</span>
     <div class="side-foot">
-      <button id="reset-data">↺ Restaurar datos de ejemplo</button>
-      <div class="ver">FlowMoney web · guardado en tu navegador</div>
+      <div class="user-card">
+        <div class="user-av" id="user-av">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+        </div>
+        <div class="user-meta">
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-email" id="user-email"></div>
+        </div>
+      </div>
+      <div class="side-actions">
+        <button id="reset-data">↺ Restaurar ejemplo</button>
+        <button id="logout">Cerrar sesión</button>
+      </div>
     </div>
   </aside>
 

@@ -132,7 +132,9 @@ function movementForm(existing) {
     field('Nota', noteInput),
     h('div', { class: 'modal-actions' }, [
       editing ? h('button', { type: 'button', class: 'btn btn-danger ghost-danger', onclick: async () => {
-        if (await confirmDialog(`¿Eliminar "${existing.description}"?`)) { store.deleteTransaction(existing.id); closeModal(); toast('Movimiento eliminado'); }
+        if (!(await confirmDialog(`¿Eliminar "${existing.description}"?`))) return;
+        try { await store.deleteTransaction(existing.id); closeModal(); toast('Movimiento eliminado'); }
+        catch (err) { toast(err.message, 'warn'); }
       } }, 'Eliminar') : h('span'),
       h('div', { class: 'spacer' }),
       h('button', { type: 'button', class: 'btn btn-ghost', onclick: closeModal }, 'Cancelar'),
@@ -140,7 +142,7 @@ function movementForm(existing) {
     ]),
   ]);
 
-  form.addEventListener('submit', () => {
+  form.addEventListener('submit', async () => {
     const amount = parseFloat(amountInput.value);
     if (!descInput.value.trim()) return toast('Escribe una descripción', 'warn');
     if (!(amount > 0)) return toast('El monto debe ser mayor a 0', 'warn');
@@ -153,9 +155,13 @@ function movementForm(existing) {
       date: dateInputToMs(dateInput.value),
       note: noteInput.value.trim(),
     };
-    if (editing) { store.updateTransaction(existing.id, payload); toast('Cambios guardados'); }
-    else { store.addTransaction(payload); toast('Movimiento registrado'); }
-    closeModal();
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      if (editing) { await store.updateTransaction(existing.id, payload); toast('Cambios guardados'); }
+      else { await store.addTransaction(payload); toast('Movimiento registrado'); }
+      closeModal();
+    } catch (err) { toast(err.message, 'warn'); submitBtn.disabled = false; }
   });
 
   if (type === 'INCOME') typeBtns.INCOME.classList.add('active', 'in');
@@ -197,11 +203,13 @@ function categoryForm(existing) {
       h('button', { type: 'submit', class: 'btn btn-primary' }, editing ? 'Guardar' : 'Crear categoría'),
     ]),
   ]);
-  form.addEventListener('submit', () => {
+  form.addEventListener('submit', async () => {
     if (!nameInput.value.trim()) return toast('Ponle un nombre', 'warn');
-    if (editing) { store.updateCategory(existing.id, { name: nameInput.value.trim(), icon, color }); toast('Categoría actualizada'); }
-    else { store.addCategory({ name: nameInput.value.trim(), icon, color }); toast('Categoría creada'); }
-    closeModal();
+    try {
+      if (editing) { await store.updateCategory(existing.id, { name: nameInput.value.trim(), icon, color }); toast('Categoría actualizada'); }
+      else { await store.addCategory({ name: nameInput.value.trim(), icon, color }); toast('Categoría creada'); }
+      closeModal();
+    } catch (err) { toast(err.message, 'warn'); }
   });
   openModal(editing ? 'Editar categoría' : 'Nueva categoría', form);
 }
@@ -356,7 +364,8 @@ function renderCategorias(root) {
       h('button', { class: 'icon-btn sm', title: 'Editar', onclick: () => categoryForm(c) }, '✎'),
       !c.isDefault ? h('button', { class: 'icon-btn sm', title: 'Eliminar', onclick: async () => {
         if (!(await confirmDialog(`¿Eliminar la categoría "${c.name}"?`))) return;
-        store.deleteCategory(c.id) ? toast('Categoría eliminada') : toast('No se puede: tiene movimientos', 'warn');
+        try { await store.deleteCategory(c.id); toast('Categoría eliminada'); }
+        catch (err) { toast(err.message, 'warn'); }
       } }, '🗑') : null,
     ]),
   ])));
@@ -383,10 +392,12 @@ function renderPresupuestos(root) {
     const b = store.budgetFor(c.id, state.month, state.year);
     const amount = b?.amount || 0;
     const input = h('input', { class: 'input slim tnum bud-input', type: 'number', min: '0', step: '10', placeholder: '—', value: amount || '' });
-    input.addEventListener('change', () => {
+    input.addEventListener('change', async () => {
       const v = parseFloat(input.value) || 0;
-      store.setBudget(c.id, state.month, state.year, v);
-      toast(v > 0 ? `Presupuesto de ${c.name}: ${money(v)}` : `Presupuesto de ${c.name} quitado`);
+      try {
+        await store.setBudget(c.id, state.month, state.year, v);
+        toast(v > 0 ? `Presupuesto de ${c.name}: ${money(v)}` : `Presupuesto de ${c.name} quitado`);
+      } catch (err) { toast(err.message, 'warn'); }
     });
     const meter = amount > 0 ? (() => {
       const st = budgetState(spent, amount);
@@ -522,17 +533,26 @@ function shiftMonth(delta) {
   render();
 }
 
-function init() {
+async function init() {
   // navegación lateral
   document.querySelectorAll('.side-nav a').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); go(a.dataset.view); }));
   document.getElementById('new-mv').addEventListener('click', () => movementForm());
   document.getElementById('prev-month').addEventListener('click', () => shiftMonth(-1));
   document.getElementById('next-month').addEventListener('click', () => shiftMonth(1));
   document.getElementById('reset-data').addEventListener('click', async () => {
-    if (await confirmDialog('¿Restaurar los datos de ejemplo? Se perderán tus cambios.', { confirmText: 'Restaurar', danger: false })) { store.reset(); toast('Datos de ejemplo restaurados'); }
+    if (await confirmDialog('¿Restaurar los datos de ejemplo? Se perderán tus cambios.', { confirmText: 'Restaurar', danger: false })) {
+      try { await store.reset(); toast('Datos de ejemplo restaurados'); } catch (err) { toast(err.message, 'warn'); }
+    }
   });
+  document.getElementById('logout').addEventListener('click', () => store.logout());
 
-  // re-render ante cualquier cambio del store
+  // carga inicial (si no hay sesión, api.js redirige a login.html)
+  try { await store.load(); } catch (e) { return; }
+
+  const u = store.user || {};
+  document.getElementById('user-name').textContent = u.name || '';
+  document.getElementById('user-email').textContent = u.email || '';
+
   store.subscribe(() => render());
   go('resumen');
 }

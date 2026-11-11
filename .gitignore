@@ -8,5 +8,10 @@ captures/
 .externalNativeBuild/
 .cxx/
 
+# Node (backend)
+node_modules/
+npm-debug.log*
+.env
+
 # Sistema
 .DS_Store

@@ -34,16 +34,19 @@ presupuestos, reportes y balance. Nombre: **FlowMoney**. Idioma de UI: **españo
 - Trabajo de desarrollo en **DEV**. **QA** para revisión de calidad.
 - No tocar `main`/`master` sin permiso. Push con `git push -u origin <rama>`.
 
-## Entregable web (hecho — SITIO FUNCIONAL)
-Sitio de escritorio contenerizado en Docker (`docker compose up --build` → http://localhost:8080):
-- `frontend/index.html` — landing (hero "río de flujo").
-- `frontend/app.html` + `assets/` — **app funcional** (SPA en JS vanilla, módulos ES).
-  Persistencia en **localStorage** (offline). 5 vistas: Resumen, Movimientos (CRUD+filtros),
-  Categorías (crear/editar), Presupuestos (alerta 80%), Reportes (dona+barras SVG, export PDF/print).
-  IA de clasificación local en `assets/js/ai.js` (reglas por palabras clave, es-PE).
-- JS: `format.js, data.js, ai.js, charts.js, ui.js, app.js`. Sin build step (nginx sirve estáticos).
-- Nota: la app requiere servirse por HTTP (módulos ES); Docker ya lo hace.
-- Moneda actual: `$` (cambiar en `assets/js/format.js` → `CURRENCY`). Mes en Store: 0-based (como JS Date).
+## Entregable web (hecho — FULL‑STACK con login + MySQL)
+`docker compose up --build` → http://localhost:8080. 3 servicios: **db (MySQL 8) + api (Node/Express) + web (Nginx)**.
+- Frontend (`frontend/`, Nginx): `index.html` (landing), `login.html` (registro/login), `app.html` (panel).
+  `assets/js`: `api.js` (cliente /api), `data.js` (caché + mutaciones vs API), `ai.js` (IA local), `charts.js`,
+  `ui.js`, `auth.js`, `format.js`, `app.js` (router + 5 vistas). Sin build step.
+- Backend (`backend/`, Express): `server.js`, `db.js` (pool MySQL + migración + siembra por usuario),
+  `schema.sql`, `middleware/auth.js` (JWT en cookie httpOnly, bcrypt), `routes/auth.js`, `routes/api.js`.
+  Datos SIEMPRE acotados por `user_id`. Al registrarse se siembran categorías + datos de ejemplo del mes.
+- nginx.conf hace proxy `/api` → `api:3000` (mismo origen, sin CORS). `.env.example` para secretos.
+- Moneda `$` (cambiar en `format.js` → `CURRENCY`). Mes: 0‑based (JS Date) en front y en DB (`budgets.month`,
+  `transactions.date` = epoch ms BIGINT).
+- Verificado end‑to‑end (register/login/bootstrap/CRUD/presupuestos/logout) contra MySQL real.
+  Nota: `docker build` del api falla SOLO dentro del sandbox (proxy TLS bloquea npm); en una máquina normal funciona.
 
 ## Sistema de diseño (tokens — reusar en la app Android)
 - Paper `#F1F4EF` · Ink `#16231E` · Pine `#1F4D3A` · Sage `#6B8F7D` · Brass `#C08A3E` · Clay `#C25A44`
@@ -58,7 +61,7 @@ Sitio de escritorio contenerizado en Docker (`docker compose up --build` → htt
 
 ## Estado actual
 - [x] Diseño web elegante + Docker
-- [x] Sitio web PC **funcional** (landing + app con CRUD, presupuestos, reportes, IA; offline)
+- [x] Sitio web PC **full‑stack**: login de usuarios + **MySQL** + API Node + CRUD/presupuestos/reportes/IA
 - [x] claude.md
 - [ ] Setup Android (Gradle, Hilt, AppDatabase)
-- [ ] Módulos 2–6 (la lógica web ya sirve de referencia: entidades, categorías, reglas IA)
+- [ ] Módulos 2–6 (referencia lista: `backend/schema.sql` = entidades; `ai.js` = reglas IA)

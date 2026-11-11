@@ -1,12 +1,54 @@
-# FlowMoney — diseño web (landing + preview del panel) contenerizado.
-# Uso:
-#   docker compose up --build
-# Luego abre:  http://localhost:8080
+# FlowMoney — stack completo: MySQL + API (Node) + Web (Nginx).
+# Uso:  docker compose up --build   →   http://localhost:8080
+#
+# Para producción, cambia las contraseñas y define un JWT_SECRET propio
+# (puedes ponerlos en un archivo .env; ver .env.example).
 services:
-  flowmoney-web:
+  db:
+    image: mysql:8.0
+    container_name: flowmoney-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${DB_NAME:-flowmoney}
+      MYSQL_USER: ${DB_USER:-flowmoney}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-flowmoney}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  api:
+    build: ./backend
+    image: flowmoney-api:latest
+    container_name: flowmoney-api
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-flowmoney}
+      DB_USER: ${DB_USER:-flowmoney}
+      DB_PASSWORD: ${DB_PASSWORD:-flowmoney}
+      JWT_SECRET: ${JWT_SECRET:-dev-insecure-secret-change-me}
+      COOKIE_SECURE: "false"
+      PORT: "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
     build: .
     image: flowmoney-web:latest
     container_name: flowmoney-web
     ports:
       - "8080:80"
+    depends_on:
+      - api
     restart: unless-stopped
+
+volumes:
+  db_data:
