@@ -92,7 +92,9 @@ fun CategoriesContent(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { onEvent(CategoriesEvent.AddClicked) },
-                icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                // El texto del FAB extendido no llega a los lectores de pantalla (puede plegarse),
+                // así que la etiqueta accesible va en el ícono.
+                icon = { Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.categories_add)) },
                 text = { Text(stringResource(R.string.categories_add)) },
             )
         },

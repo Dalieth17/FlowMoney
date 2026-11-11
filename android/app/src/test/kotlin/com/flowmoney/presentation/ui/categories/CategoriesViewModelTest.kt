@@ -19,6 +19,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -29,11 +30,19 @@ class CategoriesViewModelTest {
 
     private val defaults = DefaultCategories.all.mapIndexed { index, category -> category.copy(id = index + 1L) }
     private val repository = FakeCategoryRepository(defaults)
-    private val viewModel = CategoriesViewModel(
-        ObserveCategoriesUseCase(repository),
-        SaveCategoryUseCase(repository),
-        DeleteCategoryUseCase(repository),
-    )
+
+    // Se crea en @Before y no como propiedad: los inicializadores corren antes que las reglas
+    // de JUnit, y viewModelScope necesita el Dispatchers.Main de test ya instalado.
+    private lateinit var viewModel: CategoriesViewModel
+
+    @Before
+    fun setUp() {
+        viewModel = CategoriesViewModel(
+            ObserveCategoriesUseCase(repository),
+            SaveCategoryUseCase(repository),
+            DeleteCategoryUseCase(repository),
+        )
+    }
 
     /** uiState usa WhileSubscribed: hay que suscribirse para que emita. */
     private fun TestScope.subscribe(): MutableList<CategoriesMessage> {

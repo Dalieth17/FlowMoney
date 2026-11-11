@@ -57,7 +57,7 @@ class CategoriesContentTest {
     fun `el boton flotante abre el editor`() {
         val events = mutableListOf<CategoriesEvent>()
         render(CategoriesUiState(isLoading = false, defaults = defaults), events)
-        composeRule.onNodeWithText("Nueva categoría").performClick()
+        composeRule.onNodeWithContentDescription("Nueva categoría").performClick()
         assertEquals(listOf<CategoriesEvent>(CategoriesEvent.AddClicked), events)
     }
 }
