@@ -47,10 +47,22 @@ frontend/tests/ tests de domain/ y format (node:test)
 Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` (gastos/alertas)
 · Brass `#c08a3e` (saldo/acento) · Sage `#6b8f7d`. Fraunces (display) + Hanken Grotesk (UI).
 
+## Android (`android/`)
+
+- Módulos: `:domain` (Kotlin puro, testFixtures con `FakeCategoryRepository`) y `:app`
+  (`com.flowmoney`: data/local, data/repository, di, presentation/{theme,components,navigation,ui}, util).
+- Patrón por módulo: Entity+DAO (Room) → Repository (contrato en domain, impl en app) →
+  UseCase (devuelve `Outcome<T, XError>`) → ViewModel (`uiState: StateFlow`, `onEvent(Event)`,
+  `messages: Flow` para snackbars) → Screen (con estado) + Content (sin estado, previews y tests).
+- Ids `Long`; colores "#RRGGBB"; íconos = clave de Material (catálogo en `CategoryVisuals.kt`).
+- Textos en `res/values/strings.xml`; errores de dominio → texto en `CategoryTexts.kt`.
+- Nombres de test **solo ASCII** (sin tildes): Kotlin los convierte en nombres de archivo .class.
+- Este sandbox no tiene Android SDK (dl.google.com bloqueado; el usuario no quiso cambiar la red):
+  `:domain` se prueba aquí con un settings temporal; `:app` lo compila/prueba/lintea el CI.
+
 ## Estado
 
-- [x] Landing + login + panel (7 vistas) + MySQL + API en capas + migraciones
-- [x] Cuentas con saldos, perfil (moneda/contraseña), búsqueda y CSV, IA local
-- [x] 63 tests (31 front, 17 API unit, 15 integración) + E2E manual con Playwright
-- [ ] Android: setup (Gradle, Hilt, Room) → Categorías → Movimientos → Presupuestos → Reportes → IA
+- [x] Web: landing + login + panel (7 vistas) + MySQL + API en capas + 63 tests + CI
+- [x] Android: setup (Gradle, Hilt, Room, Compose) + módulo **Categorías**
+- [ ] Android: Movimientos → Presupuestos → Reportes → IA (esperar confirmación entre módulos)
 - Ideas web: recuperar contraseña por correo, movimientos recurrentes, gráfico por cuenta.

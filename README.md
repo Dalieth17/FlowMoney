@@ -116,6 +116,27 @@ Todas las rutas (salvo `health` y `auth`) requieren sesión y operan solo sobre 
 
 Errores: `{ "error": "mensaje en español" }` con 400 (validación), 401, 404, 409 (regla de negocio) o 429.
 
+## App Android (`android/`)
+
+App offline (Room) con la misma identidad visual. Kotlin · Jetpack Compose · Material 3 · Hilt ·
+Room · Navigation (rutas tipadas) · Coroutines/Flow. MVVM + Clean Architecture en dos módulos:
+
+| Módulo    | Contenido                                                                                 |
+| --------- | ----------------------------------------------------------------------------------------- |
+| `:domain` | Kotlin puro: modelos, reglas, contratos de repositorio y casos de uso. Sin Android.       |
+| `:app`    | `data` (Room, repositorios) · `di` (Hilt) · `presentation` (Compose, ViewModels) · `util` |
+
+Estado: **setup + módulo Categorías** (lista, crear/editar con ícono y color, borrar con
+confirmación, predeterminadas protegidas). Siguen Movimientos → Presupuestos → Reportes → IA.
+
+```bash
+cd android && ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+```
+
+Requiere JDK 17+ y el Android SDK (Android Studio lo instala). Las versiones están fijadas en
+`android/gradle/libs.versions.toml`. CI publica el APK de depuración como artefacto
+(**Actions → CI → flowmoney-debug-apk**) para instalarlo sin compilar.
+
 ## Ramas
 
 - `DEV` — desarrollo.
