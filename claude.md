@@ -34,10 +34,16 @@ presupuestos, reportes y balance. Nombre: **FlowMoney**. Idioma de UI: **españo
 - Trabajo de desarrollo en **DEV**. **QA** para revisión de calidad.
 - No tocar `main`/`master` sin permiso. Push con `git push -u origin <rama>`.
 
-## Entregable web (hecho)
-Diseño front-end de escritorio, contenerizado en Docker:
-- `frontend/index.html` — landing + preview del panel (self-contained, Fonts de Google).
-- `Dockerfile` + `nginx.conf` + `docker-compose.yml` → `docker compose up --build`, http://localhost:8080
+## Entregable web (hecho — SITIO FUNCIONAL)
+Sitio de escritorio contenerizado en Docker (`docker compose up --build` → http://localhost:8080):
+- `frontend/index.html` — landing (hero "río de flujo").
+- `frontend/app.html` + `assets/` — **app funcional** (SPA en JS vanilla, módulos ES).
+  Persistencia en **localStorage** (offline). 5 vistas: Resumen, Movimientos (CRUD+filtros),
+  Categorías (crear/editar), Presupuestos (alerta 80%), Reportes (dona+barras SVG, export PDF/print).
+  IA de clasificación local en `assets/js/ai.js` (reglas por palabras clave, es-PE).
+- JS: `format.js, data.js, ai.js, charts.js, ui.js, app.js`. Sin build step (nginx sirve estáticos).
+- Nota: la app requiere servirse por HTTP (módulos ES); Docker ya lo hace.
+- Moneda actual: `$` (cambiar en `assets/js/format.js` → `CURRENCY`). Mes en Store: 0-based (como JS Date).
 
 ## Sistema de diseño (tokens — reusar en la app Android)
 - Paper `#F1F4EF` · Ink `#16231E` · Pine `#1F4D3A` · Sage `#6B8F7D` · Brass `#C08A3E` · Clay `#C25A44`
@@ -52,6 +58,7 @@ Diseño front-end de escritorio, contenerizado en Docker:
 
 ## Estado actual
 - [x] Diseño web elegante + Docker
+- [x] Sitio web PC **funcional** (landing + app con CRUD, presupuestos, reportes, IA; offline)
 - [x] claude.md
 - [ ] Setup Android (Gradle, Hilt, AppDatabase)
-- [ ] Módulos 2–6
+- [ ] Módulos 2–6 (la lógica web ya sirve de referencia: entidades, categorías, reglas IA)
