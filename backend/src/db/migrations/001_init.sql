@@ -1,5 +1,5 @@
--- schema.sql — esquema de la base de datos FlowMoney (MySQL 8).
--- Referencia; el backend ejecuta este mismo DDL al arrancar (db.js).
+-- 001_init.sql — esquema inicial de FlowMoney (MySQL 8).
+-- Usa IF NOT EXISTS para convivir con bases creadas por versiones anteriores.
 
 CREATE TABLE IF NOT EXISTS users (
   id            INT AUTO_INCREMENT PRIMARY KEY,
@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE TABLE IF NOT EXISTS accounts (
   id              INT AUTO_INCREMENT PRIMARY KEY,
-  user_id         INT          NOT NULL,
-  name            VARCHAR(40)  NOT NULL,
+  user_id         INT           NOT NULL,
+  name            VARCHAR(40)   NOT NULL,
   type            ENUM('CASH','BANK','SAVINGS') NOT NULL DEFAULT 'CASH',
   initial_balance DECIMAL(12,2) NOT NULL DEFAULT 0,
   CONSTRAINT fk_acc_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS budgets (
   user_id     INT           NOT NULL,
   category_id INT           NOT NULL,
   amount      DECIMAL(12,2) NOT NULL,
-  month       TINYINT       NOT NULL,                 -- 0..11 (como JS Date)
+  month       TINYINT       NOT NULL,                 -- 0..11 (como Date de JS)
   year        SMALLINT      NOT NULL,
   CONSTRAINT fk_bud_user FOREIGN KEY (user_id)     REFERENCES users(id)      ON DELETE CASCADE,
   CONSTRAINT fk_bud_cat  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
