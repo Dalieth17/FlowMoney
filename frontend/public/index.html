@@ -5,265 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>FlowMoney</title>
-<meta name="description" content="FlowMoney — control de finanzas personales que funciona sin conexión. Mira a dónde fluye tu dinero: ingresos, gastos, presupuestos y balance en un solo lugar.">
+<meta name="description" content="FlowMoney — control de finanzas personales. Mira a dónde fluye tu dinero: ingresos, gastos, presupuestos y balance en un solo lugar.">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --paper:#F1F4EF;
-    --paper-2:#E8EDE5;
-    --card:#FBFCFA;
-    --ink:#16231E;
-    --ink-soft:#43564D;
-    --pine:#1F4D3A;
-    --pine-deep:#163A2B;
-    --sage:#6B8F7D;
-    --brass:#C08A3E;
-    --brass-deep:#9E6E27;
-    --clay:#C25A44;
-    --line:#D7DED3;
-    --line-soft:#E4E9E0;
-    --shadow:0 1px 2px rgba(22,35,30,.04), 0 18px 40px -24px rgba(22,35,30,.28);
-    --radius:18px;
-    --maxw:1180px;
-    --sans:"Hanken Grotesk",system-ui,-apple-system,Segoe UI,sans-serif;
-    --serif:"Fraunces",Georgia,"Times New Roman",serif;
-  }
-  *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
-  body{
-    margin:0;
-    background:
-      radial-gradient(1200px 520px at 82% -8%, rgba(192,138,62,.10), transparent 60%),
-      radial-gradient(1000px 620px at -10% 8%, rgba(31,77,58,.10), transparent 55%),
-      var(--paper);
-    color:var(--ink);
-    font-family:var(--sans);
-    font-size:17px;
-    line-height:1.55;
-    -webkit-font-smoothing:antialiased;
-    text-rendering:optimizeLegibility;
-  }
-  .tnum{font-variant-numeric:tabular-nums}
-  a{color:inherit}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px}
-
-  /* ---------- Top bar ---------- */
-  header.top{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.1) blur(8px);
-    background:linear-gradient(var(--paper),rgba(241,244,239,.72));border-bottom:1px solid var(--line-soft)}
-  .top .bar{display:flex;align-items:center;gap:28px;height:72px}
-  .brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:-.01em;font-size:18px}
-  .brand .mark{width:30px;height:30px;flex:0 0 auto}
-  .nav{display:flex;gap:26px;margin-left:8px}
-  .nav a{text-decoration:none;color:var(--ink-soft);font-weight:500;font-size:15.5px;padding:6px 0;position:relative}
-  .nav a:hover{color:var(--pine)}
-  .nav a::after{content:"";position:absolute;left:0;right:100%;bottom:-2px;height:2px;background:var(--brass);transition:right .28s ease}
-  .nav a:hover::after{right:0}
-  .top .right{margin-left:auto;display:flex;align-items:center;gap:16px}
-  .pill{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--pine);
-    background:rgba(31,77,58,.08);border:1px solid rgba(31,77,58,.16);padding:6px 12px;border-radius:999px}
-  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--pine);box-shadow:0 0 0 0 rgba(31,77,58,.45);animation:pulse 2.6s ease-out infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(31,77,58,.4)}70%{box-shadow:0 0 0 7px rgba(31,77,58,0)}100%{box-shadow:0 0 0 0 rgba(31,77,58,0)}}
-
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-family:var(--sans);
-    font-weight:600;font-size:15.5px;border-radius:12px;padding:11px 20px;cursor:pointer;border:1px solid transparent;
-    text-decoration:none;transition:transform .14s ease, box-shadow .2s ease, background .2s ease}
-  .btn:active{transform:translateY(1px)}
-  .btn-primary{background:var(--pine);color:#F4F7F2;box-shadow:0 10px 22px -12px rgba(31,77,58,.75)}
-  .btn-primary:hover{background:var(--pine-deep)}
-  .btn-ghost{background:transparent;color:var(--pine);border-color:var(--line)}
-  .btn-ghost:hover{border-color:var(--sage);background:rgba(107,143,125,.08)}
-
-  /* ---------- Hero ---------- */
-  .hero{position:relative;padding:76px 0 40px}
-  .hero-grid{display:grid;grid-template-columns:1.02fr 1.18fr;gap:52px;align-items:center}
-  .eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--brass-deep);font-weight:600;font-size:15px;margin-bottom:22px}
-  .eyebrow .sep{width:26px;height:1px;background:var(--brass);opacity:.6}
-  h1{font-family:var(--serif);font-weight:500;font-size:clamp(42px,5.1vw,68px);line-height:1.02;
-    letter-spacing:-.018em;margin:0 0 22px;color:var(--ink)}
-  h1 em{font-style:italic;color:var(--pine);font-weight:500}
-  .lede{font-size:19px;line-height:1.6;color:var(--ink-soft);max-width:30em;margin:0 0 30px}
-  .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
-  .cta-note{color:var(--ink-soft);font-size:14.5px;margin-top:18px}
-
-  /* river card */
-  .river{position:relative;background:var(--card);border:1px solid var(--line);border-radius:26px;
-    box-shadow:var(--shadow);padding:22px 22px 18px;overflow:hidden}
-  .river-head{display:flex;align-items:baseline;justify-content:space-between;margin:2px 6px 12px}
-  .river-head .ttl{font-weight:600;font-size:15px;color:var(--ink)}
-  .river-head .sub{font-size:13.5px;color:var(--ink-soft)}
-  .river-legend{display:flex;gap:18px;align-items:center;margin:14px 6px 2px;font-size:13.5px;color:var(--ink-soft)}
-  .river-legend span{display:inline-flex;align-items:center;gap:7px}
-  .river-legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
-  svg.flow{display:block;width:100%;height:auto}
-  .trace{stroke-dasharray:14 320;animation:trace 7s linear infinite}
-  @keyframes trace{to{stroke-dashoffset:-668}}
-
-  /* floating balance tag */
-  .balance-tag{position:absolute;right:26px;top:70px;background:var(--pine);color:#EAF2EC;border-radius:14px;
-    padding:12px 16px;box-shadow:0 14px 30px -14px rgba(22,58,43,.8)}
-  .balance-tag .k{font-size:12.5px;opacity:.78;letter-spacing:.01em}
-  .balance-tag .v{font-family:var(--serif);font-size:25px;font-weight:500;line-height:1.1;margin-top:2px}
-
-  /* ---------- Section frame ---------- */
-  section.block{padding:40px 0}
-  .block-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:26px}
-  .block-head h2{font-family:var(--serif);font-weight:500;font-size:clamp(26px,3vw,36px);letter-spacing:-.015em;margin:0;line-height:1.08}
-  .block-head p{margin:8px 0 0;color:var(--ink-soft);max-width:40em;font-size:16px}
-
-  /* ---------- Dashboard preview ---------- */
-  .dash{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-  .dash-top{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--line-soft);
-    background:linear-gradient(180deg,rgba(107,143,125,.07),transparent)}
-  .dash-top .dots{display:flex;gap:7px}
-  .dash-top .dots i{width:11px;height:11px;border-radius:50%;background:var(--line);display:inline-block}
-  .dash-top .dots i:nth-child(1){background:#D8B48C}
-  .dash-top .dots i:nth-child(2){background:#C9D3C3}
-  .dash-top .dots i:nth-child(3){background:#AFC2B2}
-  .dash-top .path{color:var(--ink-soft);font-size:14px;font-weight:500}
-  .dash-top .month{margin-left:auto;font-weight:600;font-size:14.5px;color:var(--pine)}
-
-  .dash-body{display:grid;grid-template-columns:1.35fr 1fr;gap:0}
-  .col{padding:24px}
-  .col.left{border-right:1px solid var(--line-soft)}
-
-  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
-  .stat{border:1px solid var(--line-soft);border-radius:14px;padding:14px 15px;background:var(--card)}
-  .stat .k{font-size:13px;color:var(--ink-soft);font-weight:500;display:flex;align-items:center;gap:7px}
-  .stat .k i{width:8px;height:8px;border-radius:50%}
-  .stat .v{font-family:var(--serif);font-size:24px;font-weight:500;margin-top:7px;letter-spacing:-.01em}
-  .stat.bal{background:linear-gradient(180deg,rgba(31,77,58,.07),rgba(31,77,58,.02));border-color:rgba(31,77,58,.22)}
-  .stat.bal .v{color:var(--pine)}
-
-  .panel-ttl{font-weight:600;font-size:14.5px;margin:0 0 14px;display:flex;align-items:center;justify-content:space-between}
-  .panel-ttl span{color:var(--ink-soft);font-weight:500;font-size:13px}
-
-  /* weekly bars */
-  .bars{display:flex;align-items:flex-end;gap:14px;height:150px;padding:6px 2px 0;border-bottom:1px solid var(--line-soft)}
-  .bars .week{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%}
-  .bars .stack{flex:1;width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:4px}
-  .bars .inc,.bars .exp{width:100%;border-radius:6px 6px 3px 3px}
-  .bars .inc{background:linear-gradient(180deg,var(--sage),var(--pine))}
-  .bars .exp{background:linear-gradient(180deg,#D98E6E,var(--clay));border-radius:3px 3px 6px 6px}
-  .bars .wk{font-size:12.5px;color:var(--ink-soft)}
-
-  /* category breakdown */
-  .cats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:13px}
-  .cats li{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:12px}
-  .cats .ic{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:12px}
-  .cats .meta{min-width:0}
-  .cats .nm{font-size:14.5px;font-weight:500}
-  .cats .track{height:7px;border-radius:999px;background:var(--line-soft);margin-top:6px;overflow:hidden}
-  .cats .fill{height:100%;border-radius:999px}
-  .cats .amt{font-weight:600;font-size:14px;color:var(--ink)}
-
-  /* budgets */
-  .budgets{display:flex;flex-direction:column;gap:18px}
-  .bud{border:1px solid var(--line-soft);border-radius:14px;padding:14px 15px}
-  .bud-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}
-  .bud-top .nm{font-weight:600;font-size:14.5px}
-  .bud-top .fig{font-size:13.5px;color:var(--ink-soft)}
-  .bud-top .fig b{color:var(--ink);font-weight:600}
-  .meter{position:relative;height:12px;border-radius:999px;background:var(--line-soft);overflow:hidden}
-  .meter .lvl{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
-  .meter .mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:rgba(22,35,30,.35)}
-  .bud-foot{display:flex;justify-content:space-between;align-items:center;margin-top:9px;font-size:13px}
-  .flag{display:inline-flex;align-items:center;gap:7px;font-weight:600}
-  .flag.ok{color:var(--sage)}
-  .flag.warn{color:var(--brass-deep)}
-  .flag.over{color:var(--clay)}
-  .flag .d{width:8px;height:8px;border-radius:50%;background:currentColor}
-  .pct{color:var(--ink-soft)}
-
-  /* movements */
-  .mv{list-style:none;margin:0;padding:0}
-  .mv li{display:grid;grid-template-columns:38px 1fr auto;gap:13px;align-items:center;padding:12px 2px;border-bottom:1px solid var(--line-soft)}
-  .mv li:last-child{border-bottom:0}
-  .mv .av{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;font-weight:600;font-size:15px}
-  .mv .d .t{font-weight:600;font-size:14.5px}
-  .mv .d .s{font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:8px;margin-top:2px}
-  .tag-cat{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px}
-  .mv .amt{font-weight:600;font-size:15px;text-align:right}
-  .mv .amt.in{color:var(--pine)}
-  .mv .amt.out{color:var(--ink)}
-
-  /* ---------- AI section ---------- */
-  .ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
-  .ai-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px}
-  .ai-input{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--paper)}
-  .ai-input .lbl{font-size:12.5px;color:var(--ink-soft);font-weight:500}
-  .ai-input .val{font-weight:600;font-size:17px}
-  .caret{display:inline-block;width:2px;height:20px;background:var(--pine);margin-left:1px;animation:blink 1.1s step-end infinite;vertical-align:-3px}
-  @keyframes blink{50%{opacity:0}}
-  .ai-sugg{margin-top:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .ai-sugg .arrow{color:var(--sage)}
-  .sugg-chip{display:inline-flex;align-items:center;gap:9px;background:rgba(31,77,58,.08);border:1px solid rgba(31,77,58,.2);
-    color:var(--pine);font-weight:600;padding:9px 14px;border-radius:12px;font-size:15px}
-  .sugg-chip .ic{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;color:#fff;font-size:11px}
-  .conf{font-size:12.5px;color:var(--ink-soft)}
-  .ai-actions{display:flex;gap:10px;margin-top:20px}
-  .mini{font-size:14px;padding:9px 16px;border-radius:11px;cursor:pointer;font-weight:600;font-family:var(--sans);border:1px solid var(--line)}
-  .mini.yes{background:var(--pine);color:#F3F7F3;border-color:var(--pine)}
-  .mini.no{background:transparent;color:var(--ink-soft)}
-  .ai-list{margin-top:22px;display:flex;flex-direction:column;gap:10px}
-  .ai-list .row{display:flex;align-items:center;justify-content:space-between;font-size:14px;color:var(--ink-soft)}
-  .ai-list .row b{color:var(--ink);font-weight:600}
-
-  /* feature list on ai left */
-  .flist{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-direction:column;gap:16px}
-  .flist li{display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start}
-  .flist .fi{width:34px;height:34px;border-radius:10px;background:rgba(192,138,62,.12);border:1px solid rgba(192,138,62,.3);
-    display:grid;place-items:center;color:var(--brass-deep)}
-  .flist .ft{font-weight:600;font-size:15.5px;margin:0}
-  .flist .fd{margin:3px 0 0;font-size:14.5px;color:var(--ink-soft);line-height:1.5}
-
-  /* ---------- Modules strip ---------- */
-  .mods{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
-  .mod{background:var(--card);border:1px solid var(--line-soft);border-radius:14px;padding:18px 16px;transition:border-color .2s ease, transform .2s ease}
-  .mod:hover{border-color:var(--sage);transform:translateY(-2px)}
-  .mod .mi{width:30px;height:30px;color:var(--pine);margin-bottom:12px}
-  .mod h3{margin:0 0 5px;font-size:15.5px;font-weight:600}
-  .mod p{margin:0;font-size:13.5px;color:var(--ink-soft);line-height:1.5}
-
-  /* ---------- Footer / CTA ---------- */
-  .closer{margin:36px 0 56px;background:linear-gradient(135deg,var(--pine-deep),var(--pine));color:#E9F1EB;
-    border-radius:26px;padding:48px 44px;position:relative;overflow:hidden}
-  .closer::after{content:"";position:absolute;right:-60px;top:-60px;width:320px;height:320px;border-radius:50%;
-    background:radial-gradient(circle,rgba(192,138,62,.5),transparent 68%);opacity:.5}
-  .closer h2{font-family:var(--serif);font-weight:500;font-size:clamp(28px,3.4vw,40px);margin:0 0 12px;letter-spacing:-.015em;position:relative}
-  .closer p{margin:0 0 26px;color:#CFE0D4;max-width:34em;font-size:17px;position:relative}
-  .closer .cta-row{position:relative}
-  .btn-brass{background:var(--brass);color:#2A1E07}
-  .btn-brass:hover{background:#D29A4E}
-  .btn-outline{background:transparent;border-color:rgba(255,255,255,.4);color:#EAF2EC}
-  .btn-outline:hover{background:rgba(255,255,255,.1)}
-
-  footer.foot{border-top:1px solid var(--line-soft);padding:30px 0 50px;color:var(--ink-soft);font-size:14px}
-  .foot .row{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-  .foot a{text-decoration:none;color:var(--ink-soft)}
-  .foot a:hover{color:var(--pine)}
-
-  /* ---------- Responsive ---------- */
-  @media (max-width:980px){
-    .hero-grid{grid-template-columns:1fr;gap:34px}
-    .dash-body{grid-template-columns:1fr}
-    .col.left{border-right:0;border-bottom:1px solid var(--line-soft)}
-    .ai-grid{grid-template-columns:1fr;gap:28px}
-    .mods{grid-template-columns:repeat(2,1fr)}
-    .nav,.top .right .pill{display:none}
-    .balance-tag{position:static;display:inline-block;margin:14px 6px 2px}
-  }
-  @media (max-width:560px){
-    .wrap{padding:0 20px}
-    .stat-row{grid-template-columns:1fr}
-    .mods{grid-template-columns:1fr}
-    body{font-size:16px}
-  }
-  @media (prefers-reduced-motion:reduce){
-    *{animation:none !important;transition:none !important}
-  }
-</style>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/landing.css">
 </head>
 <body>
 
@@ -279,14 +27,13 @@
       FlowMoney
     </div>
     <nav class="nav">
-      <a href="login.html">Movimientos</a>
-      <a href="login.html">Categorías</a>
-      <a href="login.html">Presupuestos</a>
-      <a href="login.html">Reportes</a>
+      <a href="#panel">Cómo funciona</a>
+      <a href="#ia">Clasificación con IA</a>
+      <a href="#modulos">Módulos</a>
     </nav>
     <div class="right">
-      <span class="pill"><span class="dot"></span>Funciona sin conexión</span>
-      <a href="login.html" class="btn btn-primary">Abrir mi balance</a>
+      <a href="login.html" class="btn btn-ghost">Ingresar</a>
+      <a href="login.html#registro" class="btn btn-primary">Crear cuenta</a>
     </div>
   </div>
 </header>
@@ -297,12 +44,12 @@
     <div class="hero-copy">
       <div class="eyebrow"><span class="sep"></span>Finanzas personales, sin complicaciones</div>
       <h1>Mira a dónde <em>fluye</em> tu dinero.</h1>
-      <p class="lede">FlowMoney reúne cada ingreso y cada gasto en un solo lugar. Registra, clasifica y presupuesta en segundos — todo guardado en tu teléfono, sin cuentas que crear ni conexión que esperar.</p>
+      <p class="lede">FlowMoney reúne cada ingreso y cada gasto en un solo lugar. Registra, clasifica y presupuesta en segundos desde tu PC, con saldos por cuenta y reportes claros.</p>
       <div class="cta-row">
-        <a href="login.html" class="btn btn-primary">Abrir el panel</a>
+        <a href="login.html#registro" class="btn btn-primary">Empezar gratis</a>
         <a href="#panel" class="btn btn-ghost">Ver cómo funciona</a>
       </div>
-      <p class="cta-note">Sin registro. Sin publicidad. Tus datos nunca salen del dispositivo.</p>
+      <p class="cta-note">Gratis y sin publicidad. Tus datos solo los ves tú.</p>
     </div>
 
     <!-- Cashflow river -->
@@ -367,7 +114,7 @@
         <h2>Tu mes, de un vistazo</h2>
         <p>Balance, flujo semanal, categorías y presupuestos conviven en un panel tranquilo. Nada de ruido: solo lo que necesitas para decidir.</p>
       </div>
-      <a href="login.html" class="btn btn-ghost">Explorar el panel</a>
+      <a href="login.html#registro" class="btn btn-ghost">Probar el panel</a>
     </div>
 
     <div class="dash">
@@ -489,7 +236,7 @@
     <div class="block-head">
       <div>
         <h2>Escribe el nombre. FlowMoney adivina la categoría.</h2>
-        <p>Un clasificador local lee la descripción de cada gasto y propone su categoría. Tú decides si la aceptas. Funciona sin conexión y sin enviar nada a ningún servidor.</p>
+        <p>Un clasificador local lee la descripción de cada gasto y propone su categoría. Tú decides si la aceptas. Corre en tu navegador, sin servicios externos.</p>
       </div>
     </div>
 
@@ -512,7 +259,7 @@
             <span class="fi">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/></svg>
             </span>
-            <div><p class="ft">Privado por diseño</p><p class="fd">El modelo vive en tu dispositivo. Tus descripciones y montos nunca viajan a la nube.</p></div>
+            <div><p class="ft">Privado por diseño</p><p class="fd">El clasificador corre en tu navegador y no envía tus descripciones a servicios de terceros.</p></div>
           </li>
         </ul>
       </div>
@@ -550,12 +297,12 @@
 </section>
 
 <!-- ===================== MODULES ===================== -->
-<section class="block">
+<section class="block" id="modulos">
   <div class="wrap">
     <div class="block-head">
       <div>
         <h2>Todo lo que mueve tu dinero</h2>
-        <p>Cinco módulos que trabajan juntos y se guardan en tu dispositivo.</p>
+        <p>Módulos que trabajan juntos, guardados de forma segura en tu cuenta.</p>
       </div>
     </div>
     <div class="mods">
@@ -582,7 +329,7 @@
       <div class="mod">
         <svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M5 12H2M22 12h-3"/><circle cx="12" cy="12" r="4"/></svg>
         <h3>Clasificación con IA</h3>
-        <p>Sugiere la categoría a partir de la descripción, en el dispositivo y sin conexión.</p>
+        <p>Sugiere la categoría a partir de la descripción, al instante y en tu navegador.</p>
       </div>
     </div>
   </div>
@@ -593,10 +340,10 @@
   <div class="wrap">
     <div class="closer">
       <h2>Empieza a ordenar tu dinero hoy.</h2>
-      <p>Descarga FlowMoney, registra tu primer movimiento y mira cómo se arma tu balance. Toma menos de un minuto y no necesitas conexión.</p>
+      <p>Crea tu cuenta, registra tu primer movimiento y mira cómo se arma tu balance. Toma menos de un minuto.</p>
       <div class="cta-row">
-        <a href="login.html" class="btn btn-brass">Abrir FlowMoney</a>
-        <a href="#" class="btn btn-outline">Descargar para Android</a>
+        <a href="login.html#registro" class="btn btn-brass">Crear cuenta gratis</a>
+        <a href="login.html" class="btn btn-outline">Ya tengo cuenta</a>
       </div>
     </div>
   </div>
@@ -611,8 +358,8 @@
       </svg>
       FlowMoney
     </div>
-    <div>Finanzas personales, offline y privadas. Hecho con Kotlin, Jetpack Compose y Room.</div>
-    <div><a href="#">Privacidad</a> &nbsp;·&nbsp; <a href="#">Términos</a></div>
+    <div>Finanzas personales claras y privadas.</div>
+    <div><a href="login.html">Ingresar</a></div>
   </div>
 </footer>
 

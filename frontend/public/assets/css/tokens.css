@@ -1,0 +1,89 @@
+/* tokens.css — sistema de diseño compartido (landing, login y panel). */
+:root {
+  /* Superficies */
+  --paper: #f1f4ef;
+  --paper-2: #e8ede5;
+  --card: #fbfcfa;
+  --card-2: #f4f7f2;
+
+  /* Texto (--muted cumple contraste AA 4.5:1 sobre --paper) */
+  --ink: #16231e;
+  --ink-soft: #43564d;
+  --muted: #56665d;
+
+  /* Marca: pino (ingresos), salvia, latón (saldo/acento), arcilla (gastos/alertas) */
+  --pine: #1f4d3a;
+  --pine-deep: #163a2b;
+  --sage: #6b8f7d;
+  --brass: #c08a3e;
+  --brass-deep: #9e6e27;
+  --clay: #c25a44;
+
+  /* Líneas, sombras, radios */
+  --line: #d7ded3;
+  --line-soft: #e4e9e0;
+  --shadow: 0 1px 2px rgba(22, 35, 30, 0.04), 0 16px 36px -24px rgba(22, 35, 30, 0.26);
+  --radius: 16px;
+
+  /* Tipografía */
+  --sans: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* El atributo hidden siempre gana sobre display de los componentes. */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

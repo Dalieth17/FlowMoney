@@ -1,9 +1,9 @@
-// charts.js — gráficos en SVG puro (sin librerías): dona y barras.
-// Devuelven cadenas SVG para inyectar en el DOM.
+// Gráficos en SVG puro (sin librerías): dona y barras agrupadas.
+// Devuelven cadenas SVG; todo texto variable pasa por esc().
 
-import { money, compact } from './format.js';
+import { money, compact } from '../core/format.js';
 
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 /**
  * Dona por categorías.
@@ -13,7 +13,8 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 export function donut(data, opts = {}) {
   const size = opts.size || 220;
   const r = size / 2 - 14;
-  const cx = size / 2, cy = size / 2;
+  const cx = size / 2,
+    cy = size / 2;
   const stroke = 26;
   const circ = 2 * Math.PI * r;
   const total = opts.total != null ? opts.total : data.reduce((a, d) => a + d.value, 0);
@@ -26,16 +27,19 @@ export function donut(data, opts = {}) {
   }
 
   let offset = 0;
-  const arcs = data.filter((d) => d.value > 0).map((d) => {
-    const frac = d.value / total;
-    const dash = frac * circ;
-    const seg = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.color}" stroke-width="${stroke}"
+  const arcs = data
+    .filter((d) => d.value > 0)
+    .map((d) => {
+      const frac = d.value / total;
+      const dash = frac * circ;
+      const seg = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.color}" stroke-width="${stroke}"
         stroke-dasharray="${dash.toFixed(2)} ${(circ - dash).toFixed(2)}"
         stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})" stroke-linecap="butt">
         <title>${esc(d.label)}: ${money(d.value)} (${Math.round(frac * 100)}%)</title></circle>`;
-    offset += dash;
-    return seg;
-  }).join('');
+      offset += dash;
+      return seg;
+    })
+    .join('');
 
   const top = opts.centerTop != null ? opts.centerTop : money(total);
   const bottom = opts.centerBottom != null ? opts.centerBottom : 'gastado';
@@ -54,7 +58,10 @@ export function donut(data, opts = {}) {
 export function groupedBars(data, opts = {}) {
   const w = opts.width || 560;
   const h = opts.height || 240;
-  const padL = 44, padR = 12, padT = 14, padB = 30;
+  const padL = 44,
+    padR = 12,
+    padT = 14,
+    padB = 30;
   const innerW = w - padL - padR;
   const innerH = h - padT - padB;
   const max = Math.max(1, ...data.map((d) => Math.max(d.income, d.expense)));

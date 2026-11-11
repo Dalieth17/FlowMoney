@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>FlowMoney · Ingresar</title>
+  <meta name="description" content="Ingresa a FlowMoney para administrar tus finanzas personales.">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/auth.css">
+  <script type="module" src="assets/js/pages/login.js"></script>
+</head>
+<body>
+  <aside class="brand-panel">
+    <a class="bp-brand" href="index.html">
+      <img class="mark" src="assets/img/favicon.svg" alt="" width="32" height="32">
+      FlowMoney
+    </a>
+    <div class="bp-center">
+      <h1>Tu dinero,<br><em>claro</em> cada mes.</h1>
+      <p>Registra ingresos y gastos, pon presupuestos y mira tu balance en un panel tranquilo.</p>
+      <ul class="bp-points">
+        <li><span class="tick" aria-hidden="true">✓</span> Presupuestos con aviso al superarte</li>
+        <li><span class="tick" aria-hidden="true">✓</span> Saldos por cuenta y reportes claros</li>
+        <li><span class="tick" aria-hidden="true">✓</span> Categoría sugerida por IA al escribir</li>
+      </ul>
+    </div>
+    <p class="bp-foot">Tus datos quedan en tu cuenta, guardados de forma segura.</p>
+  </aside>
+
+  <main class="form-panel">
+    <div class="auth-card">
+      <h2 id="auth-title">Hola de nuevo</h2>
+      <p class="auth-sub" id="auth-subtitle">Ingresa para ver tu balance.</p>
+
+      <div class="tabs" role="tablist" aria-label="Modo">
+        <button type="button" id="tab-login" class="active" role="tab" aria-selected="true">Ingresar</button>
+        <button type="button" id="tab-register" role="tab" aria-selected="false">Crear cuenta</button>
+      </div>
+
+      <div class="auth-err" id="auth-err" role="alert" hidden></div>
+
+      <form class="auth-form" id="auth-form" novalidate>
+        <div class="field" id="name-field" hidden>
+          <label class="field-label" for="f-name">Nombre</label>
+          <input class="input" type="text" id="f-name" autocomplete="name" maxlength="80" placeholder="¿Cómo te llamas?">
+        </div>
+        <div class="field">
+          <label class="field-label" for="f-email">Correo</label>
+          <input class="input" type="email" id="f-email" autocomplete="email" maxlength="160" placeholder="tucorreo@ejemplo.com" required>
+        </div>
+        <div class="field">
+          <label class="field-label" for="f-password">Contraseña</label>
+          <span class="pw-row">
+            <input class="input" type="password" id="f-password" autocomplete="current-password" maxlength="128" placeholder="Mínimo 6 caracteres" required>
+            <button type="button" class="toggle" id="pw-toggle" aria-pressed="false" aria-controls="f-password">Ver</button>
+          </span>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submit-btn">Ingresar</button>
+      </form>
+
+      <p class="auth-foot" id="auth-foot"></p>
+    </div>
+  </main>
+</body>
+</html>
