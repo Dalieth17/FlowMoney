@@ -1,12 +1,13 @@
 # FlowMoney — stack completo: MySQL + API (Node) + Web (Nginx).
-# Uso:  docker compose up --build   →   http://localhost:8080
+#   docker compose up --build   →   http://localhost:8080
 #
-# Para producción, cambia las contraseñas y define un JWT_SECRET propio
-# (puedes ponerlos en un archivo .env; ver .env.example).
+# Solo el servicio web publica un puerto; la API y MySQL quedan en la red interna.
+# Para producción copia .env.example a .env y cambia contraseñas y JWT_SECRET.
+name: flowmoney
+
 services:
   db:
     image: mysql:8.0
-    container_name: flowmoney-db
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
       MYSQL_DATABASE: ${DB_NAME:-flowmoney}
@@ -15,7 +16,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent']
       interval: 10s
       timeout: 5s
       retries: 10
@@ -24,28 +25,24 @@ services:
 
   api:
     build: ./backend
-    image: flowmoney-api:latest
-    container_name: flowmoney-api
     environment:
       DB_HOST: db
-      DB_PORT: "3306"
+      DB_PORT: '3306'
       DB_NAME: ${DB_NAME:-flowmoney}
       DB_USER: ${DB_USER:-flowmoney}
       DB_PASSWORD: ${DB_PASSWORD:-flowmoney}
-      JWT_SECRET: ${JWT_SECRET:-dev-insecure-secret-change-me}
-      COOKIE_SECURE: "false"
-      PORT: "3000"
+      # Vacío = se genera uno aleatorio en cada arranque (seguro, pero cierra sesiones al reiniciar).
+      JWT_SECRET: ${JWT_SECRET:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
 
   web:
-    build: .
-    image: flowmoney-web:latest
-    container_name: flowmoney-web
+    build: ./frontend
     ports:
-      - "8080:80"
+      - '${WEB_PORT:-8080}:8080'
     depends_on:
       - api
     restart: unless-stopped

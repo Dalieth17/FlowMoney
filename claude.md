@@ -1,67 +1,56 @@
 # claude.md — Contexto de FlowMoney
 
-> Archivo de contexto para Claude. Léelo al inicio de cada sesión en vez de re-derivar todo.
-> Mantenlo corto y actualízalo cuando cambie una decisión. Ahorra tokens.
+> Léelo al inicio de cada sesión en vez de re‑explorar el repo. Mantenlo corto y al día.
 
 ## Qué es
-App Android de **finanzas personales**, 100% **offline**. Control de ingresos, gastos,
-presupuestos, reportes y balance. Nombre: **FlowMoney**. Idioma de UI: **español**.
 
-## Arquitectura (acordada)
-- MVVM + **Clean Architecture**, 3 capas: `presentation / domain / data`.
-- UI: **Jetpack Compose** + Material 3. Async: **Coroutines + Flow**.
-- Persistencia: **Room** (SQLite). DI: **Hilt**. Navegación: **Navigation Compose**.
-- Gráficos: **Vico** (preferido sobre MPAndroidChart). IA: reglas heurísticas por
-  palabras clave en local (ML Kit opcional, nunca en la nube).
+Finanzas personales (ES). Hoy: **sitio web full‑stack** listo. Después: app Android
+(Kotlin, Compose, Room, Hilt, Clean Architecture, MVVM) — pendiente de empezar.
 
-## Paquete base
-`com.flowmoney` → `data/{local,repository}`, `domain/{model,repository,usecase}`,
-`presentation/{ui,viewmodel,components}`, `di`, `util`.
+## Ramas y flujo
 
-## Entidades Room
-- **Transaction**: id, amount:Double, description:String, date:Long, type(INCOME/EXPENSE),
-  categoryId:Int(FK), accountId:Int?(FK), note:String?
-- **Category**: id, name, icon(String Material), color(hex), isDefault:Boolean
-- **Budget**: id, categoryId(FK), amount:Double, month:Int, year:Int
-- **Account** (opcional): id, name, type(CASH/BANK/SAVINGS), initialBalance
+- Trabajar en **DEV**; sincronizar **QA** para revisión. `git push -u origin <rama>`.
+- Antes de commitear: `npm run check` (lint + formato + tests unitarios) y, si toca la API,
+  `test:integration` con MySQL (ver README). CI en `.github/workflows/ci.yml`.
 
-## Orden de desarrollo (por módulo: Entity+DAO+Repo+UseCase+ViewModel+Screen)
-1. Setup proyecto (build.gradle, AppDatabase, Hilt) → **hecho el diseño web, falta Android**
-2. Categorías → 3. Movimientos → 4. Presupuestos → 5. Reportes → 6. IA
-> Esperar confirmación del usuario antes de pasar al siguiente módulo.
+## Estructura
 
-## Ramas (git)
-- Trabajo de desarrollo en **DEV**. **QA** para revisión de calidad.
-- No tocar `main`/`master` sin permiso. Push con `git push -u origin <rama>`.
+```
+backend/src/   config · db (pool, migrate, seed, migrations/*.sql) · repositories · services
+               · routes (crudRouter + *.routes) · validation (zod) · middleware · utils
+backend/tests/ unit (sin BD) · integration (MySQL real, supertest)
+frontend/public/ index.html (landing) · login.html · app.html
+  assets/js/   core (api, store, router, format) · domain (selectors, classifier, rules, csv,
+               accountTypes) · ui (dom, feedback, widgets, charts, pickers, exportCsv)
+               · forms · views (resumen, movimientos, cuentas, categorias, presupuestos,
+               reportes, perfil) · pages (app, login)
+  assets/css/  tokens.css (diseño) · app.css · auth.css · landing.css
+frontend/nginx/ default.conf + security-headers.conf (incluir en CADA location)
+frontend/tests/ tests de domain/ y format (node:test)
+```
 
-## Entregable web (hecho — FULL‑STACK con login + MySQL)
-`docker compose up --build` → http://localhost:8080. 3 servicios: **db (MySQL 8) + api (Node/Express) + web (Nginx)**.
-- Frontend (`frontend/`, Nginx): `index.html` (landing), `login.html` (registro/login), `app.html` (panel).
-  `assets/js`: `api.js` (cliente /api), `data.js` (caché + mutaciones vs API), `ai.js` (IA local), `charts.js`,
-  `ui.js`, `auth.js`, `format.js`, `app.js` (router + 5 vistas). Sin build step.
-- Backend (`backend/`, Express): `server.js`, `db.js` (pool MySQL + migración + siembra por usuario),
-  `schema.sql`, `middleware/auth.js` (JWT en cookie httpOnly, bcrypt), `routes/auth.js`, `routes/api.js`.
-  Datos SIEMPRE acotados por `user_id`. Al registrarse se siembran categorías + datos de ejemplo del mes.
-- nginx.conf hace proxy `/api` → `api:3000` (mismo origen, sin CORS). `.env.example` para secretos.
-- Moneda `$` (cambiar en `format.js` → `CURRENCY`). Mes: 0‑based (JS Date) en front y en DB (`budgets.month`,
-  `transactions.date` = epoch ms BIGINT).
-- Verificado end‑to‑end (register/login/bootstrap/CRUD/presupuestos/logout) contra MySQL real.
-  Nota: `docker build` del api falla SOLO dentro del sandbox (proxy TLS bloquea npm); en una máquina normal funciona.
+## Convenciones (respetar)
 
-## Sistema de diseño (tokens — reusar en la app Android)
-- Paper `#F1F4EF` · Ink `#16231E` · Pine `#1F4D3A` · Sage `#6B8F7D` · Brass `#C08A3E` · Clay `#C25A44`
-- Ingresos/positivo = pine/sage. Gastos = clay. Acento/saldo = brass. Alerta presupuesto >80%.
-- Tipografía web: **Fraunces** (display serif) + **Hanken Grotesk** (UI, cifras tabulares).
-- En Android: traducir a Material 3 ColorScheme con estos roles; cifras con `tabularNums`.
+- Backend en capas: route (valida con zod → `req.valid`) → service (reglas, `HttpError`) →
+  repository (SQL parametrizado, acepta `conn` para transacciones). Todo filtrado por `user_id`.
+- Errores API: `{ error }` en español; 400 validación, 401 sesión, 404, 409 regla de negocio.
+  Contraseña actual incorrecta = 400 (401 haría que el front redirija al login).
+- Cambios de esquema = **nueva migración** `NNN_descripcion.sql` (nunca editar las aplicadas).
+- Frontend: vistas montan con `mount(root, ...)` (nunca `append(null)`); texto siempre por
+  `h()`/textContent; `html:` solo para SVG propio. Lógica pura en `domain/` (+ test).
+- Montos DECIMAL(12,2) → number; fechas epoch ms (BIGINT); mes 0‑based (como JS Date).
+- Moneda por usuario (`users.currency`: `$`, `S/`, `US$`, `€`); `setCurrency()` en el store.
+- Prettier (120 col, comillas simples) y ESLint flat config en la raíz; HTML fuera de Prettier.
 
-## Convenciones
-- Código limpio, comentarios solo donde aporten. Guías oficiales de Android/Kotlin.
-- Montos: Double en datos; formatear en UI. Fechas: Long (epoch millis).
-- Por entrega indicar: decisiones clave + dependencias nuevas necesarias.
+## Diseño (tokens.css)
 
-## Estado actual
-- [x] Diseño web elegante + Docker
-- [x] Sitio web PC **full‑stack**: login de usuarios + **MySQL** + API Node + CRUD/presupuestos/reportes/IA
-- [x] claude.md
-- [ ] Setup Android (Gradle, Hilt, AppDatabase)
-- [ ] Módulos 2–6 (referencia lista: `backend/schema.sql` = entidades; `ai.js` = reglas IA)
+Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` (gastos/alertas)
+· Brass `#c08a3e` (saldo/acento) · Sage `#6b8f7d`. Fraunces (display) + Hanken Grotesk (UI).
+
+## Estado
+
+- [x] Landing + login + panel (7 vistas) + MySQL + API en capas + migraciones
+- [x] Cuentas con saldos, perfil (moneda/contraseña), búsqueda y CSV, IA local
+- [x] 63 tests (31 front, 17 API unit, 15 integración) + E2E manual con Playwright
+- [ ] Android: setup (Gradle, Hilt, Room) → Categorías → Movimientos → Presupuestos → Reportes → IA
+- Ideas web: recuperar contraseña por correo, movimientos recurrentes, gráfico por cuenta.

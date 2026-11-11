@@ -1,9 +1,0 @@
-.git
-.gitignore
-claude.md
-README.md
-**/*.md
-.DS_Store
-backend
-node_modules
-.env

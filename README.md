@@ -1,105 +1,122 @@
 # FlowMoney
 
-App de finanzas personales. Este repositorio contiene el **sitio web full‑stack**
-(landing + app con cuentas de usuario) y servirá de referencia para la app Android
-(Kotlin · Jetpack Compose · Room · Clean Architecture).
+Finanzas personales: ingresos, gastos, cuentas, presupuestos y reportes, con sugerencia de
+categoría por IA. Este repositorio contiene el **sitio web full‑stack** (landing + panel con
+cuentas de usuario) y servirá de referencia para la app Android (Kotlin · Compose · Room).
 
-Stack web: **Nginx** (estáticos) + **API Node/Express** + **MySQL**, con **login de usuarios**
-(registro, sesión con JWT en cookie httpOnly) y datos por usuario. Todo en Docker.
+**Stack:** Nginx (estáticos) · API Node.js 24 + Express · MySQL 8 · Docker Compose.
+Frontend en JavaScript nativo con módulos ES (sin paso de build).
 
-## Ejecutar (un solo comando)
+## Ejecutar
 
 ```bash
 docker compose up --build
 ```
 
-Abre http://localhost:8080 →
+Abre http://localhost:8080 → **Crear cuenta** → el panel arranca con un mes de ejemplo.
 
-1. **Landing** con el hero "río de flujo".
-2. **Crear cuenta / Ingresar** (`/login.html`).
-3. **Panel** (`/app.html`) ya con datos de ejemplo cargados para tu usuario.
+Para producción copia `.env.example` a `.env` y define contraseñas propias, `JWT_SECRET`
+(`openssl rand -hex 32`) y `COOKIE_SECURE=true` si sirves por HTTPS.
 
-> Para producción, copia `.env.example` a `.env` y cambia las contraseñas y el `JWT_SECRET`.
+## Funciones
 
-## Qué hace
-
-Cada usuario tiene sus propios datos, guardados en **MySQL**:
-
-- **Login** — registro e inicio de sesión; sesión con JWT en cookie httpOnly; contraseñas con bcrypt.
-- **Resumen** — ingresos/gastos/balance, flujo semanal, gasto por categoría, alertas de presupuesto y movimientos recientes.
-- **Movimientos** — alta, edición y borrado, con filtros por tipo y categoría.
-- **Categorías** — predeterminadas + creación de propias (ícono y color).
-- **Presupuestos** — límite por categoría con aviso automático al 80% y al superarlo.
-- **Reportes** — dona por categoría, barras de 6 meses, tasa de ahorro y **Exportar PDF** (imprimir).
-- **IA** — al escribir la descripción, sugiere la categoría (clasificador local por palabras clave).
-
-En la barra lateral: "Restaurar ejemplo" (reinicia tus datos) y "Cerrar sesión".
+| Sección          | Qué hace                                                                                      |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| **Cuenta**       | Registro e ingreso; sesión con JWT en cookie httpOnly; contraseñas con bcrypt.                |
+| **Resumen**      | Ingresos, gastos y balance del mes, flujo semanal, gasto por categoría, alertas.              |
+| **Movimientos**  | Alta, edición y borrado; búsqueda por texto; filtros por tipo, categoría y cuenta; CSV.       |
+| **Cuentas**      | Efectivo, banco y ahorros con saldo = saldo inicial + ingresos − gastos.                      |
+| **Categorías**   | Predeterminadas + propias con ícono y color.                                                  |
+| **Presupuestos** | Límite mensual por categoría; aviso al 80 % y al superarlo.                                   |
+| **Reportes**     | Dona por categoría, barras de 6 meses, tasa de ahorro, exportar a PDF (imprimir).             |
+| **Perfil**       | Nombre, moneda ($, S/, US$, €), cambio de contraseña, exportar todo, restaurar ejemplo.       |
+| **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador). |
 
 ## Arquitectura
 
 ```
-┌────────────┐   /          ┌──────────────┐   /api/*   ┌──────────────┐
-│  Navegador │ ───────────► │  web (Nginx) │ ─────────► │  api (Node)  │
-└────────────┘   8080:80    │  estáticos   │  proxy     │  Express     │
-                            └──────────────┘            └──────┬───────┘
-                                                               │ mysql2
-                                                        ┌──────▼───────┐
-                                                        │  db (MySQL)  │
-                                                        └──────────────┘
+Navegador ──► web (Nginx :8080) ──/api──► api (Express :3000) ──► db (MySQL 8)
+              estáticos + CSP              routes → services → repositories
 ```
 
-## Estructura
+Solo `web` publica un puerto; la API y MySQL viven en la red interna de Docker.
 
+### Backend (`backend/src`) — capas al estilo Clean Architecture
+
+| Capa            | Responsabilidad                                                           |
+| --------------- | ------------------------------------------------------------------------- |
+| `routes/`       | HTTP: valida la entrada (zod) y responde. Sin lógica de negocio.          |
+| `services/`     | Reglas: propiedad de los datos, categorías protegidas, cuentas en uso.    |
+| `repositories/` | SQL parametrizado y mapeo fila → entidad. Aceptan una transacción.        |
+| `validation/`   | Esquemas zod con mensajes en español.                                     |
+| `db/`           | Pool, migraciones versionadas (`db/migrations/*.sql`) y datos de ejemplo. |
+| `middleware/`   | Autenticación, validación, rate limit del login, errores centralizados.   |
+
+Seguridad: helmet, rate limit en login/registro, cookies httpOnly + SameSite, consultas
+parametrizadas, todos los datos acotados por usuario, comparación de contraseña en tiempo
+constante aunque el correo no exista, imágenes Docker sin root.
+
+### Frontend (`frontend/public/assets/js`)
+
+| Carpeta   | Contenido                                                                       |
+| --------- | ------------------------------------------------------------------------------- |
+| `core/`   | Cliente de la API, store (caché + mutaciones), router por hash, formato.        |
+| `domain/` | Lógica pura y testeable: cálculos financieros, clasificador IA, CSV.            |
+| `ui/`     | DOM seguro (sin `innerHTML` con datos), modal accesible, widgets, gráficos SVG. |
+| `forms/`  | Formularios de movimiento, categoría y cuenta.                                  |
+| `views/`  | Una vista por sección del panel.                                                |
+| `pages/`  | Puntos de entrada de `app.html` y `login.html`.                                 |
+
+## Desarrollo
+
+Requiere Node.js 22 o superior.
+
+```bash
+npm install && npm --prefix backend install
 ```
-frontend/                   Cliente (Nginx)
-  index.html                Landing (hero "río de flujo")
-  login.html                Login / registro
-  app.html                  Panel (shell)
-  assets/css/app.css        Estilos (sistema de diseño compartido)
-  assets/js/
-    api.js                  Cliente HTTP hacia /api
-    data.js                 Caché + mutaciones contra la API
-    ai.js                   Clasificador local por palabras clave
-    charts.js               Dona y barras en SVG
-    ui.js                   Modal, toast, confirm, pickers
-    auth.js                 Lógica del login
-    format.js               Moneda, fechas, semanas
-    app.js                  Router + 5 vistas + formularios
-backend/                    API (Node/Express)
-  server.js                 App Express
-  db.js                     Pool MySQL, migración y siembra por usuario
-  schema.sql                Esquema de la base de datos
-  middleware/auth.js        JWT en cookie httpOnly
-  routes/auth.js            register / login / logout / me
-  routes/api.js             categorías, movimientos, presupuestos (por usuario)
-  Dockerfile
-Dockerfile · nginx.conf     Imagen web (Nginx) + proxy a la API
-docker-compose.yml          db (MySQL) + api (Node) + web (Nginx)
-.env.example                Variables (contraseñas, JWT_SECRET)
-claude.md                   Contexto del proyecto
+
+```bash
+npm run check
 ```
 
-## API (resumen)
+`npm run check` ejecuta ESLint, Prettier (`format:check`) y los tests unitarios de frontend y API.
+Otros scripts: `npm run lint:fix`, `npm run format`, `npm run test:web`, `npm run test:api`.
 
-| Método | Ruta                     | Descripción                        |
-|--------|--------------------------|------------------------------------|
-| POST   | `/api/auth/register`     | Crea cuenta + siembra datos        |
-| POST   | `/api/auth/login`        | Inicia sesión                      |
-| POST   | `/api/auth/logout`       | Cierra sesión                      |
-| GET    | `/api/auth/me`           | Usuario actual                     |
-| GET    | `/api/bootstrap`         | Todos los datos del usuario        |
-| POST/PUT/DELETE | `/api/transactions[/:id]` | CRUD de movimientos         |
-| POST/PUT/DELETE | `/api/categories[/:id]`   | CRUD de categorías          |
-| PUT    | `/api/budgets`           | Define/actualiza presupuesto       |
-| POST   | `/api/data/reset`        | Reinicia a datos de ejemplo        |
+### Tests de integración de la API
+
+Necesitan un MySQL; por ejemplo:
+
+```bash
+docker run -d --name flowmoney-test-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=flowmoney -e MYSQL_USER=flowmoney -e MYSQL_PASSWORD=flowmoney mysql:8.0
+```
+
+```bash
+DB_HOST=127.0.0.1 npm --prefix backend run test:integration
+```
+
+GitHub Actions (`.github/workflows/ci.yml`) corre lint, formato, todos los tests (con MySQL) y
+el build de las imágenes en cada push a `DEV`, `QA` y `main`, y en cada pull request.
+
+## API
+
+Todas las rutas (salvo `health` y `auth`) requieren sesión y operan solo sobre los datos del usuario.
+
+| Método              | Ruta                                     | Descripción                               |
+| ------------------- | ---------------------------------------- | ----------------------------------------- |
+| GET                 | `/api/health`                            | Estado de la API                          |
+| POST                | `/api/auth/register`, `/api/auth/login`  | Crea cuenta / inicia sesión               |
+| POST · GET          | `/api/auth/logout` · `/api/auth/me`      | Cierra sesión · usuario actual            |
+| GET                 | `/api/bootstrap`                         | Todos los datos del usuario               |
+| GET · PUT           | `/api/profile` · `/api/profile/password` | Perfil y moneda · cambio de contraseña    |
+| GET POST PUT DELETE | `/api/transactions[/:id]`                | Movimientos                               |
+| GET POST PUT DELETE | `/api/accounts[/:id]`                    | Cuentas                                   |
+| GET POST PUT DELETE | `/api/categories[/:id]`                  | Categorías                                |
+| GET · PUT           | `/api/budgets`                           | Presupuestos (PUT con monto 0 lo elimina) |
+| POST                | `/api/data/reset`                        | Restaura el mes de ejemplo                |
+
+Errores: `{ "error": "mensaje en español" }` con 400 (validación), 401, 404, 409 (regla de negocio) o 429.
 
 ## Ramas
 
 - `DEV` — desarrollo.
 - `QA` — revisión de calidad.
-
-## Siguiente paso
-
-Setup del proyecto Android (Gradle, Hilt, Room `AppDatabase`) y luego los módulos:
-Categorías → Movimientos → Presupuestos → Reportes → IA. El esquema (`backend/schema.sql`)
-y las reglas de IA (`frontend/assets/js/ai.js`) ya sirven de referencia.
