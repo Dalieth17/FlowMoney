@@ -2,3 +2,7 @@ node_modules
 package-lock.json
 # El HTML se formatea a mano: Prettier puede alterar espacios entre elementos en línea.
 *.html
+
+# Proyecto Android: Prettier no formatea Kotlin/XML; ignorar salidas de build y esquemas generados.
+android/**/build
+android/app/schemas

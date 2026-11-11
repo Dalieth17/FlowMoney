@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FlowMoney</string>
+
+    <!-- Categorías: lista -->
+    <string name="categories_title">Categorías</string>
+    <string name="categories_add">Nueva categoría</string>
+    <string name="categories_section_custom">Tus categorías</string>
+    <string name="categories_section_default">Predeterminadas</string>
+    <string name="categories_default_badge">Predeterminada</string>
+    <string name="categories_empty_title">Aún no tienes categorías propias</string>
+    <string name="categories_empty_body">Crea una para organizar tus gastos a tu manera, con su propio ícono y color.</string>
+
+    <!-- Categorías: editor -->
+    <string name="category_editor_new">Nueva categoría</string>
+    <string name="category_editor_edit">Editar categoría</string>
+    <string name="category_field_name">Nombre</string>
+    <string name="category_field_icon">Ícono</string>
+    <string name="category_field_color">Color</string>
+    <string name="category_name_counter">%1$d/%2$d</string>
+
+    <!-- Acciones -->
+    <string name="action_save">Guardar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_edit_named">Editar %1$s</string>
+    <string name="action_delete_named">Eliminar %1$s</string>
+
+    <!-- Eliminar -->
+    <string name="delete_category_title">¿Eliminar categoría?</string>
+    <string name="delete_category_body">Se eliminará “%1$s”. Esta acción no se puede deshacer.</string>
+
+    <!-- Avisos -->
+    <string name="message_category_created">Categoría “%1$s” creada</string>
+    <string name="message_category_updated">Cambios guardados</string>
+    <string name="message_category_deleted">Categoría “%1$s” eliminada</string>
+
+    <!-- Errores de negocio -->
+    <string name="error_category_blank_name">Escribe un nombre</string>
+    <string name="error_category_name_too_long">Máximo %1$d caracteres</string>
+    <string name="error_category_duplicate">Ya existe una categoría con ese nombre</string>
+    <string name="error_category_invalid_icon">Elige un ícono</string>
+    <string name="error_category_invalid_color">Elige un color</string>
+    <string name="error_category_not_found">La categoría ya no existe</string>
+    <string name="error_category_default_delete">Las categorías predeterminadas no se pueden eliminar</string>
+
+    <!-- Íconos (etiquetas para lectores de pantalla) -->
+    <string name="icon_restaurant">Comida</string>
+    <string name="icon_directions_bus">Transporte</string>
+    <string name="icon_movie">Cine</string>
+    <string name="icon_medical_services">Salud</string>
+    <string name="icon_school">Educación</string>
+    <string name="icon_lightbulb">Servicios</string>
+    <string name="icon_home">Hogar</string>
+    <string name="icon_work">Trabajo</string>
+    <string name="icon_category">General</string>
+    <string name="icon_shopping_cart">Compras</string>
+    <string name="icon_local_cafe">Café</string>
+    <string name="icon_flight">Viajes</string>
+    <string name="icon_card_giftcard">Regalos</string>
+    <string name="icon_credit_card">Tarjeta</string>
+    <string name="icon_phone_android">Teléfono</string>
+    <string name="icon_checkroom">Ropa</string>
+    <string name="icon_pets">Mascotas</string>
+    <string name="icon_fitness_center">Gimnasio</string>
+    <string name="icon_savings">Ahorro</string>
+    <string name="icon_sports_esports">Videojuegos</string>
+
+    <!-- Colores (etiquetas para lectores de pantalla) -->
+    <string name="color_clay">Arcilla</string>
+    <string name="color_blue">Azul</string>
+    <string name="color_violet">Violeta</string>
+    <string name="color_teal">Verde agua</string>
+    <string name="color_amber">Ámbar</string>
+    <string name="color_brass">Latón</string>
+    <string name="color_terracotta">Terracota</string>
+    <string name="color_pine">Pino</string>
+    <string name="color_sage">Salvia</string>
+    <string name="color_slate">Pizarra</string>
+    <string name="color_raspberry">Frambuesa</string>
+    <string name="color_sky">Celeste</string>
+</resources>

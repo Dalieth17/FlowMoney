@@ -3,7 +3,8 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  { ignores: ['**/node_modules/**'] },
+  // Salidas generadas y el proyecto Android (Kotlin) quedan fuera del lint de JS.
+  { ignores: ['**/node_modules/**', '**/build/**', 'android/**'] },
   js.configs.recommended,
   {
     files: ['frontend/public/**/*.js'],

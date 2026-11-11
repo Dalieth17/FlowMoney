@@ -72,3 +72,33 @@ jobs:
       - uses: actions/checkout@v5
       - run: docker compose config --quiet
       - run: docker compose build
+
+  android:
+    name: App Android (build, tests y lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      # Valida el gradle-wrapper.jar y cachea dependencias.
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Tests de dominio y app, lint y APK de depuración
+        run: ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --stacktrace
+      - name: Publicar APK de depuración
+        uses: actions/upload-artifact@v4
+        with:
+          name: flowmoney-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Publicar reportes si algo falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: |
+            android/app/build/reports
+            android/domain/build/reports
