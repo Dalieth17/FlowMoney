@@ -1,0 +1,57 @@
+# claude.md — Contexto de FlowMoney
+
+> Archivo de contexto para Claude. Léelo al inicio de cada sesión en vez de re-derivar todo.
+> Mantenlo corto y actualízalo cuando cambie una decisión. Ahorra tokens.
+
+## Qué es
+App Android de **finanzas personales**, 100% **offline**. Control de ingresos, gastos,
+presupuestos, reportes y balance. Nombre: **FlowMoney**. Idioma de UI: **español**.
+
+## Arquitectura (acordada)
+- MVVM + **Clean Architecture**, 3 capas: `presentation / domain / data`.
+- UI: **Jetpack Compose** + Material 3. Async: **Coroutines + Flow**.
+- Persistencia: **Room** (SQLite). DI: **Hilt**. Navegación: **Navigation Compose**.
+- Gráficos: **Vico** (preferido sobre MPAndroidChart). IA: reglas heurísticas por
+  palabras clave en local (ML Kit opcional, nunca en la nube).
+
+## Paquete base
+`com.flowmoney` → `data/{local,repository}`, `domain/{model,repository,usecase}`,
+`presentation/{ui,viewmodel,components}`, `di`, `util`.
+
+## Entidades Room
+- **Transaction**: id, amount:Double, description:String, date:Long, type(INCOME/EXPENSE),
+  categoryId:Int(FK), accountId:Int?(FK), note:String?
+- **Category**: id, name, icon(String Material), color(hex), isDefault:Boolean
+- **Budget**: id, categoryId(FK), amount:Double, month:Int, year:Int
+- **Account** (opcional): id, name, type(CASH/BANK/SAVINGS), initialBalance
+
+## Orden de desarrollo (por módulo: Entity+DAO+Repo+UseCase+ViewModel+Screen)
+1. Setup proyecto (build.gradle, AppDatabase, Hilt) → **hecho el diseño web, falta Android**
+2. Categorías → 3. Movimientos → 4. Presupuestos → 5. Reportes → 6. IA
+> Esperar confirmación del usuario antes de pasar al siguiente módulo.
+
+## Ramas (git)
+- Trabajo de desarrollo en **DEV**. **QA** para revisión de calidad.
+- No tocar `main`/`master` sin permiso. Push con `git push -u origin <rama>`.
+
+## Entregable web (hecho)
+Diseño front-end de escritorio, contenerizado en Docker:
+- `frontend/index.html` — landing + preview del panel (self-contained, Fonts de Google).
+- `Dockerfile` + `nginx.conf` + `docker-compose.yml` → `docker compose up --build`, http://localhost:8080
+
+## Sistema de diseño (tokens — reusar en la app Android)
+- Paper `#F1F4EF` · Ink `#16231E` · Pine `#1F4D3A` · Sage `#6B8F7D` · Brass `#C08A3E` · Clay `#C25A44`
+- Ingresos/positivo = pine/sage. Gastos = clay. Acento/saldo = brass. Alerta presupuesto >80%.
+- Tipografía web: **Fraunces** (display serif) + **Hanken Grotesk** (UI, cifras tabulares).
+- En Android: traducir a Material 3 ColorScheme con estos roles; cifras con `tabularNums`.
+
+## Convenciones
+- Código limpio, comentarios solo donde aporten. Guías oficiales de Android/Kotlin.
+- Montos: Double en datos; formatear en UI. Fechas: Long (epoch millis).
+- Por entrega indicar: decisiones clave + dependencias nuevas necesarias.
+
+## Estado actual
+- [x] Diseño web elegante + Docker
+- [x] claude.md
+- [ ] Setup Android (Gradle, Hilt, AppDatabase)
+- [ ] Módulos 2–6

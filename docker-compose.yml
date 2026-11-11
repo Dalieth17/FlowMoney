@@ -1,0 +1,12 @@
+# FlowMoney — diseño web (landing + preview del panel) contenerizado.
+# Uso:
+#   docker compose up --build
+# Luego abre:  http://localhost:8080
+services:
+  flowmoney-web:
+    build: .
+    image: flowmoney-web:latest
+    container_name: flowmoney-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped
