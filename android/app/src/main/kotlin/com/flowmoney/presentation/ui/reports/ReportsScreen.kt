@@ -243,7 +243,7 @@ private fun SummaryCard(report: MonthlyReport) {
 }
 
 @Composable
-private fun CategoriesCard(shares: List<CategoryShare>) {
+internal fun CategoriesCard(shares: List<CategoryShare>) {
     ReportCard(title = stringResource(R.string.reports_by_category_title)) {
         if (shares.isEmpty()) {
             Text(
@@ -365,7 +365,7 @@ private fun FlowCard(report: MonthlyReport, grouping: BarsGrouping, onGroupingCh
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun GroupingSelector(selected: BarsGrouping, onSelect: (BarsGrouping) -> Unit) {
+internal fun GroupingSelector(selected: BarsGrouping, onSelect: (BarsGrouping) -> Unit) {
     val label = stringResource(R.string.reports_flow_grouping)
     val options = listOf(
         BarsGrouping.WEEKS to R.string.reports_flow_by_week,

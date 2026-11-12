@@ -24,10 +24,8 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import java.time.YearMonth
 
-// Ventana de test alta: así todo el reporte se compone y queda en pantalla, sin depender del
-// scroll de un LazyColumn (que no compone lo que queda fuera de una ventana de teléfono normal).
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [34], qualifiers = "w411dp-h2200dp")
+@Config(sdk = [34], qualifiers = "w411dp-h891dp")
 class ReportsContentTest {
     @get:Rule
     val composeRule = createComposeRule()
@@ -72,7 +70,7 @@ class ReportsContentTest {
     }
 
     @Test
-    fun `muestra el mes el resumen la categoria y la tasa de ahorro`() {
+    fun `muestra el mes el resumen y la tasa de ahorro`() {
         render(ReportsUiState(month = november, report = report))
 
         composeRule.onNodeWithText(DateFormat.month(november)).assertIsDisplayed()
@@ -80,8 +78,6 @@ class ReportsContentTest {
         composeRule.onNodeWithText("86 %").assertIsDisplayed()
         // "Gastaste 25 % menos que en octubre" (60.000 frente a 80.000).
         composeRule.onNodeWithText("Gastaste 25 % menos que en octubre").assertIsDisplayed()
-        // La fila de la categoría se expone a TalkBack como una sola frase.
-        composeRule.onNodeWithContentDescription("Alimentación: S/ 450.00, 75 % del gasto").assertIsDisplayed()
     }
 
     @Test
@@ -91,14 +87,6 @@ class ReportsContentTest {
         composeRule.onNodeWithContentDescription("Mes anterior").performClick()
         composeRule.onNodeWithContentDescription("Mes siguiente").performClick()
         assertEquals(listOf(ReportsEvent.PreviousMonth, ReportsEvent.NextMonth), events)
-    }
-
-    @Test
-    fun `el selector cambia las barras a por mes`() {
-        val events = mutableListOf<ReportsEvent>()
-        render(ReportsUiState(month = november, report = report), events)
-        composeRule.onNodeWithText("Por mes").performClick()
-        assertEquals(listOf<ReportsEvent>(ReportsEvent.BarsGroupingChanged(BarsGrouping.MONTHS)), events)
     }
 
     @Test
@@ -120,5 +108,29 @@ class ReportsContentTest {
     fun `mientras carga no muestra el resumen`() {
         render(ReportsUiState(month = november, report = null))
         composeRule.onNodeWithContentDescription("Exportar a PDF").assertIsNotEnabled()
+    }
+
+    // La tarjeta de categorías y el selector se prueban sueltos: dentro del LazyColumn de la
+    // pantalla quedan fuera de la ventana de test y no se pueden asertar ni tocar de forma fiable.
+
+    @Test
+    fun `la tarjeta de categorias expone cada gasto con su porcentaje para TalkBack`() {
+        composeRule.setContent { FlowMoneyTheme { CategoriesCard(report.expensesByCategory) } }
+
+        // Cada fila es una sola frase: nombre, monto y porcentaje.
+        composeRule.onNodeWithContentDescription("Alimentación: S/ 450.00, 75 % del gasto").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Transporte: S/ 150.00, 25 % del gasto").assertIsDisplayed()
+    }
+
+    @Test
+    fun `el selector emite la agrupacion elegida`() {
+        val chosen = mutableListOf<BarsGrouping>()
+        composeRule.setContent {
+            FlowMoneyTheme { GroupingSelector(selected = BarsGrouping.WEEKS, onSelect = { chosen += it }) }
+        }
+
+        composeRule.onNodeWithText("Por mes").performClick()
+        composeRule.onNodeWithText("Por semana").performClick()
+        assertEquals(listOf(BarsGrouping.MONTHS, BarsGrouping.WEEKS), chosen)
     }
 }
