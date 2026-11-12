@@ -17,7 +17,9 @@ const TRANSACTION_TYPES = Object.freeze(['INCOME', 'EXPENSE']);
 const ACCOUNT_TYPES = Object.freeze(['CASH', 'BANK', 'SAVINGS']);
 const MAX_AMOUNT = 9_999_999_999.99; // DECIMAL(12,2)
 
-const roundCents = (n) => Math.round(n * 100) / 100;
+const MIN_AMOUNT = 0.01; // un céntimo: el mínimo representable en DECIMAL(12,2)
+// EPSILON corrige el error binario: sin él, Math.round(0.015 * 100) da 1 (0.01) en vez de 2.
+const roundCents = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 const email = z.string().trim().toLowerCase().email('Correo no válido').max(160, 'Correo demasiado largo');
 const password = z
   .string()
@@ -72,7 +74,8 @@ const transactionSchema = z.object({
   description: z.string().trim().min(1, 'Escribe una descripción').max(120, 'Descripción demasiado larga'),
   amount: z.coerce
     .number({ invalid_type_error: 'Monto no válido' })
-    .positive('El monto debe ser mayor a 0')
+    // Se valida ANTES de redondear: 0.001 se rechaza en vez de guardarse como 0.
+    .min(MIN_AMOUNT, 'El monto mínimo es 0.01')
     .max(MAX_AMOUNT, 'Monto demasiado alto')
     .transform(roundCents),
   type: z.enum(TRANSACTION_TYPES, { errorMap: () => ({ message: 'Tipo no válido' }) }),
@@ -89,7 +92,13 @@ const budgetSchema = z.object({
   categoryId: positiveId('Elige una categoría'),
   month: z.coerce.number().int().min(0, 'Mes no válido').max(11, 'Mes no válido'),
   year: z.coerce.number().int().min(2000, 'Año no válido').max(2100, 'Año no válido'),
-  amount: z.coerce.number().min(0, 'El límite no puede ser negativo').max(MAX_AMOUNT).transform(roundCents),
+  // 0 quita el límite; cualquier otro valor debe ser de al menos un céntimo (0.004 ya no borra el presupuesto).
+  amount: z.coerce
+    .number({ invalid_type_error: 'Límite no válido' })
+    .min(0, 'El límite no puede ser negativo')
+    .max(MAX_AMOUNT)
+    .refine((v) => v === 0 || v >= MIN_AMOUNT, 'El límite mínimo es 0.01 (usa 0 para quitarlo)')
+    .transform(roundCents),
 });
 
 const idParamSchema = z.object({ id: positiveId('Identificador no válido') });

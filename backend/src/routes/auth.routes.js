@@ -5,7 +5,7 @@ const validate = require('../middleware/validate');
 const requireAuth = require('../middleware/requireAuth');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { registerSchema, loginSchema } = require('../validation/schemas');
-const { startSession, endSession } = require('../utils/session');
+const { startSession, endSession } = require('../services/sessionService');
 const authService = require('../services/authService');
 const profileService = require('../services/profileService');
 
@@ -17,7 +17,7 @@ router.post(
   validate(registerSchema),
   asyncHandler(async (req, res) => {
     const user = await authService.register(req.valid.body);
-    startSession(res, user);
+    await startSession(res, user.id);
     res.status(201).json({ user });
   }),
 );
@@ -28,15 +28,18 @@ router.post(
   validate(loginSchema),
   asyncHandler(async (req, res) => {
     const user = await authService.login(req.valid.body);
-    startSession(res, user);
+    await startSession(res, user.id);
     res.json({ user });
   }),
 );
 
-router.post('/logout', (req, res) => {
-  endSession(res);
-  res.status(204).end();
-});
+router.post(
+  '/logout',
+  asyncHandler(async (req, res) => {
+    await endSession(req, res);
+    res.status(204).end();
+  }),
+);
 
 router.get(
   '/me',

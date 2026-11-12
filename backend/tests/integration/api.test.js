@@ -98,7 +98,7 @@ describe('movimientos', () => {
       .post('/api/transactions')
       .send(txPayload(data, { amount: -5 }))
       .expect(400);
-    assert.equal(res.body.error, 'El monto debe ser mayor a 0');
+    assert.equal(res.body.error, 'El monto mínimo es 0.01');
   });
 
   test('aislamiento: un usuario no puede tocar datos de otro', async () => {

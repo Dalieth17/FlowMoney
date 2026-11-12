@@ -3,6 +3,11 @@ const { pool } = require('../db/pool');
 
 const COLUMNS = 'id, name, icon, color, is_default';
 
+// Cláusulas de bloqueo para lecturas dentro de una transacción:
+// 'update' = exclusivo (para comprobar-y-borrar), 'share' = compartido (para referenciar).
+const LOCKS = Object.freeze({ update: ' FOR UPDATE', share: ' FOR SHARE' });
+const lockClause = (lock) => (lock ? LOCKS[lock] : '');
+
 const toCategory = (row) => ({
   id: row.id,
   name: row.name,
@@ -16,8 +21,11 @@ async function listByUser(userId, db = pool) {
   return rows.map(toCategory);
 }
 
-async function findOwned(id, userId, db = pool) {
-  const [rows] = await db.query(`SELECT ${COLUMNS} FROM categories WHERE id = ? AND user_id = ?`, [id, userId]);
+async function findOwned(id, userId, db = pool, { lock } = {}) {
+  const [rows] = await db.query(`SELECT ${COLUMNS} FROM categories WHERE id = ? AND user_id = ?${lockClause(lock)}`, [
+    id,
+    userId,
+  ]);
   return rows[0] ? toCategory(rows[0]) : null;
 }
 

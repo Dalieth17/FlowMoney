@@ -15,22 +15,22 @@ docker compose up --build
 
 Abre http://localhost:8080 → **Crear cuenta** → el panel arranca con un mes de ejemplo.
 
-Para producción copia `.env.example` a `.env` y define contraseñas propias, `JWT_SECRET`
-(`openssl rand -hex 32`) y `COOKIE_SECURE=true` si sirves por HTTPS.
+Para producción copia `.env.example` a `.env`, define contraseñas propias y `COOKIE_SECURE=true`
+si sirves por HTTPS.
 
 ## Funciones
 
-| Sección          | Qué hace                                                                                      |
-| ---------------- | --------------------------------------------------------------------------------------------- |
-| **Cuenta**       | Registro e ingreso; sesión con JWT en cookie httpOnly; contraseñas con bcrypt.                |
-| **Resumen**      | Ingresos, gastos y balance del mes, flujo semanal, gasto por categoría, alertas.              |
-| **Movimientos**  | Alta, edición y borrado; búsqueda por texto; filtros por tipo, categoría y cuenta; CSV.       |
-| **Cuentas**      | Efectivo, banco y ahorros con saldo = saldo inicial + ingresos − gastos.                      |
-| **Categorías**   | Predeterminadas + propias con ícono y color.                                                  |
-| **Presupuestos** | Límite mensual por categoría; aviso al 80 % y al superarlo.                                   |
-| **Reportes**     | Dona por categoría, barras de 6 meses, tasa de ahorro, exportar a PDF (imprimir).             |
-| **Perfil**       | Nombre, moneda ($, S/, US$, €), cambio de contraseña, exportar todo, restaurar ejemplo.       |
-| **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador). |
+| Sección          | Qué hace                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| **Cuenta**       | Registro e ingreso; sesiones revocables en el servidor (cookie httpOnly); contraseñas con scrypt. |
+| **Resumen**      | Ingresos, gastos y balance del mes, flujo semanal, gasto por categoría, alertas.                  |
+| **Movimientos**  | Alta, edición y borrado; búsqueda por texto; filtros por tipo, categoría y cuenta; CSV.           |
+| **Cuentas**      | Efectivo, banco y ahorros con saldo = saldo inicial + ingresos − gastos.                          |
+| **Categorías**   | Predeterminadas + propias con ícono y color.                                                      |
+| **Presupuestos** | Límite mensual por categoría; aviso al 80 % y al superarlo.                                       |
+| **Reportes**     | Dona por categoría, barras de 6 meses, tasa de ahorro, exportar a PDF (imprimir).                 |
+| **Perfil**       | Nombre, moneda ($, S/, US$, €), cambio de contraseña, exportar todo, restaurar ejemplo.           |
+| **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador).     |
 
 ## Arquitectura
 
@@ -52,9 +52,11 @@ Solo `web` publica un puerto; la API y MySQL viven en la red interna de Docker.
 | `db/`           | Pool, migraciones versionadas (`db/migrations/*.sql`) y datos de ejemplo. |
 | `middleware/`   | Autenticación, validación, rate limit del login, errores centralizados.   |
 
-Seguridad: helmet, rate limit en login/registro, cookies httpOnly + SameSite, consultas
-parametrizadas, todos los datos acotados por usuario, comparación de contraseña en tiempo
-constante aunque el correo no exista, imágenes Docker sin root.
+Seguridad: sesiones opacas en el servidor (solo se guarda el hash del token; cerrar sesión o
+cambiar la contraseña las revoca al instante), contraseñas con scrypt sin límite de 72 bytes
+(los hashes bcrypt antiguos se renuevan al iniciar sesión), helmet, rate limit en login/registro,
+cookies httpOnly + SameSite, consultas parametrizadas, operaciones de comprobar-y-borrar en
+transacciones con bloqueo de filas, datos acotados por usuario e imágenes Docker sin root.
 
 ### Frontend (`frontend/public/assets/js`)
 

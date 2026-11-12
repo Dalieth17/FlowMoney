@@ -1,12 +1,16 @@
-// Exige sesión válida. Deja el id del usuario en req.userId.
+// Exige una sesión activa en el servidor. Deja el id del usuario en req.userId.
 const HttpError = require('../utils/httpError');
-const { readSession } = require('../utils/session');
+const { readSession } = require('../services/sessionService');
 
-function requireAuth(req, res, next) {
-  const userId = readSession(req);
-  if (!userId) return next(HttpError.unauthorized('Sesión inválida o expirada'));
-  req.userId = userId;
-  return next();
+async function requireAuth(req, res, next) {
+  try {
+    const session = await readSession(req);
+    if (!session) return next(HttpError.unauthorized('Sesión inválida o expirada'));
+    req.userId = session.userId;
+    return next();
+  } catch (err) {
+    return next(err);
+  }
 }
 
 module.exports = requireAuth;

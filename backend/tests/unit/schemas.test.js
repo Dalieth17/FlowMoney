@@ -42,9 +42,17 @@ describe('transactionSchema', () => {
     assert.equal(r.note, '');
   });
 
-  test('rechaza montos no positivos', () => {
-    const r = transactionSchema.safeParse({ ...base, amount: 0 });
-    assert.equal(firstError(r), 'El monto debe ser mayor a 0');
+  test('rechaza montos menores a un céntimo antes de redondear (QA #4)', () => {
+    for (const amount of [0, -5, 0.001, 0.0049]) {
+      const r = transactionSchema.safeParse({ ...base, amount });
+      assert.equal(firstError(r), 'El monto mínimo es 0.01', `monto ${amount}`);
+    }
+    assert.equal(transactionSchema.parse({ ...base, amount: 0.01 }).amount, 0.01);
+  });
+
+  test('redondea medios céntimos hacia arriba pese al error binario', () => {
+    assert.equal(transactionSchema.parse({ ...base, amount: 0.015 }).amount, 0.02);
+    assert.equal(transactionSchema.parse({ ...base, amount: 1.005 }).amount, 1.01);
   });
 
   test('rechaza tipos desconocidos', () => {
@@ -53,6 +61,13 @@ describe('transactionSchema', () => {
 });
 
 describe('budgetSchema', () => {
+  test('0 quita el límite; entre 0 y 0.01 se rechaza (QA #4)', () => {
+    const period = { categoryId: 1, month: 0, year: 2026 };
+    assert.equal(budgetSchema.parse({ ...period, amount: 0 }).amount, 0);
+    assert.match(firstError(budgetSchema.safeParse({ ...period, amount: 0.004 })), /mínimo es 0.01/);
+    assert.equal(budgetSchema.parse({ ...period, amount: 0.01 }).amount, 0.01);
+  });
+
   test('el mes va de 0 a 11', () => {
     assert.equal(budgetSchema.safeParse({ categoryId: 1, month: 12, year: 2026, amount: 10 }).success, false);
     assert.equal(budgetSchema.safeParse({ categoryId: 1, month: 0, year: 2026, amount: 10 }).success, true);

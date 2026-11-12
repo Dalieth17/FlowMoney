@@ -25,7 +25,7 @@ describe('API sin base de datos', () => {
   });
 
   test('una cookie con token falso se rechaza', async () => {
-    const res = await request(app).get('/api/bootstrap').set('Cookie', 'fm_token=no.es.valido');
+    const res = await request(app).get('/api/bootstrap').set('Cookie', 'fm_session=no.es.valido');
     assert.equal(res.status, 401);
   });
 

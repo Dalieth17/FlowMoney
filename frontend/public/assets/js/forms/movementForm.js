@@ -155,7 +155,7 @@ export function openMovementForm(existing) {
     e.preventDefault();
     const value = Number.parseFloat(amount.value);
     if (!description.value.trim()) return toast('Escribe una descripción', 'warn');
-    if (!(value > 0)) return toast('El monto debe ser mayor a 0', 'warn');
+    if (!(value >= 0.01)) return toast('El monto mínimo es 0.01', 'warn');
     if (!date.value) return toast('Elige una fecha', 'warn');
 
     const payload = {

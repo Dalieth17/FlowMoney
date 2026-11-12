@@ -8,10 +8,6 @@ const { closePool } = require('./db/pool');
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 async function start() {
-  if (config.auth.jwtSecretIsEphemeral) {
-    logger.warn('JWT_SECRET no definido: se generó uno temporal. Las sesiones se cerrarán al reiniciar.');
-  }
-
   await waitForDatabase();
   await runMigrations();
 

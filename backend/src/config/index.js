@@ -1,5 +1,4 @@
 // Configuración centralizada. Único lugar que lee process.env.
-const crypto = require('node:crypto');
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -7,11 +6,6 @@ const toInt = (value, fallback) => {
   const n = Number.parseInt(value, 10);
   return Number.isFinite(n) ? n : fallback;
 };
-
-// Sin JWT_SECRET generamos uno aleatorio: es seguro, pero las sesiones
-// se invalidan en cada reinicio. En producción conviene fijarlo en .env.
-const jwtSecretFromEnv = process.env.JWT_SECRET;
-const jwtSecret = jwtSecretFromEnv || crypto.randomBytes(32).toString('hex');
 
 const config = Object.freeze({
   env,
@@ -29,13 +23,16 @@ const config = Object.freeze({
   }),
 
   auth: Object.freeze({
-    jwtSecret,
-    jwtSecretIsEphemeral: !jwtSecretFromEnv,
-    tokenTtl: '7d',
-    cookieName: 'fm_token',
+    // Sesiones en el servidor (tabla sessions): duran 7 días o hasta cerrar sesión.
+    cookieName: 'fm_session',
     cookieMaxAgeMs: 7 * 24 * 60 * 60 * 1000,
     cookieSecure: process.env.COOKIE_SECURE === 'true',
-    bcryptRounds: toInt(process.env.BCRYPT_ROUNDS, env === 'test' ? 4 : 10),
+    // scrypt: N=2^15 (~32 MB, ~50-100 ms por hash) en producción; barato en tests.
+    scrypt: Object.freeze({
+      cost: toInt(process.env.SCRYPT_COST, env === 'test' ? 1024 : 32768),
+      blockSize: 8,
+      parallelization: 1,
+    }),
   }),
 
   rateLimit: Object.freeze({
