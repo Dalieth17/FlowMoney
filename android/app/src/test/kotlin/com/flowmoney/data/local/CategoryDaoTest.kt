@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.flowmoney.data.local.dao.CategoryDao
 import com.flowmoney.data.local.entity.CategoryEntity
+import com.flowmoney.domain.model.CategoryRules
 import com.flowmoney.domain.model.DefaultCategories
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -40,7 +41,8 @@ class CategoryDaoTest {
     @After
     fun tearDown() = database.close()
 
-    private fun custom(name: String) = CategoryEntity(name = name, icon = "pets", color = "#B0506B", isDefault = false)
+    private fun custom(name: String) =
+        CategoryEntity(name = name, nameKey = CategoryRules.nameKey(name), icon = "pets", color = "#B0506B", isDefault = false)
 
     @Test
     fun `siembra las categorias predeterminadas al crear la base`() = runTest {
@@ -59,11 +61,16 @@ class CategoryDaoTest {
     }
 
     @Test
-    fun `existsByName ignora mayusculas y puede excluir un id`() = runTest {
+    fun `existsByNameKey ignora mayusculas y puede excluir un id`() = runTest {
         val salud = dao.observeAll().first().single { it.name == "Salud" }
-        assertTrue(dao.existsByName("SALUD", excludingId = null))
-        assertFalse(dao.existsByName("salud", excludingId = salud.id))
-        assertFalse(dao.existsByName("Mascotas", excludingId = null))
+        assertTrue(dao.existsByNameKey(CategoryRules.nameKey("SALUD"), excludingId = null))
+        assertFalse(dao.existsByNameKey(CategoryRules.nameKey("salud"), excludingId = salud.id))
+        assertFalse(dao.existsByNameKey(CategoryRules.nameKey("Mascotas"), excludingId = null))
+    }
+
+    @Test(expected = SQLiteConstraintException::class)
+    fun `la base rechaza duplicados que difieren en mayusculas con tilde (QA 5)`() = runTest {
+        dao.insert(custom("EDUCACIÓN")) // "Educación" ya existe entre las predeterminadas
     }
 
     @Test(expected = SQLiteConstraintException::class)

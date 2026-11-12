@@ -10,7 +10,7 @@ interface CategoryRepository {
 
     suspend fun getById(id: Long): Category?
 
-    /** true si existe otra categoría con ese nombre (sin distinguir mayúsculas). */
+    /** true si existe otra categoría con ese nombre según [com.flowmoney.domain.model.CategoryRules.nameKey]. */
     suspend fun existsByName(name: String, excludingId: Long? = null): Boolean
 
     /** Inserta y devuelve el id generado. */

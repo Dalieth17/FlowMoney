@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.flowmoney.domain.model.CategoryRules
 import com.flowmoney.domain.model.DefaultCategories
 
 /**
@@ -15,6 +16,7 @@ class SeedDatabaseCallback : RoomDatabase.Callback() {
         DefaultCategories.all.forEach { category ->
             val values = ContentValues().apply {
                 put("name", category.name)
+                put("name_key", CategoryRules.nameKey(category.name))
                 put("icon", category.icon)
                 put("color", category.color)
                 put("is_default", if (category.isDefault) 1 else 0)

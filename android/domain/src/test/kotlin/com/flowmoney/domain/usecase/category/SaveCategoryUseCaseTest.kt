@@ -39,6 +39,13 @@ class SaveCategoryUseCaseTest {
     }
 
     @Test
+    fun `no permite duplicados que solo difieren en mayusculas con tilde (QA 5)`() = runTest {
+        save(CategoryDraft(name = "Educación", icon = "school", color = "#D9A648"))
+        val result = save(CategoryDraft(name = "EDUCACIÓN", icon = "school", color = "#3E78A8"))
+        assertEquals(Outcome.Failure(CategoryError.DuplicateName), result)
+    }
+
+    @Test
     fun `editar conserva si es predeterminada y permite su propio nombre`() = runTest {
         val result = save(CategoryDraft(id = 1, name = "Salud", icon = "fitness_center", color = "#3E78A8"))
 

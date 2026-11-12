@@ -1,5 +1,8 @@
 package com.flowmoney.domain.model
 
+import java.text.Normalizer
+import java.util.Locale
+
 /** Reglas de validación de categorías (únicas para toda la app). */
 object CategoryRules {
     const val NAME_MAX_LENGTH = 40
@@ -9,6 +12,20 @@ object CategoryRules {
 
     /** Quita espacios sobrantes: "  Comida   rápida " → "Comida rápida". */
     fun normalizeName(raw: String): String = raw.trim().replace(WHITESPACE, " ")
+
+    /**
+     * Clave para comparar nombres sin distinguir mayúsculas en cualquier alfabeto:
+     * "Educación", "EDUCACIÓN" y "educación" comparten clave.
+     *
+     * - NFC: "ó" escrita como un carácter o como "o" + tilde combinada es lo mismo.
+     * - mayúsculas→minúsculas con Locale.ROOT: plegado de mayúsculas Unicode estable
+     *   (incluye ß/SS) e independiente del idioma del teléfono.
+     * - Las tildes SÍ cuentan: "año" y "ano" son palabras distintas en español.
+     */
+    fun nameKey(name: String): String =
+        Normalizer.normalize(normalizeName(name), Normalizer.Form.NFC)
+            .uppercase(Locale.ROOT)
+            .lowercase(Locale.ROOT)
 
     /** Normaliza el color a mayúsculas para compararlo y guardarlo siempre igual. */
     fun normalizeColor(raw: String): String = raw.trim().uppercase()

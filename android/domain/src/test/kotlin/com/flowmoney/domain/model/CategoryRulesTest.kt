@@ -1,6 +1,7 @@
 package com.flowmoney.domain.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -8,6 +9,21 @@ class CategoryRulesTest {
     @Test
     fun `normaliza espacios del nombre`() {
         assertEquals("Comida rápida", CategoryRules.normalizeName("  Comida   rápida "))
+    }
+
+    @Test
+    fun `la clave de nombre ignora mayusculas tambien con tildes (QA 5)`() {
+        val key = CategoryRules.nameKey("Educación")
+        assertEquals(key, CategoryRules.nameKey("EDUCACIÓN"))
+        assertEquals(key, CategoryRules.nameKey("  educación "))
+        assertEquals(key, CategoryRules.nameKey("Educacio\u0301n")) // "o" + tilde combinada (NFD)
+        assertEquals(CategoryRules.nameKey("Straße"), CategoryRules.nameKey("STRASSE"))
+    }
+
+    @Test
+    fun `las tildes y la enie siguen distinguiendo palabras`() {
+        assertNotEquals(CategoryRules.nameKey("Educación"), CategoryRules.nameKey("Educacion"))
+        assertNotEquals(CategoryRules.nameKey("Año"), CategoryRules.nameKey("Ano"))
     }
 
     @Test

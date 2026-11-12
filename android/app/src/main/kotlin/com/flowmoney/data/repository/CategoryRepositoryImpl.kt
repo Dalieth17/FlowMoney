@@ -2,6 +2,7 @@ package com.flowmoney.data.repository
 
 import com.flowmoney.data.local.dao.CategoryDao
 import com.flowmoney.domain.model.Category
+import com.flowmoney.domain.model.CategoryRules
 import com.flowmoney.domain.repository.CategoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,7 +18,7 @@ class CategoryRepositoryImpl @Inject constructor(
     override suspend fun getById(id: Long): Category? = dao.getById(id)?.toDomain()
 
     override suspend fun existsByName(name: String, excludingId: Long?): Boolean =
-        dao.existsByName(name, excludingId)
+        dao.existsByNameKey(CategoryRules.nameKey(name), excludingId)
 
     override suspend fun insert(category: Category): Long = dao.insert(category.toEntity())
 

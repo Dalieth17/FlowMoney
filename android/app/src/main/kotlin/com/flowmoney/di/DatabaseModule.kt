@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.flowmoney.data.local.AppDatabase
 import com.flowmoney.data.local.SeedDatabaseCallback
 import com.flowmoney.data.local.dao.CategoryDao
+import com.flowmoney.data.local.migrations.ALL_MIGRATIONS
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,6 +21,9 @@ object DatabaseModule {
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.NAME)
             .addCallback(SeedDatabaseCallback())
+            // Sin fallbackToDestructiveMigration: un cambio de esquema sin migración debe fallar
+            // en desarrollo, no borrar los datos del usuario en producción.
+            .addMigrations(*ALL_MIGRATIONS)
             .build()
 
     @Provides

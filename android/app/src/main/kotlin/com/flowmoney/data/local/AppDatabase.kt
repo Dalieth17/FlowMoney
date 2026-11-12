@@ -7,11 +7,13 @@ import com.flowmoney.data.local.entity.CategoryEntity
 
 /**
  * Base de datos local (offline). Cada cambio de esquema sube [version] y añade una
- * migración; el esquema exportado en app/schemas sirve para probarlas.
+ * migración en `migrations/Migrations.kt` (nunca se borran datos del usuario).
+ *
+ * v1: categorías · v2: `categories.name_key` (unicidad de nombres Unicode).
  */
 @Database(
     entities = [CategoryEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

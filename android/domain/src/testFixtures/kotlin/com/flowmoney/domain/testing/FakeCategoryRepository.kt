@@ -1,6 +1,7 @@
 package com.flowmoney.domain.testing
 
 import com.flowmoney.domain.model.Category
+import com.flowmoney.domain.model.CategoryRules
 import com.flowmoney.domain.repository.CategoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,13 +20,15 @@ class FakeCategoryRepository(initial: List<Category> = emptyList()) : CategoryRe
     val current: List<Category> get() = state.value
 
     override fun observeAll(): Flow<List<Category>> = state.map { list ->
-        list.sortedWith(compareByDescending<Category> { it.isDefault }.thenBy { it.name.lowercase() })
+        list.sortedWith(compareByDescending<Category> { it.isDefault }.thenBy { CategoryRules.nameKey(it.name) })
     }
 
     override suspend fun getById(id: Long): Category? = state.value.firstOrNull { it.id == id }
 
-    override suspend fun existsByName(name: String, excludingId: Long?): Boolean =
-        state.value.any { it.name.equals(name, ignoreCase = true) && it.id != excludingId }
+    override suspend fun existsByName(name: String, excludingId: Long?): Boolean {
+        val key = CategoryRules.nameKey(name)
+        return state.value.any { CategoryRules.nameKey(it.name) == key && it.id != excludingId }
+    }
 
     override suspend fun insert(category: Category): Long {
         val id = nextId++
