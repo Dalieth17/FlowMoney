@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.flowmoney.data.repository.TransactionRepositoryImpl
+import com.flowmoney.domain.model.DailyTotal
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionFilter
 import com.flowmoney.domain.model.TransactionType
@@ -115,6 +116,29 @@ class TransactionDaoTest {
         repository.delete(id)
         assertNull(repository.getById(id))
         assertEquals(1, repository.countByCategory(foodId))
+    }
+
+    @Test
+    fun `totales por dia y tipo dentro del rango incluidos los extremos`() = runTest {
+        add("A", LocalDate.of(2026, 11, 1), cents = 1_000)
+        add("B", LocalDate.of(2026, 11, 1), cents = 250)
+        add("Sueldo", LocalDate.of(2026, 11, 1), TransactionType.INCOME, salaryId, cents = 420_000)
+        add("C", LocalDate.of(2026, 11, 30), cents = 700)
+        add("Antes", LocalDate.of(2026, 10, 31))
+        add("Despues", LocalDate.of(2026, 12, 1))
+
+        val totals = repository.observeDailyTotals(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30)).first()
+
+        // Una fila por dia y tipo: los dos gastos del dia 1 llegan ya sumados.
+        assertEquals(3, totals.size)
+        assertEquals(
+            setOf(
+                DailyTotal(LocalDate.of(2026, 11, 1), TransactionType.EXPENSE, 1_250),
+                DailyTotal(LocalDate.of(2026, 11, 1), TransactionType.INCOME, 420_000),
+                DailyTotal(LocalDate.of(2026, 11, 30), TransactionType.EXPENSE, 700),
+            ),
+            totals.toSet(),
+        )
     }
 
     @Test(expected = SQLiteConstraintException::class)

@@ -1,5 +1,6 @@
 package com.flowmoney.domain.testing
 
+import com.flowmoney.domain.model.DailyTotal
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionDetails
 import com.flowmoney.domain.model.TransactionFilter
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import java.time.LocalDate
 import java.time.YearMonth
 
 /**
@@ -54,9 +56,16 @@ class FakeTransactionRepository(
 
     override suspend fun countByCategory(categoryId: Long): Int = state.value.count { it.categoryId == categoryId }
 
-    override fun observeExpensesByCategory(month: YearMonth): Flow<Map<Long, Long>> = state.map { list ->
-        list.filter { it.type == TransactionType.EXPENSE && YearMonth.from(it.date) == month }
-            .groupBy { it.categoryId }
-            .mapValues { (_, items) -> items.sumOf { it.amountCents } }
+    override fun observeTotalsByCategory(month: YearMonth, type: TransactionType): Flow<Map<Long, Long>> =
+        state.map { list ->
+            list.filter { it.type == type && YearMonth.from(it.date) == month }
+                .groupBy { it.categoryId }
+                .mapValues { (_, items) -> items.sumOf { it.amountCents } }
+        }
+
+    override fun observeDailyTotals(from: LocalDate, to: LocalDate): Flow<List<DailyTotal>> = state.map { list ->
+        list.filter { it.date in from..to }
+            .groupBy { it.date to it.type }
+            .map { (key, items) -> DailyTotal(key.first, key.second, items.sumOf { it.amountCents }) }
     }
 }

@@ -47,6 +47,7 @@
     <!-- Navegación -->
     <string name="nav_movements">Movimientos</string>
     <string name="nav_budgets">Presupuestos</string>
+    <string name="nav_reports">Reportes</string>
     <string name="nav_categories">Categorías</string>
 
     <!-- Movimientos: lista -->
@@ -167,6 +168,43 @@
     </plurals>
     <string name="message_budgets_nothing_to_copy">No había presupuestos para copiar</string>
     <string name="error_budget_not_found">Ese presupuesto ya no existe</string>
+
+    <!-- Reportes: pantalla -->
+    <string name="reports_title">Reportes</string>
+    <string name="reports_export_pdf">Exportar a PDF</string>
+    <string name="reports_export_failed">No se pudo preparar el PDF en este dispositivo</string>
+    <string name="reports_empty_title">Sin movimientos este mes</string>
+    <string name="reports_empty_body">Registra tus ingresos y gastos para ver aquí el resumen y los gráficos del mes.</string>
+    <string name="percent_value">%1$d %%</string>
+    <string name="percent_negative">−%1$d %%</string>
+    <string name="percent_tiny">&lt;1 %%</string>
+    <string name="reports_savings_rate">Tasa de ahorro</string>
+    <string name="reports_expense_more">Gastaste %1$d %% más que en %2$s</string>
+    <string name="reports_expense_less">Gastaste %1$d %% menos que en %2$s</string>
+    <string name="reports_expense_same">Gastaste lo mismo que en %1$s</string>
+    <string name="reports_by_category_title">Gastos por categoría</string>
+    <string name="reports_by_category_empty">Sin gastos este mes</string>
+    <string name="reports_total">Total</string>
+    <string name="reports_share_description">%1$s: %2$s, %3$s del gasto</string>
+    <string name="reports_flow_title">Ingresos y gastos</string>
+    <string name="reports_flow_grouping">Agrupar por</string>
+    <string name="reports_flow_by_week">Por semana</string>
+    <string name="reports_flow_by_month">Por mes</string>
+    <string name="reports_flow_empty">Sin movimientos en este periodo</string>
+    <string name="reports_flow_period">Periodo</string>
+    <string name="reports_flow_row_description">%1$s: ingresos %2$s, gastos %3$s</string>
+    <string name="reports_week_short">Sem %1$d</string>
+    <string name="reports_week_range">Semana %1$d · %2$d–%3$d</string>
+    <string name="reports_week_single">Semana %1$d · %2$d</string>
+
+    <!-- Reportes: documento PDF -->
+    <string name="report_doc_title">Reporte de %1$s</string>
+    <string name="report_doc_generated">FlowMoney · Generado el %1$s</string>
+    <string name="report_doc_flow_by_week">Ingresos y gastos por semana</string>
+    <string name="report_doc_flow_by_month">Ingresos y gastos por mes</string>
+    <string name="report_doc_category">Categoría</string>
+    <string name="report_doc_amount">Monto</string>
+    <string name="report_doc_share">Parte</string>
 
     <!-- Íconos (etiquetas para lectores de pantalla) -->
     <string name="icon_restaurant">Comida</string>

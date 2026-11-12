@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.flowmoney.data.local.entity.CategoryTotalRow
+import com.flowmoney.data.local.entity.DailyTotalRow
 import com.flowmoney.data.local.entity.TransactionEntity
 import com.flowmoney.data.local.entity.TransactionWithCategoryRow
 import kotlinx.coroutines.flow.Flow
@@ -57,4 +58,18 @@ interface TransactionDao {
         """,
     )
     fun observeTotalsByCategory(fromEpochDay: Long, toEpochDay: Long, type: String): Flow<List<CategoryTotalRow>>
+
+    /**
+     * Total por día y tipo en un rango de días. Los reportes agrupan después por semana o por mes:
+     * son como mucho dos filas por día, así que no hace falta traer cada movimiento.
+     */
+    @Query(
+        """
+        SELECT date_epoch_day, type, SUM(amount_cents) AS total_cents
+          FROM transactions
+         WHERE date_epoch_day BETWEEN :fromEpochDay AND :toEpochDay
+         GROUP BY date_epoch_day, type
+        """,
+    )
+    fun observeDailyTotals(fromEpochDay: Long, toEpochDay: Long): Flow<List<DailyTotalRow>>
 }

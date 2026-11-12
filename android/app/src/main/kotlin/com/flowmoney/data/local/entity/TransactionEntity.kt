@@ -47,3 +47,10 @@ data class CategoryTotalRow(
     @ColumnInfo(name = "category_id") val categoryId: Long,
     @ColumnInfo(name = "total_cents") val totalCents: Long,
 )
+
+/** Fila de una suma agrupada por día y tipo de movimiento. */
+data class DailyTotalRow(
+    @ColumnInfo(name = "date_epoch_day") val dateEpochDay: Long,
+    val type: TransactionType,
+    @ColumnInfo(name = "total_cents") val totalCents: Long,
+)

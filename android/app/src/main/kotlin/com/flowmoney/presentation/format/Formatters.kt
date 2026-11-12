@@ -52,6 +52,14 @@ object DateFormat {
     fun monthInSentence(month: YearMonth, locale: Locale = Locale.getDefault()): String =
         month.format(DateTimeFormatter.ofPattern("LLLL yyyy", locale))
 
+    /** "octubre": solo el nombre del mes, para frases como "más que en octubre". */
+    fun monthName(month: YearMonth, locale: Locale = Locale.getDefault()): String =
+        month.format(DateTimeFormatter.ofPattern("LLLL", locale))
+
+    /** "oct": etiqueta corta para ejes de gráficos (sin el punto que añaden algunos idiomas). */
+    fun monthShort(month: YearMonth, locale: Locale = Locale.getDefault()): String =
+        month.format(DateTimeFormatter.ofPattern("LLL", locale)).trimEnd('.')
+
     /** "Jueves, 12 de noviembre de 2026" (según el idioma del teléfono). */
     fun day(date: LocalDate, locale: Locale = Locale.getDefault()): String =
         date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale))

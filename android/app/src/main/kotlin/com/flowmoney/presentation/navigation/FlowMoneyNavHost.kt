@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.DataUsage
 import androidx.compose.material3.Icon
@@ -30,6 +31,7 @@ import com.flowmoney.R
 import com.flowmoney.presentation.ui.budgets.BudgetsScreen
 import com.flowmoney.presentation.ui.categories.CategoriesScreen
 import com.flowmoney.presentation.ui.movements.MovementsScreen
+import com.flowmoney.presentation.ui.reports.ReportsScreen
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -41,9 +43,12 @@ data object MovementsDestination
 data object BudgetsDestination
 
 @Serializable
+data object ReportsDestination
+
+@Serializable
 data object CategoriesDestination
 
-/** Pestañas de la barra inferior. Cada módulo nuevo (Reportes) añade la suya aquí. */
+/** Pestañas de la barra inferior, en el orden en que se muestran. */
 private enum class TopLevelTab(
     val route: Any,
     val routeClass: KClass<*>,
@@ -52,6 +57,7 @@ private enum class TopLevelTab(
 ) {
     MOVEMENTS(MovementsDestination, MovementsDestination::class, R.string.nav_movements, Icons.AutoMirrored.Rounded.ReceiptLong),
     BUDGETS(BudgetsDestination, BudgetsDestination::class, R.string.nav_budgets, Icons.Rounded.DataUsage),
+    REPORTS(ReportsDestination, ReportsDestination::class, R.string.nav_reports, Icons.Rounded.BarChart),
     CATEGORIES(CategoriesDestination, CategoriesDestination::class, R.string.nav_categories, Icons.Rounded.Category),
 }
 
@@ -97,6 +103,7 @@ fun FlowMoneyNavHost(
         ) {
             composable<MovementsDestination> { MovementsScreen() }
             composable<BudgetsDestination> { BudgetsScreen() }
+            composable<ReportsDestination> { ReportsScreen() }
             composable<CategoriesDestination> { CategoriesScreen() }
         }
     }

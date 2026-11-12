@@ -3,6 +3,7 @@ package com.flowmoney.domain.usecase.budget
 import com.flowmoney.domain.model.BudgetOverview
 import com.flowmoney.domain.model.BudgetStatus
 import com.flowmoney.domain.model.CategorySpending
+import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.domain.repository.BudgetRepository
 import com.flowmoney.domain.repository.CategoryRepository
 import com.flowmoney.domain.repository.TransactionRepository
@@ -24,7 +25,7 @@ class ObserveBudgetOverviewUseCase @Inject constructor(
         categories.observeAll(),
         budgets.observe(month),
         budgets.observeLatestBefore(month),
-        transactions.observeExpensesByCategory(month),
+        transactions.observeTotalsByCategory(month, TransactionType.EXPENSE),
     ) { categoryList, current, previous, spending ->
         val limits = current.associate { it.categoryId to it.limitCents }
         val statuses = categoryList.mapNotNull { category ->

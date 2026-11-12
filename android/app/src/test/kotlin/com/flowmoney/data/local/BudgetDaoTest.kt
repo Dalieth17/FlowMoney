@@ -115,7 +115,7 @@ class BudgetDaoTest {
     }
 
     @Test
-    fun `gasto por categoria del mes sin ingresos ni otros meses`() = runTest {
+    fun `total por categoria del mes separado por tipo y sin otros meses`() = runTest {
         suspend fun add(cents: Long, categoryId: Long, date: LocalDate, type: TransactionType = TransactionType.EXPENSE) {
             transactions.insert(Transaction(amountCents = cents, description = "x", date = date, type = type, categoryId = categoryId))
         }
@@ -126,6 +126,10 @@ class BudgetDaoTest {
         add(5_000, foodId, LocalDate.of(2026, 10, 31))
         add(5_000, foodId, LocalDate.of(2026, 12, 1))
 
-        assertEquals(mapOf(foodId to 3_550L, transportId to 700L), transactions.observeExpensesByCategory(november).first())
+        assertEquals(
+            mapOf(foodId to 3_550L, transportId to 700L),
+            transactions.observeTotalsByCategory(november, TransactionType.EXPENSE).first(),
+        )
+        assertEquals(mapOf(foodId to 99_000L), transactions.observeTotalsByCategory(november, TransactionType.INCOME).first())
     }
 }

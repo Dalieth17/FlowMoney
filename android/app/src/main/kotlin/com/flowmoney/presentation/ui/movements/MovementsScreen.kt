@@ -65,6 +65,7 @@ import com.flowmoney.domain.model.TransactionDetails
 import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.presentation.components.CategoryAvatar
 import com.flowmoney.presentation.components.MonthSelector
+import com.flowmoney.presentation.components.MonthTotals
 import com.flowmoney.presentation.format.DateFormat
 import com.flowmoney.presentation.format.MoneyFormat
 import com.flowmoney.presentation.theme.FlowMoneyTheme
@@ -147,40 +148,7 @@ fun MovementsContent(
 @Composable
 private fun SummaryCard(summary: MonthSummary) {
     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            SummaryValue(
-                label = stringResource(R.string.summary_income),
-                value = MoneyFormat.format(summary.incomeCents),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f),
-            )
-            SummaryValue(
-                label = stringResource(R.string.summary_expense),
-                value = MoneyFormat.format(summary.expenseCents),
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.weight(1f),
-            )
-            SummaryValue(
-                label = stringResource(R.string.summary_balance),
-                value = MoneyFormat.format(summary.balanceCents),
-                color = if (summary.balanceCents < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-@Composable
-private fun SummaryValue(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
-    Column(modifier) {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(
-            value,
-            style = MaterialTheme.typography.titleMedium,
-            color = color,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        MonthTotals(summary, Modifier.padding(16.dp))
     }
 }
 

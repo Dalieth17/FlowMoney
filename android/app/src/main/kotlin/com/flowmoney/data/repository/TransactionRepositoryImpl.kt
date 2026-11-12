@@ -1,6 +1,7 @@
 package com.flowmoney.data.repository
 
 import com.flowmoney.data.local.dao.TransactionDao
+import com.flowmoney.domain.model.DailyTotal
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionDetails
 import com.flowmoney.domain.model.TransactionFilter
@@ -8,6 +9,7 @@ import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 
@@ -34,10 +36,15 @@ class TransactionRepositoryImpl @Inject constructor(
 
     override suspend fun countByCategory(categoryId: Long): Int = dao.countByCategory(categoryId)
 
-    override fun observeExpensesByCategory(month: YearMonth): Flow<Map<Long, Long>> =
+    override fun observeTotalsByCategory(month: YearMonth, type: TransactionType): Flow<Map<Long, Long>> =
         dao.observeTotalsByCategory(
             fromEpochDay = month.atDay(1).toEpochDay(),
             toEpochDay = month.atEndOfMonth().toEpochDay(),
-            type = TransactionType.EXPENSE.name,
+            type = type.name,
         ).map { rows -> rows.associate { it.categoryId to it.totalCents } }
+
+    override fun observeDailyTotals(from: LocalDate, to: LocalDate): Flow<List<DailyTotal>> =
+        dao.observeDailyTotals(from.toEpochDay(), to.toEpochDay()).map { rows ->
+            rows.map { DailyTotal(LocalDate.ofEpochDay(it.dateEpochDay), it.type, it.totalCents) }
+        }
 }

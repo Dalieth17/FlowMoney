@@ -154,9 +154,13 @@ Estado:
   avance, aviso al 80 % y al superarlo, resumen del mes, gasto en categorías sin presupuesto,
   "repetir los límites" del último mes que los tenga y quitar con **Deshacer**. Al guardar un gasto
   que deja su categoría cerca o por encima del límite, Movimientos lo avisa en el momento.
+- **Reportes** — resumen del mes (ingresos, gastos, balance, tasa de ahorro y comparación con el
+  mes anterior), gráfico de dona por categoría con sus porcentajes, y barras de ingresos y gastos
+  por semana o por mes. Exporta el reporte a **PDF** con el diálogo de impresión del sistema (los
+  gráficos van como SVG; el documento no usa JavaScript ni red).
 
-Siguen Reportes → IA. La base de datos se actualiza con migraciones de Room (probadas en
-`MigrationTest`), nunca borrando datos.
+Sigue IA. La base de datos se actualiza con migraciones de Room (probadas en `MigrationTest`),
+nunca borrando datos. Los porcentajes se reparten de modo que siempre sumen 100.
 
 ```bash
 cd android && ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug

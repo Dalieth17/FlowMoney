@@ -1,9 +1,12 @@
 package com.flowmoney.domain.repository
 
+import com.flowmoney.domain.model.DailyTotal
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionDetails
 import com.flowmoney.domain.model.TransactionFilter
+import com.flowmoney.domain.model.TransactionType
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 import java.time.YearMonth
 
 /** Contrato de acceso a movimientos. La capa de datos lo implementa (Room). */
@@ -21,6 +24,9 @@ interface TransactionRepository {
 
     suspend fun countByCategory(categoryId: Long): Int
 
-    /** Total gastado en el mes por categoría (solo gastos; las categorías sin gastos no aparecen). */
-    fun observeExpensesByCategory(month: YearMonth): Flow<Map<Long, Long>>
+    /** Total del mes por id de categoría para un tipo de movimiento (las categorías sin movimientos no aparecen). */
+    fun observeTotalsByCategory(month: YearMonth, type: TransactionType): Flow<Map<Long, Long>>
+
+    /** Totales por día y tipo entre dos fechas, ambas incluidas (los días sin movimientos no aparecen). */
+    fun observeDailyTotals(from: LocalDate, to: LocalDate): Flow<List<DailyTotal>>
 }

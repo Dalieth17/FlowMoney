@@ -1,6 +1,7 @@
 package com.flowmoney.domain.usecase.budget
 
 import com.flowmoney.domain.model.BudgetStatus
+import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.domain.repository.BudgetRepository
 import com.flowmoney.domain.repository.CategoryRepository
 import com.flowmoney.domain.repository.TransactionRepository
@@ -17,7 +18,7 @@ class CheckBudgetUseCase @Inject constructor(
     suspend operator fun invoke(categoryId: Long, month: YearMonth): BudgetStatus? {
         val budget = budgets.get(categoryId, month) ?: return null
         val category = categories.getById(categoryId) ?: return null
-        val spent = transactions.observeExpensesByCategory(month).first()[categoryId] ?: 0L
+        val spent = transactions.observeTotalsByCategory(month, TransactionType.EXPENSE).first()[categoryId] ?: 0L
         return BudgetStatus(category, budget.limitCents, spent)
     }
 }
