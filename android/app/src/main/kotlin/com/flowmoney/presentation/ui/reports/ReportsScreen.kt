@@ -51,7 +51,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -81,11 +80,6 @@ import com.flowmoney.util.toColorOrNull
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
-
-/** Etiquetas para los tests de interfaz. */
-object ReportsTestTags {
-    const val LIST = "reports_list"
-}
 
 private val DonutSize = 176.dp
 private val DonutStroke = 26.dp
@@ -150,7 +144,7 @@ fun ReportsContent(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().testTag(ReportsTestTags.LIST),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
