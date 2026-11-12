@@ -41,6 +41,8 @@ frontend/tests/ tests de domain/ y format (node:test)
 - Montos DECIMAL(12,2) → number; fechas epoch ms (BIGINT); mes 0‑based (como JS Date).
 - Moneda por usuario (`users.currency`: `$`, `S/`, `US$`, `€`); `setCurrency()` en el store.
 - Prettier (120 col, comillas simples) y ESLint flat config en la raíz; HTML fuera de Prettier.
+- Docker: web en 8080 (`WEB_PORT`); MySQL publicado solo en `127.0.0.1:3307` (`MYSQL_PORT`, nunca
+  3306: el usuario tiene un MySQL local). Dentro de la red de Docker la API usa `db:3306`.
 
 ## Diseño (tokens.css)
 
