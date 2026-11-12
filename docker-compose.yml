@@ -3,7 +3,7 @@
 #
 # Puertos que se usan en tu equipo (cámbialos en .env si alguno está ocupado):
 #   8080  web    (WEB_PORT)
-#   3307  MySQL  (MYSQL_PORT) — solo accesible desde tu propio equipo (127.0.0.1)
+#   3309  MySQL  (MYSQL_PORT) — solo accesible desde tu propio equipo (127.0.0.1)
 # La API no publica ningún puerto: el navegador le habla a través de Nginx.
 # Para producción copia .env.example a .env y cambia las contraseñas.
 name: flowmoney
@@ -17,11 +17,11 @@ services:
       MYSQL_USER: ${DB_USER:-flowmoney}
       MYSQL_PASSWORD: ${DB_PASSWORD:-flowmoney}
     ports:
-      # MySQL en tu equipo: 127.0.0.1:3307 (no el 3306, que suele estar ocupado por un MySQL ya
+      # MySQL en tu equipo: 127.0.0.1:3309 (no el 3306, que suele estar ocupado por un MySQL ya
       # instalado). Sirve para entrar con Workbench/DBeaver. Solo escucha en 127.0.0.1, así que
       # no queda expuesto a la red. Dentro de Docker la API sigue usando db:3306, que es un
       # puerto interno del contenedor y no toca los de tu equipo.
-      - '127.0.0.1:${MYSQL_PORT:-3307}:3306'
+      - '127.0.0.1:${MYSQL_PORT:-3309}:3306'
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:

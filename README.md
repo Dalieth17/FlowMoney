@@ -18,12 +18,12 @@ Abre http://localhost:8080 → **Crear cuenta** → el panel arranca con un mes 
 | Puerto en tu equipo | Servicio | Variable (`.env`) | Notas                                                    |
 | ------------------- | -------- | ----------------- | -------------------------------------------------------- |
 | 8080                | Web      | `WEB_PORT`        | El sitio y la API (`/api`).                              |
-| 3307                | MySQL    | `MYSQL_PORT`      | Solo desde tu equipo (`127.0.0.1`), para Workbench, etc. |
+| 3309                | MySQL    | `MYSQL_PORT`      | Solo desde tu equipo (`127.0.0.1`), para Workbench, etc. |
 
-MySQL usa el **3307** (y no el 3306) para convivir con un MySQL que ya tengas instalado. Si algún
+MySQL usa el **3309** (y no el 3306) para convivir con un MySQL que ya tengas instalado. Si algún
 puerto está ocupado, crea un archivo `.env` junto a `docker-compose.yml` con otro valor
 (p. ej. `MYSQL_PORT=3310`) y vuelve a ejecutar el comando. Para entrar a la base con un cliente:
-host `127.0.0.1`, puerto `3307`, usuario y contraseña `flowmoney` (base `flowmoney`).
+host `127.0.0.1`, puerto `3309`, usuario y contraseña `flowmoney` (base `flowmoney`).
 
 Para producción copia `.env.example` a `.env`, define contraseñas propias y `COOKIE_SECURE=true`
 si sirves por HTTPS.
@@ -98,7 +98,7 @@ Otros scripts: `npm run lint:fix`, `npm run format`, `npm run test:web`, `npm ru
 ### Tests de integración de la API
 
 Necesitan un MySQL aparte, desechable (así no llenan de usuarios de prueba tu base de desarrollo).
-Usa el puerto 3308 para no chocar con un MySQL local (3306) ni con el de `docker compose` (3307):
+Usa el puerto 3308 para no chocar con un MySQL local (3306) ni con el de `docker compose` (3309):
 
 ```bash
 docker run -d --name flowmoney-test-db -p 127.0.0.1:3308:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=flowmoney -e MYSQL_USER=flowmoney -e MYSQL_PASSWORD=flowmoney mysql:8.0
