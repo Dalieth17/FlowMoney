@@ -9,7 +9,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.flowmoney.data.local.migrations.ALL_MIGRATIONS
 import com.flowmoney.data.local.migrations.uniqueName
+import com.flowmoney.data.repository.TransactionRepositoryImpl
 import com.flowmoney.domain.model.CategoryRules
+import com.flowmoney.domain.model.Transaction
+import com.flowmoney.domain.model.TransactionType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -19,6 +22,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import java.time.LocalDate
 
 /**
  * Migraciones sobre una base real en disco: se crea a mano la versión antigua (con el DDL
@@ -63,7 +67,7 @@ class MigrationTest {
     }
 
     @Test
-    fun `de 1 a 2 conserva los datos y renombra duplicados que v1 dejaba pasar (QA 5)`() = runTest {
+    fun `de 1 a 3 conserva los datos y renombra duplicados que v1 dejaba pasar (QA 5)`() = runTest {
         createVersion1 {
             execSQL("INSERT INTO categories (name, icon, color, is_default) VALUES ('Educación', 'school', '#D9A648', 1)")
             execSQL("INSERT INTO categories (name, icon, color, is_default) VALUES ('EDUCACIÓN', 'school', '#3E78A8', 0)")
@@ -79,6 +83,36 @@ class MigrationTest {
             assertEquals(listOf("Educación", "EDUCACIÓN (2)", "Mascotas"), names)
             // La nueva regla ya rige sobre la base migrada.
             assertTrue(database.categoryDao().existsByNameKey(CategoryRules.nameKey("educación"), excludingId = null))
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
+    fun `de 1 a 3 crea la tabla de movimientos con su clave foranea`() = runTest {
+        createVersion1 {
+            execSQL("INSERT INTO categories (name, icon, color, is_default) VALUES ('Mascotas', 'pets', '#B0506B', 0)")
+        }
+
+        val database = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
+            .addMigrations(*ALL_MIGRATIONS)
+            .allowMainThreadQueries()
+            .build()
+        try {
+            // Room ya validó el esquema al abrir; además la tabla nueva funciona de punta a punta.
+            val mascotas = database.categoryDao().observeAll().first().single()
+            val repository = TransactionRepositoryImpl(database.transactionDao())
+            val id = repository.insert(
+                Transaction(
+                    amountCents = 3_550,
+                    description = "Veterinario",
+                    date = LocalDate.of(2026, 11, 12),
+                    type = TransactionType.EXPENSE,
+                    categoryId = mascotas.id,
+                ),
+            )
+            assertEquals("Veterinario", repository.getById(id)?.description)
+            assertEquals(1, repository.countByCategory(mascotas.id))
         } finally {
             database.close()
         }

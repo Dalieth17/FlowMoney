@@ -128,8 +128,18 @@ Room · Navigation (rutas tipadas) · Coroutines/Flow. MVVM + Clean Architecture
 | `:domain` | Kotlin puro: modelos, reglas, contratos de repositorio y casos de uso. Sin Android.       |
 | `:app`    | `data` (Room, repositorios) · `di` (Hilt) · `presentation` (Compose, ViewModels) · `util` |
 
-Estado: **setup + módulo Categorías** (lista, crear/editar con ícono y color, borrar con
-confirmación, predeterminadas protegidas). Siguen Movimientos → Presupuestos → Reportes → IA.
+Estado:
+
+- **Categorías** — lista, crear/editar con ícono y color, borrar con confirmación; las
+  predeterminadas y las que tienen movimientos están protegidas; nombres únicos sin importar
+  mayúsculas (también con tildes: `Educación` = `EDUCACIÓN`).
+- **Movimientos** (pantalla inicial) — selector de mes, resumen de ingresos/gastos/balance,
+  filtros por tipo y categoría, lista agrupada por día (Hoy, Ayer…), alta/edición en hoja inferior
+  (monto con teclado decimal, categoría, calendario, nota) y borrado con confirmación.
+  Montos en céntimos (`Long`) y fechas como día (`LocalDate`): sin errores de redondeo ni de zona horaria.
+
+Siguen Presupuestos → Reportes → IA. La base de datos se actualiza con migraciones de Room
+(probadas en `MigrationTest`), nunca borrando datos.
 
 ```bash
 cd android && ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug

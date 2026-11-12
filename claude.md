@@ -4,8 +4,8 @@
 
 ## Qué es
 
-Finanzas personales (ES). Hoy: **sitio web full‑stack** listo. Después: app Android
-(Kotlin, Compose, Room, Hilt, Clean Architecture, MVVM) — pendiente de empezar.
+Finanzas personales (ES). **Sitio web full‑stack** listo y app Android (Kotlin, Compose, Room,
+Hilt, Clean Architecture, MVVM) en desarrollo por módulos.
 
 ## Ramas y flujo
 
@@ -49,13 +49,21 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 
 ## Android (`android/`)
 
-- Módulos: `:domain` (Kotlin puro, testFixtures con `FakeCategoryRepository`) y `:app`
+- Módulos: `:domain` (Kotlin puro, testFixtures con `FakeCategoryRepository` y
+  `FakeTransactionRepository`) y `:app`
   (`com.flowmoney`: data/local, data/repository, di, presentation/{theme,components,navigation,ui}, util).
 - Patrón por módulo: Entity+DAO (Room) → Repository (contrato en domain, impl en app) →
   UseCase (devuelve `Outcome<T, XError>`) → ViewModel (`uiState: StateFlow`, `onEvent(Event)`,
   `messages: Flow` para snackbars) → Screen (con estado) + Content (sin estado, previews y tests).
 - Ids `Long`; colores "#RRGGBB"; íconos = clave de Material (catálogo en `CategoryVisuals.kt`).
-- Textos en `res/values/strings.xml`; errores de dominio → texto en `CategoryTexts.kt`.
+- Textos en `res/values/strings.xml`; errores de dominio → texto en `CategoryTexts.kt` /
+  `MovementTexts.kt`.
+- Dinero en céntimos `Long` (`Money.parseToCents` acepta "12,50" o "12.50"); fechas `LocalDate`
+  guardadas como días‑época; `Clock` inyectado (`TimeModule`) para tests deterministas.
+- Esquema Room: subir `version` + `MIGRATION_X_Y` en `data/local/migrations/Migrations.kt` +
+  caso en `MigrationTest` (crea la v1 a mano y migra). Sin migración destructiva.
+- Navegación: barra inferior en `FlowMoneyNavHost` (`TopLevelTab`); cada pestaña es un destino
+  `@Serializable`. Las pantallas tienen su propio Scaffold (insets ya consumidos por el padre).
 - Nombres de test **solo ASCII** (sin tildes): Kotlin los convierte en nombres de archivo .class.
 - Este sandbox no tiene Android SDK (dl.google.com bloqueado; el usuario no quiso cambiar la red):
   `:domain` se prueba aquí con un settings temporal; `:app` lo compila/prueba/lintea el CI.
@@ -64,5 +72,6 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 
 - [x] Web: landing + login + panel (7 vistas) + MySQL + API en capas + 63 tests + CI
 - [x] Android: setup (Gradle, Hilt, Room, Compose) + módulo **Categorías**
-- [ ] Android: Movimientos → Presupuestos → Reportes → IA (esperar confirmación entre módulos)
+- [x] Android: módulo **Movimientos** (BD v3, pantalla inicial con barra inferior)
+- [ ] Android: Presupuestos → Reportes → IA (esperar confirmación entre módulos)
 - Ideas web: recuperar contraseña por correo, movimientos recurrentes, gráfico por cuenta.

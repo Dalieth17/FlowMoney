@@ -4,6 +4,7 @@ import com.flowmoney.domain.model.Category
 import com.flowmoney.domain.model.CategoryError
 import com.flowmoney.domain.model.DefaultCategories
 import com.flowmoney.domain.testing.FakeCategoryRepository
+import com.flowmoney.domain.testing.FakeTransactionRepository
 import com.flowmoney.domain.usecase.category.DeleteCategoryUseCase
 import com.flowmoney.domain.usecase.category.ObserveCategoriesUseCase
 import com.flowmoney.domain.usecase.category.SaveCategoryUseCase
@@ -40,7 +41,7 @@ class CategoriesViewModelTest {
         viewModel = CategoriesViewModel(
             ObserveCategoriesUseCase(repository),
             SaveCategoryUseCase(repository),
-            DeleteCategoryUseCase(repository),
+            DeleteCategoryUseCase(repository, FakeTransactionRepository(repository)),
         )
     }
 

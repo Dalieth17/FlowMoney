@@ -15,4 +15,6 @@ sealed interface CategoryError {
     data object NotFound : CategoryError
 
     data object DefaultCannotBeDeleted : CategoryError
+
+    data class InUse(val transactionCount: Int) : CategoryError
 }

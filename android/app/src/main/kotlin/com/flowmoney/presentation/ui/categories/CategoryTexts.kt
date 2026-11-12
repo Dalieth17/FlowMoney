@@ -15,6 +15,8 @@ fun CategoryError.text(resources: Resources): String = when (this) {
     CategoryError.InvalidColor -> resources.getString(R.string.error_category_invalid_color)
     CategoryError.NotFound -> resources.getString(R.string.error_category_not_found)
     CategoryError.DefaultCannotBeDeleted -> resources.getString(R.string.error_category_default_delete)
+    is CategoryError.InUse ->
+        resources.getQuantityString(R.plurals.error_category_in_use, transactionCount, transactionCount)
 }
 
 @Composable

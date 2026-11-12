@@ -44,6 +44,68 @@
     <string name="error_category_not_found">La categoría ya no existe</string>
     <string name="error_category_default_delete">Las categorías predeterminadas no se pueden eliminar</string>
 
+    <!-- Navegación -->
+    <string name="nav_movements">Movimientos</string>
+    <string name="nav_categories">Categorías</string>
+
+    <!-- Movimientos: lista -->
+    <string name="movements_title">Movimientos</string>
+    <string name="movements_add">Nuevo movimiento</string>
+    <string name="movements_previous_month">Mes anterior</string>
+    <string name="movements_next_month">Mes siguiente</string>
+    <string name="movements_empty_title">Sin movimientos este mes</string>
+    <string name="movements_empty_body">Registra tus ingresos y gastos para ver tu balance del mes.</string>
+    <string name="movements_empty_filtered_title">Nada coincide con los filtros</string>
+    <string name="movements_empty_filtered_body">Prueba con otro tipo u otra categoría.</string>
+    <string name="summary_income">Ingresos</string>
+    <string name="summary_expense">Gastos</string>
+    <string name="summary_balance">Balance</string>
+    <string name="filter_all">Todos</string>
+    <string name="filter_income">Ingresos</string>
+    <string name="filter_expense">Gastos</string>
+    <string name="filter_category">Categoría</string>
+    <string name="filter_all_categories">Todas las categorías</string>
+    <string name="filter_clear">Quitar filtros</string>
+    <string name="day_today">Hoy</string>
+    <string name="day_yesterday">Ayer</string>
+
+    <!-- Movimientos: editor -->
+    <string name="movement_editor_new">Nuevo movimiento</string>
+    <string name="movement_editor_edit">Editar movimiento</string>
+    <string name="movement_type_label">Tipo de movimiento</string>
+    <string name="movement_type_income">Ingreso</string>
+    <string name="movement_type_expense">Gasto</string>
+    <string name="movement_field_amount">Monto</string>
+    <string name="movement_field_description">Descripción</string>
+    <string name="movement_field_category">Categoría</string>
+    <string name="movement_field_date">Fecha</string>
+    <string name="movement_field_note">Nota (opcional)</string>
+    <string name="movement_pick_category">Elegir categoría</string>
+    <string name="movement_pick_date">Elegir fecha</string>
+    <string name="action_ok">Aceptar</string>
+
+    <!-- Movimientos: eliminar -->
+    <string name="delete_movement_title">¿Eliminar movimiento?</string>
+    <string name="delete_movement_body">Se eliminará “%1$s”. Esta acción no se puede deshacer.</string>
+
+    <!-- Movimientos: avisos y errores -->
+    <string name="message_movement_created">Movimiento registrado</string>
+    <string name="message_movement_updated">Cambios guardados</string>
+    <string name="message_movement_deleted">Movimiento eliminado</string>
+    <string name="error_movement_invalid_amount">Escribe un monto válido, por ejemplo 12.50</string>
+    <string name="error_movement_amount_too_small">El monto mínimo es 0.01</string>
+    <string name="error_movement_amount_too_large">El monto es demasiado grande</string>
+    <string name="error_movement_blank_description">Escribe una descripción</string>
+    <string name="error_movement_category_required">Elige una categoría</string>
+    <string name="error_movement_category_not_found">La categoría ya no existe</string>
+    <string name="error_movement_not_found">El movimiento ya no existe</string>
+    <string name="error_text_too_long">Máximo %1$d caracteres</string>
+    <plurals name="error_category_in_use">
+        <item quantity="one">No se puede eliminar: tiene %1$d movimiento</item>
+        <item quantity="many">No se puede eliminar: tiene %1$d movimientos</item>
+        <item quantity="other">No se puede eliminar: tiene %1$d movimientos</item>
+    </plurals>
+
     <!-- Íconos (etiquetas para lectores de pantalla) -->
     <string name="icon_restaurant">Comida</string>
     <string name="icon_directions_bus">Transporte</string>

@@ -1,7 +1,9 @@
 package com.flowmoney.di
 
 import com.flowmoney.data.repository.CategoryRepositoryImpl
+import com.flowmoney.data.repository.TransactionRepositoryImpl
 import com.flowmoney.domain.repository.CategoryRepository
+import com.flowmoney.domain.repository.TransactionRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,4 +17,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCategoryRepository(impl: CategoryRepositoryImpl): CategoryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionRepository(impl: TransactionRepositoryImpl): TransactionRepository
 }

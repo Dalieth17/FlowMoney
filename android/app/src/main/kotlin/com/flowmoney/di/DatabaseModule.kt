@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.flowmoney.data.local.AppDatabase
 import com.flowmoney.data.local.SeedDatabaseCallback
 import com.flowmoney.data.local.dao.CategoryDao
+import com.flowmoney.data.local.dao.TransactionDao
 import com.flowmoney.data.local.migrations.ALL_MIGRATIONS
 import dagger.Module
 import dagger.Provides
@@ -28,4 +29,7 @@ object DatabaseModule {
 
     @Provides
     fun provideCategoryDao(database: AppDatabase): CategoryDao = database.categoryDao()
+
+    @Provides
+    fun provideTransactionDao(database: AppDatabase): TransactionDao = database.transactionDao()
 }
