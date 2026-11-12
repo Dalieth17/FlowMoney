@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -116,7 +115,7 @@ fun MovementEditorSheet(editor: MovementEditorState, categories: List<Category>,
                         descriptionError ?: stringResource(
                             R.string.category_name_counter,
                             TransactionRules.normalizeText(editor.description).length,
-                            TransactionRules.DESCRIPTION_MAX,
+                            TransactionRules.DESCRIPTION_MAX_LENGTH,
                         ),
                     )
                 },
