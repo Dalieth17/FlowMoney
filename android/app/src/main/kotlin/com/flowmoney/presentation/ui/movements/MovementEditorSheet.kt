@@ -65,108 +65,119 @@ private const val AMOUNT_INPUT_MAX = 14
 @Composable
 fun MovementEditorSheet(editor: MovementEditorState, categories: List<Category>, onEvent: (MovementsEvent) -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = { onEvent(MovementsEvent.EditorDismissed) }, sheetState = sheetState) {
+        MovementEditorForm(editor = editor, categories = categories, onEvent = onEvent)
+    }
+}
+
+/** Contenido del formulario, sin la hoja modal: se puede previsualizar y probar por separado. */
+@Composable
+fun MovementEditorForm(
+    editor: MovementEditorState,
+    categories: List<Category>,
+    onEvent: (MovementsEvent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val error = editor.error
     val errorField = error?.field
     val currencySymbol = MoneyFormat.currencySymbol()
 
-    ModalBottomSheet(onDismissRequest = { onEvent(MovementsEvent.EditorDismissed) }, sheetState = sheetState) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(
-                text = stringResource(if (editor.isNew) R.string.movement_editor_new else R.string.movement_editor_edit),
-                style = MaterialTheme.typography.headlineSmall,
-            )
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text(
+            text = stringResource(if (editor.isNew) R.string.movement_editor_new else R.string.movement_editor_edit),
+            style = MaterialTheme.typography.headlineSmall,
+        )
 
-            TypeSelector(editor.type) { onEvent(MovementsEvent.TypeChanged(it)) }
+        TypeSelector(editor.type) { onEvent(MovementsEvent.TypeChanged(it)) }
 
-            val errorText = error?.text()
-            val amountError = errorText.takeIf { errorField == MovementField.AMOUNT }
-            OutlinedTextField(
-                value = editor.amountText,
-                onValueChange = { text ->
-                    // Solo dígitos y separador decimal; el dominio valida el formato final.
-                    val clean = text.filter { it.isDigit() || it == '.' || it == ',' }.take(AMOUNT_INPUT_MAX)
-                    onEvent(MovementsEvent.AmountChanged(clean))
-                },
-                label = { Text(stringResource(R.string.movement_field_amount)) },
-                prefix = if (currencySymbol.isNotEmpty()) { { Text("$currencySymbol ") } } else null,
-                singleLine = true,
-                isError = amountError != null,
-                supportingText = amountError?.let { { Text(it) } },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
-                modifier = Modifier.fillMaxWidth(),
-            )
+        val errorText = error?.text()
+        val amountError = errorText.takeIf { errorField == MovementField.AMOUNT }
+        OutlinedTextField(
+            value = editor.amountText,
+            onValueChange = { text ->
+                // Solo dígitos y separador decimal; el dominio valida el formato final.
+                val clean = text.filter { it.isDigit() || it == '.' || it == ',' }.take(AMOUNT_INPUT_MAX)
+                onEvent(MovementsEvent.AmountChanged(clean))
+            },
+            label = { Text(stringResource(R.string.movement_field_amount)) },
+            prefix = if (currencySymbol.isNotEmpty()) { { Text("$currencySymbol ") } } else null,
+            singleLine = true,
+            isError = amountError != null,
+            supportingText = amountError?.let { { Text(it) } },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-            val descriptionError = errorText.takeIf { errorField == MovementField.DESCRIPTION }
-            OutlinedTextField(
-                value = editor.description,
-                onValueChange = { onEvent(MovementsEvent.DescriptionChanged(it)) },
-                label = { Text(stringResource(R.string.movement_field_description)) },
-                singleLine = true,
-                isError = descriptionError != null,
-                supportingText = {
-                    Text(
-                        descriptionError ?: stringResource(
-                            R.string.category_name_counter,
-                            TransactionRules.normalizeText(editor.description).length,
-                            TransactionRules.DESCRIPTION_MAX_LENGTH,
-                        ),
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences,
-                    imeAction = ImeAction.Next,
-                ),
-                modifier = Modifier.fillMaxWidth(),
-            )
+        val descriptionError = errorText.takeIf { errorField == MovementField.DESCRIPTION }
+        OutlinedTextField(
+            value = editor.description,
+            onValueChange = { onEvent(MovementsEvent.DescriptionChanged(it)) },
+            label = { Text(stringResource(R.string.movement_field_description)) },
+            singleLine = true,
+            isError = descriptionError != null,
+            supportingText = {
+                Text(
+                    descriptionError ?: stringResource(
+                        R.string.category_name_counter,
+                        TransactionRules.normalizeText(editor.description).length,
+                        TransactionRules.DESCRIPTION_MAX_LENGTH,
+                    ),
+                )
+            },
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences,
+                imeAction = ImeAction.Next,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-            CategoryPicker(
-                categories = categories,
-                selectedId = editor.categoryId,
-                error = errorText.takeIf { errorField == MovementField.CATEGORY },
-                onSelect = { onEvent(MovementsEvent.CategorySelected(it)) },
-            )
+        CategoryPicker(
+            categories = categories,
+            selectedId = editor.categoryId,
+            error = errorText.takeIf { errorField == MovementField.CATEGORY },
+            onSelect = { onEvent(MovementsEvent.CategorySelected(it)) },
+        )
 
-            DateField(editor.date) { onEvent(MovementsEvent.DateSelected(it)) }
+        DateField(editor.date) { onEvent(MovementsEvent.DateSelected(it)) }
 
-            val noteError = errorText.takeIf { errorField == MovementField.NOTE }
-            OutlinedTextField(
-                value = editor.note,
-                onValueChange = { onEvent(MovementsEvent.NoteChanged(it)) },
-                label = { Text(stringResource(R.string.movement_field_note)) },
-                isError = noteError != null,
-                supportingText = noteError?.let { { Text(it) } },
-                minLines = 2,
-                maxLines = 4,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                modifier = Modifier.fillMaxWidth(),
-            )
+        val noteError = errorText.takeIf { errorField == MovementField.NOTE }
+        OutlinedTextField(
+            value = editor.note,
+            onValueChange = { onEvent(MovementsEvent.NoteChanged(it)) },
+            label = { Text(stringResource(R.string.movement_field_note)) },
+            isError = noteError != null,
+            supportingText = noteError?.let { { Text(it) } },
+            minLines = 2,
+            maxLines = 4,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-            if (errorField == MovementField.NONE && errorText != null) {
-                Text(errorText, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+        if (errorField == MovementField.NONE && errorText != null) {
+            Text(errorText, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (!editor.isNew) {
+                TextButton(
+                    onClick = { onEvent(MovementsEvent.DeleteClicked) },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) { Text(stringResource(R.string.action_delete)) }
             }
-
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                if (!editor.isNew) {
-                    TextButton(
-                        onClick = { onEvent(MovementsEvent.DeleteClicked) },
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    ) { Text(stringResource(R.string.action_delete)) }
-                }
-                Spacer(Modifier.weight(1f))
-                TextButton(onClick = { onEvent(MovementsEvent.EditorDismissed) }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-                Spacer(Modifier.width(8.dp))
-                Button(onClick = { onEvent(MovementsEvent.SaveClicked) }, enabled = !editor.isSaving) {
-                    Text(stringResource(R.string.action_save))
-                }
+            Spacer(Modifier.weight(1f))
+            TextButton(onClick = { onEvent(MovementsEvent.EditorDismissed) }) {
+                Text(stringResource(R.string.action_cancel))
+            }
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = { onEvent(MovementsEvent.SaveClicked) }, enabled = !editor.isSaving) {
+                Text(stringResource(R.string.action_save))
             }
         }
     }

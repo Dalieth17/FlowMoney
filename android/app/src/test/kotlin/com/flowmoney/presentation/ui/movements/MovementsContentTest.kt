@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.flowmoney.domain.model.Category
 import com.flowmoney.domain.model.MonthSummary
@@ -17,7 +18,6 @@ import com.flowmoney.presentation.format.DateFormat
 import com.flowmoney.presentation.format.MoneyFormat
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -108,10 +108,26 @@ class MovementsContentTest {
     fun `el formulario muestra el error junto al monto y permite guardar`() {
         val events = mutableListOf<MovementsEvent>()
         val editor = MovementEditorState(date = today, amountText = "abc", error = TransactionError.InvalidAmount)
-        render(baseState.copy(editor = editor), events)
+        composeRule.setContent {
+            FlowMoneyTheme { MovementEditorForm(editor = editor, categories = listOf(food), onEvent = { events += it }) }
+        }
 
         composeRule.onNodeWithText("Escribe un monto válido, por ejemplo 12.50").assertIsDisplayed()
-        composeRule.onNodeWithText("Guardar").performClick()
-        assertTrue(MovementsEvent.SaveClicked in events)
+        // El formulario es desplazable: en pantallas bajas el botón queda fuera de la vista.
+        composeRule.onNodeWithText("Guardar").performScrollTo().performClick()
+        assertEquals(listOf<MovementsEvent>(MovementsEvent.SaveClicked), events)
+    }
+
+    @Test
+    fun `al editar el formulario ofrece eliminar`() {
+        val events = mutableListOf<MovementsEvent>()
+        val editor = MovementEditorState.from(lunch)
+        composeRule.setContent {
+            FlowMoneyTheme { MovementEditorForm(editor = editor, categories = listOf(food), onEvent = { events += it }) }
+        }
+
+        composeRule.onNodeWithText("Editar movimiento").assertIsDisplayed()
+        composeRule.onNodeWithText("Eliminar").performScrollTo().performClick()
+        assertEquals(listOf<MovementsEvent>(MovementsEvent.DeleteClicked), events)
     }
 }
