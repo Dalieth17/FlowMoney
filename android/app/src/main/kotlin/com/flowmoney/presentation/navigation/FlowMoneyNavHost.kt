@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Category
+import androidx.compose.material.icons.rounded.DataUsage
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -26,6 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.flowmoney.R
+import com.flowmoney.presentation.ui.budgets.BudgetsScreen
 import com.flowmoney.presentation.ui.categories.CategoriesScreen
 import com.flowmoney.presentation.ui.movements.MovementsScreen
 import kotlinx.serialization.Serializable
@@ -36,9 +38,12 @@ import kotlin.reflect.KClass
 data object MovementsDestination
 
 @Serializable
+data object BudgetsDestination
+
+@Serializable
 data object CategoriesDestination
 
-/** Pestañas de la barra inferior. Cada módulo nuevo (Presupuestos, Reportes) añade la suya aquí. */
+/** Pestañas de la barra inferior. Cada módulo nuevo (Reportes) añade la suya aquí. */
 private enum class TopLevelTab(
     val route: Any,
     val routeClass: KClass<*>,
@@ -46,6 +51,7 @@ private enum class TopLevelTab(
     val icon: ImageVector,
 ) {
     MOVEMENTS(MovementsDestination, MovementsDestination::class, R.string.nav_movements, Icons.AutoMirrored.Rounded.ReceiptLong),
+    BUDGETS(BudgetsDestination, BudgetsDestination::class, R.string.nav_budgets, Icons.Rounded.DataUsage),
     CATEGORIES(CategoriesDestination, CategoriesDestination::class, R.string.nav_categories, Icons.Rounded.Category),
 }
 
@@ -90,6 +96,7 @@ fun FlowMoneyNavHost(
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
             composable<MovementsDestination> { MovementsScreen() }
+            composable<BudgetsDestination> { BudgetsScreen() }
             composable<CategoriesDestination> { CategoriesScreen() }
         }
     }

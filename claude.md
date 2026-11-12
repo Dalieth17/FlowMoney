@@ -64,6 +64,10 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
   caso en `MigrationTest` (crea la v1 a mano y migra). Sin migración destructiva.
 - Navegación: barra inferior en `FlowMoneyNavHost` (`TopLevelTab`); cada pestaña es un destino
   `@Serializable`. Las pantallas tienen su propio Scaffold (insets ya consumidos por el padre).
+- Componentes compartidos en `presentation/components`: `MonthSelector`, `AmountField`, `CategoryAvatar`.
+- Formularios: `XEditorSheet` (ModalBottomSheet) envuelve a `XEditorForm`, que es lo que se testea.
+- Tests de Compose: Robolectric usa una pantalla baja; con listas largas usar
+  `@Config(qualifiers = "w411dp-h891dp")` y `performScrollTo()` antes de tocar botones.
 - Nombres de test **solo ASCII** (sin tildes): Kotlin los convierte en nombres de archivo .class.
 - Este sandbox no tiene Android SDK (dl.google.com bloqueado; el usuario no quiso cambiar la red):
   `:domain` se prueba aquí con un settings temporal; `:app` lo compila/prueba/lintea el CI.
@@ -73,5 +77,6 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 - [x] Web: landing + login + panel (7 vistas) + MySQL + API en capas + 63 tests + CI
 - [x] Android: setup (Gradle, Hilt, Room, Compose) + módulo **Categorías**
 - [x] Android: módulo **Movimientos** (BD v3, pantalla inicial con barra inferior)
-- [ ] Android: Presupuestos → Reportes → IA (esperar confirmación entre módulos)
+- [x] Android: módulo **Presupuestos** (BD v4: `budgets` por categoría y mes `aaaamm`; avisos 80/100 %)
+- [ ] Android: Reportes → IA (esperar confirmación entre módulos)
 - Ideas web: recuperar contraseña por correo, movimientos recurrentes, gráfico por cuenta.

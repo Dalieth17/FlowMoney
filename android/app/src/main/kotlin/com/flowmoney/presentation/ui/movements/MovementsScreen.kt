@@ -15,8 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.AlertDialog
@@ -29,7 +27,6 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -55,7 +52,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,6 +64,7 @@ import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionDetails
 import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.presentation.components.CategoryAvatar
+import com.flowmoney.presentation.components.MonthSelector
 import com.flowmoney.presentation.format.DateFormat
 import com.flowmoney.presentation.format.MoneyFormat
 import com.flowmoney.presentation.theme.FlowMoneyTheme
@@ -118,7 +115,13 @@ fun MovementsContent(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item(key = "month") { MonthSelector(state.month, onEvent) }
+            item(key = "month") {
+                MonthSelector(
+                    month = state.month,
+                    onPrevious = { onEvent(MovementsEvent.PreviousMonth) },
+                    onNext = { onEvent(MovementsEvent.NextMonth) },
+                )
+            }
             item(key = "summary") { SummaryCard(state.summary) }
             item(key = "filters") { FilterRow(state, onEvent) }
 
@@ -139,30 +142,6 @@ fun MovementsContent(
 
     state.editor?.let { MovementEditorSheet(editor = it, categories = state.categories, onEvent = onEvent) }
     state.pendingDelete?.let { DeleteMovementDialog(it, onEvent) }
-}
-
-@Composable
-private fun MonthSelector(month: YearMonth, onEvent: (MovementsEvent) -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { onEvent(MovementsEvent.PreviousMonth) }) {
-            Icon(
-                Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
-                contentDescription = stringResource(R.string.movements_previous_month),
-            )
-        }
-        Text(
-            text = DateFormat.month(month),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.weight(1f).semantics { heading() },
-            textAlign = TextAlign.Center,
-        )
-        IconButton(onClick = { onEvent(MovementsEvent.NextMonth) }) {
-            Icon(
-                Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.movements_next_month),
-            )
-        }
-    }
 }
 
 @Composable

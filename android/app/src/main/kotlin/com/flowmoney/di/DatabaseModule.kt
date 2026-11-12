@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.flowmoney.data.local.AppDatabase
 import com.flowmoney.data.local.SeedDatabaseCallback
+import com.flowmoney.data.local.dao.BudgetDao
 import com.flowmoney.data.local.dao.CategoryDao
 import com.flowmoney.data.local.dao.TransactionDao
 import com.flowmoney.data.local.migrations.ALL_MIGRATIONS
@@ -32,4 +33,7 @@ object DatabaseModule {
 
     @Provides
     fun provideTransactionDao(database: AppDatabase): TransactionDao = database.transactionDao()
+
+    @Provides
+    fun provideBudgetDao(database: AppDatabase): BudgetDao = database.budgetDao()
 }

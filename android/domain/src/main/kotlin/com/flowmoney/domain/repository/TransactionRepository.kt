@@ -4,6 +4,7 @@ import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionDetails
 import com.flowmoney.domain.model.TransactionFilter
 import kotlinx.coroutines.flow.Flow
+import java.time.YearMonth
 
 /** Contrato de acceso a movimientos. La capa de datos lo implementa (Room). */
 interface TransactionRepository {
@@ -19,4 +20,7 @@ interface TransactionRepository {
     suspend fun delete(id: Long)
 
     suspend fun countByCategory(categoryId: Long): Int
+
+    /** Total gastado en el mes por categoría (solo gastos; las categorías sin gastos no aparecen). */
+    fun observeExpensesByCategory(month: YearMonth): Flow<Map<Long, Long>>
 }

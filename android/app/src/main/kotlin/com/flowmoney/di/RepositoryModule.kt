@@ -1,7 +1,9 @@
 package com.flowmoney.di
 
+import com.flowmoney.data.repository.BudgetRepositoryImpl
 import com.flowmoney.data.repository.CategoryRepositoryImpl
 import com.flowmoney.data.repository.TransactionRepositoryImpl
+import com.flowmoney.domain.repository.BudgetRepository
 import com.flowmoney.domain.repository.CategoryRepository
 import com.flowmoney.domain.repository.TransactionRepository
 import dagger.Binds
@@ -21,4 +23,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindTransactionRepository(impl: TransactionRepositoryImpl): TransactionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBudgetRepository(impl: BudgetRepositoryImpl): BudgetRepository
 }

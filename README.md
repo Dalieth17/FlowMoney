@@ -138,8 +138,13 @@ Estado:
   (monto con teclado decimal, categoría, calendario, nota) y borrado con confirmación.
   Montos en céntimos (`Long`) y fechas como día (`LocalDate`): sin errores de redondeo ni de zona horaria.
 
-Siguen Presupuestos → Reportes → IA. La base de datos se actualiza con migraciones de Room
-(probadas en `MigrationTest`), nunca borrando datos.
+- **Presupuestos** — límite mensual por categoría (cada mes el suyo, como en la web) con barra de
+  avance, aviso al 80 % y al superarlo, resumen del mes, gasto en categorías sin presupuesto,
+  "repetir los límites" del último mes que los tenga y quitar con **Deshacer**. Al guardar un gasto
+  que deja su categoría cerca o por encima del límite, Movimientos lo avisa en el momento.
+
+Siguen Reportes → IA. La base de datos se actualiza con migraciones de Room (probadas en
+`MigrationTest`), nunca borrando datos.
 
 ```bash
 cd android && ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug

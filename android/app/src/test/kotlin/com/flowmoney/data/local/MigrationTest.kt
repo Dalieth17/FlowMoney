@@ -9,7 +9,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.flowmoney.data.local.migrations.ALL_MIGRATIONS
 import com.flowmoney.data.local.migrations.uniqueName
+import com.flowmoney.data.repository.BudgetRepositoryImpl
 import com.flowmoney.data.repository.TransactionRepositoryImpl
+import com.flowmoney.domain.model.Budget
 import com.flowmoney.domain.model.CategoryRules
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionType
@@ -17,12 +19,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import java.time.LocalDate
+import java.time.YearMonth
 
 /**
  * Migraciones sobre una base real en disco: se crea a mano la versión antigua (con el DDL
@@ -113,6 +117,29 @@ class MigrationTest {
             )
             assertEquals("Veterinario", repository.getById(id)?.description)
             assertEquals(1, repository.countByCategory(mascotas.id))
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
+    fun `de 1 a 4 crea la tabla de presupuestos con borrado en cascada`() = runTest {
+        createVersion1 {
+            execSQL("INSERT INTO categories (name, icon, color, is_default) VALUES ('Mascotas', 'pets', '#B0506B', 0)")
+        }
+
+        val database = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
+            .addMigrations(*ALL_MIGRATIONS)
+            .allowMainThreadQueries()
+            .build()
+        try {
+            val mascotas = database.categoryDao().observeAll().first().single()
+            val budgets = BudgetRepositoryImpl(database.budgetDao())
+            budgets.upsert(Budget(mascotas.id, YearMonth.of(2026, 11), 8_000))
+            assertEquals(8_000L, budgets.get(mascotas.id, YearMonth.of(2026, 11))?.limitCents)
+
+            database.categoryDao().deleteById(mascotas.id)
+            assertNull(budgets.get(mascotas.id, YearMonth.of(2026, 11)))
         } finally {
             database.close()
         }

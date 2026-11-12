@@ -1,11 +1,15 @@
 package com.flowmoney.presentation.ui.movements
 
+import com.flowmoney.domain.model.Budget
+import com.flowmoney.domain.model.BudgetLevel
 import com.flowmoney.domain.model.DefaultCategories
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionError
 import com.flowmoney.domain.model.TransactionType
+import com.flowmoney.domain.testing.FakeBudgetRepository
 import com.flowmoney.domain.testing.FakeCategoryRepository
 import com.flowmoney.domain.testing.FakeTransactionRepository
+import com.flowmoney.domain.usecase.budget.CheckBudgetUseCase
 import com.flowmoney.domain.usecase.category.ObserveCategoriesUseCase
 import com.flowmoney.domain.usecase.transaction.DeleteTransactionUseCase
 import com.flowmoney.domain.usecase.transaction.ObserveTransactionsUseCase
@@ -44,6 +48,7 @@ class MovementsViewModelTest {
     private val salary = defaults.first { it.name == "Salario" }
 
     private val categories = FakeCategoryRepository(defaults)
+    private val budgets = FakeBudgetRepository()
     private val transactions = FakeTransactionRepository(
         categories,
         listOf(
@@ -64,6 +69,7 @@ class MovementsViewModelTest {
             ObserveCategoriesUseCase(categories),
             SaveTransactionUseCase(transactions, categories),
             DeleteTransactionUseCase(transactions),
+            CheckBudgetUseCase(budgets, categories, transactions),
             clock,
         )
     }
@@ -155,6 +161,45 @@ class MovementsViewModelTest {
         assertEquals(1_250L, saved.amountCents)
         assertEquals(today, saved.date)
         assertEquals(listOf<MovementsMessage>(MovementsMessage.Created), messages)
+    }
+
+    @Test
+    fun `un gasto que deja la categoria cerca del limite avisa con el porcentaje`() = runTest {
+        // Ya hay 20.50 gastados en Alimentacion este mes; con 60.00 mas son 80.50 de 100.00.
+        budgets.upsert(Budget(food.id, YearMonth.of(2026, 11), 10_000))
+        val messages = subscribe()
+        viewModel.onEvent(MovementsEvent.AddClicked)
+        viewModel.onEvent(MovementsEvent.AmountChanged("60"))
+        viewModel.onEvent(MovementsEvent.DescriptionChanged("Mercado"))
+        viewModel.onEvent(MovementsEvent.CategorySelected(food.id))
+        viewModel.onEvent(MovementsEvent.SaveClicked)
+
+        val alert = messages.single() as MovementsMessage.BudgetAlert
+        assertEquals(food, alert.status.category)
+        assertEquals(8_050L, alert.status.spentCents)
+        assertEquals(BudgetLevel.NEAR_LIMIT, alert.status.level)
+    }
+
+    @Test
+    fun `los ingresos y las categorias en control no muestran aviso de presupuesto`() = runTest {
+        budgets.upsert(Budget(food.id, YearMonth.of(2026, 11), 1_000_000))
+        budgets.upsert(Budget(salary.id, YearMonth.of(2026, 11), 100))
+        val messages = subscribe()
+
+        viewModel.onEvent(MovementsEvent.AddClicked)
+        viewModel.onEvent(MovementsEvent.AmountChanged("5"))
+        viewModel.onEvent(MovementsEvent.DescriptionChanged("Pan"))
+        viewModel.onEvent(MovementsEvent.CategorySelected(food.id))
+        viewModel.onEvent(MovementsEvent.SaveClicked)
+
+        viewModel.onEvent(MovementsEvent.AddClicked)
+        viewModel.onEvent(MovementsEvent.TypeChanged(TransactionType.INCOME))
+        viewModel.onEvent(MovementsEvent.AmountChanged("500"))
+        viewModel.onEvent(MovementsEvent.DescriptionChanged("Bono"))
+        viewModel.onEvent(MovementsEvent.CategorySelected(salary.id))
+        viewModel.onEvent(MovementsEvent.SaveClicked)
+
+        assertEquals(listOf<MovementsMessage>(MovementsMessage.Created, MovementsMessage.Created), messages)
     }
 
     @Test

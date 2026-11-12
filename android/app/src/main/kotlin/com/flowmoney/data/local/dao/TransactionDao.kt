@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import com.flowmoney.data.local.entity.CategoryTotalRow
 import com.flowmoney.data.local.entity.TransactionEntity
 import com.flowmoney.data.local.entity.TransactionWithCategoryRow
 import kotlinx.coroutines.flow.Flow
@@ -45,4 +46,15 @@ interface TransactionDao {
 
     @Query("SELECT COUNT(*) FROM transactions WHERE category_id = :categoryId")
     suspend fun countByCategory(categoryId: Long): Int
+
+    /** Total por categoría de un tipo de movimiento en un rango de días (p. ej. los gastos del mes). */
+    @Query(
+        """
+        SELECT category_id, SUM(amount_cents) AS total_cents
+          FROM transactions
+         WHERE type = :type AND date_epoch_day BETWEEN :fromEpochDay AND :toEpochDay
+         GROUP BY category_id
+        """,
+    )
+    fun observeTotalsByCategory(fromEpochDay: Long, toEpochDay: Long, type: String): Flow<List<CategoryTotalRow>>
 }

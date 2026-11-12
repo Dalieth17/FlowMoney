@@ -48,6 +48,10 @@ object DateFormat {
     fun month(month: YearMonth, locale: Locale = Locale.getDefault()): String =
         month.format(DateTimeFormatter.ofPattern("LLLL yyyy", locale)).replaceFirstChar { it.titlecase(locale) }
 
+    /** "noviembre 2026", para usar dentro de una frase (en español los meses van en minúscula). */
+    fun monthInSentence(month: YearMonth, locale: Locale = Locale.getDefault()): String =
+        month.format(DateTimeFormatter.ofPattern("LLLL yyyy", locale))
+
     /** "Jueves, 12 de noviembre de 2026" (según el idioma del teléfono). */
     fun day(date: LocalDate, locale: Locale = Locale.getDefault()): String =
         date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale))

@@ -49,8 +49,20 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+/** v3 → v4: presupuestos por categoría y mes (mismo DDL que genera Room para BudgetEntity). */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `budgets` (`month` INTEGER NOT NULL, `category_id` INTEGER NOT NULL, " +
+                "`limit_cents` INTEGER NOT NULL, PRIMARY KEY(`month`, `category_id`), " +
+                "FOREIGN KEY(`category_id`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_budgets_category_id` ON `budgets` (`category_id`)")
+    }
+}
+
 /** Todas las migraciones, en orden. Se registran en `DatabaseModule`. */
-val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
 /** Devuelve [name] o, si su clave ya está usada, "[name] (n)" dentro del largo máximo permitido. */
 internal fun uniqueName(name: String, takenKeys: MutableSet<String>): String {

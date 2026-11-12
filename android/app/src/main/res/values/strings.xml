@@ -46,13 +46,14 @@
 
     <!-- Navegación -->
     <string name="nav_movements">Movimientos</string>
+    <string name="nav_budgets">Presupuestos</string>
     <string name="nav_categories">Categorías</string>
 
     <!-- Movimientos: lista -->
     <string name="movements_title">Movimientos</string>
     <string name="movements_add">Nuevo movimiento</string>
-    <string name="movements_previous_month">Mes anterior</string>
-    <string name="movements_next_month">Mes siguiente</string>
+    <string name="month_previous">Mes anterior</string>
+    <string name="month_next">Mes siguiente</string>
     <string name="movements_empty_title">Sin movimientos este mes</string>
     <string name="movements_empty_body">Registra tus ingresos y gastos para ver tu balance del mes.</string>
     <string name="movements_empty_filtered_title">Nada coincide con los filtros</string>
@@ -83,6 +84,7 @@
     <string name="movement_pick_category">Elegir categoría</string>
     <string name="movement_pick_date">Elegir fecha</string>
     <string name="action_ok">Aceptar</string>
+    <string name="action_undo">Deshacer</string>
 
     <!-- Movimientos: eliminar -->
     <string name="delete_movement_title">¿Eliminar movimiento?</string>
@@ -92,12 +94,11 @@
     <string name="message_movement_created">Movimiento registrado</string>
     <string name="message_movement_updated">Cambios guardados</string>
     <string name="message_movement_deleted">Movimiento eliminado</string>
-    <string name="error_movement_invalid_amount">Escribe un monto válido, por ejemplo 12.50</string>
-    <string name="error_movement_amount_too_small">El monto mínimo es 0.01</string>
-    <string name="error_movement_amount_too_large">El monto es demasiado grande</string>
+    <string name="error_amount_invalid">Escribe un monto válido, por ejemplo 12.50</string>
+    <string name="error_amount_too_small">El monto mínimo es 0.01</string>
+    <string name="error_amount_too_large">El monto es demasiado grande</string>
     <string name="error_movement_blank_description">Escribe una descripción</string>
     <string name="error_movement_category_required">Elige una categoría</string>
-    <string name="error_movement_category_not_found">La categoría ya no existe</string>
     <string name="error_movement_not_found">El movimiento ya no existe</string>
     <string name="error_text_too_long">Máximo %1$d caracteres</string>
     <plurals name="error_category_in_use">
@@ -105,6 +106,67 @@
         <item quantity="many">No se puede eliminar: tiene %1$d movimientos</item>
         <item quantity="other">No se puede eliminar: tiene %1$d movimientos</item>
     </plurals>
+
+    <!-- Movimientos: aviso de presupuesto al guardar un gasto -->
+    <string name="message_movement_budget_near">Movimiento guardado · %1$s va en %2$d %% de su presupuesto</string>
+    <string name="message_movement_budget_reached">Movimiento guardado · %1$s llegó al límite de su presupuesto</string>
+    <string name="message_movement_budget_over">Movimiento guardado · %1$s superó su presupuesto (%2$d %%)</string>
+
+    <!-- Presupuestos: pantalla -->
+    <string name="budgets_title">Presupuestos</string>
+    <string name="budgets_summary_spent">Gastado este mes</string>
+    <string name="budgets_amount_of_limit">%1$s de %2$s</string>
+    <string name="budgets_remaining">Quedan %1$s</string>
+    <string name="budgets_limit_reached">Llegaste al límite</string>
+    <string name="budgets_over_by">Te pasaste por %1$s</string>
+    <string name="budgets_percent">%1$d %%</string>
+    <string name="budgets_badge_near">Cerca del límite</string>
+    <string name="budgets_badge_over">Superado</string>
+    <plurals name="budgets_alert_over">
+        <item quantity="one">%1$d presupuesto superado</item>
+        <item quantity="many">%1$d presupuestos superados</item>
+        <item quantity="other">%1$d presupuestos superados</item>
+    </plurals>
+    <plurals name="budgets_alert_near">
+        <item quantity="one">%1$d cerca del límite</item>
+        <item quantity="many">%1$d cerca del límite</item>
+        <item quantity="other">%1$d cerca del límite</item>
+    </plurals>
+    <string name="budgets_unbudgeted_extra">Además gastaste %1$s en categorías sin presupuesto</string>
+    <string name="budgets_section_yours">Tus presupuestos</string>
+    <string name="budgets_section_unbudgeted">Sin presupuesto</string>
+    <string name="budgets_empty_title">Aún no tienes presupuestos este mes</string>
+    <string name="budgets_empty_body">Elige una categoría y define cuánto quieres gastar como máximo. Te avisaremos al llegar al %1$d %%.</string>
+    <string name="budgets_unbudgeted_spent">%1$s gastado este mes</string>
+    <string name="budgets_unbudgeted_none">Sin gastos este mes</string>
+    <string name="budgets_set_limit_for">Definir límite de %1$s</string>
+    <string name="budgets_copy_title">¿Repetir los límites de %1$s?</string>
+    <plurals name="budgets_copy_body">
+        <item quantity="one">Se agregará %1$d presupuesto a este mes.</item>
+        <item quantity="many">Se agregarán %1$d presupuestos a este mes.</item>
+        <item quantity="other">Se agregarán %1$d presupuestos a este mes.</item>
+    </plurals>
+    <string name="budgets_copy_action">Copiar</string>
+
+    <!-- Presupuestos: editor -->
+    <string name="budget_editor_new">Nuevo presupuesto</string>
+    <string name="budget_editor_edit">Editar presupuesto</string>
+    <string name="budget_editor_subtitle">%1$s · %2$s</string>
+    <string name="budget_field_limit">Límite mensual</string>
+    <string name="budget_spent_so_far">Llevas gastado %1$s este mes</string>
+    <string name="budget_warning_hint">Te avisaremos al llegar al %1$d %% del límite.</string>
+    <string name="budget_remove">Quitar límite</string>
+
+    <!-- Presupuestos: avisos y errores -->
+    <string name="message_budget_saved">Límite de %1$s guardado</string>
+    <string name="message_budget_deleted">Límite de %1$s quitado</string>
+    <plurals name="message_budgets_copied">
+        <item quantity="one">Se copió %1$d presupuesto</item>
+        <item quantity="many">Se copiaron %1$d presupuestos</item>
+        <item quantity="other">Se copiaron %1$d presupuestos</item>
+    </plurals>
+    <string name="message_budgets_nothing_to_copy">No había presupuestos para copiar</string>
+    <string name="error_budget_not_found">Ese presupuesto ya no existe</string>
 
     <!-- Íconos (etiquetas para lectores de pantalla) -->
     <string name="icon_restaurant">Comida</string>

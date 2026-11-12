@@ -4,9 +4,11 @@ import com.flowmoney.data.local.dao.TransactionDao
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionDetails
 import com.flowmoney.domain.model.TransactionFilter
+import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.YearMonth
 import javax.inject.Inject
 
 class TransactionRepositoryImpl @Inject constructor(
@@ -31,4 +33,11 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun countByCategory(categoryId: Long): Int = dao.countByCategory(categoryId)
+
+    override fun observeExpensesByCategory(month: YearMonth): Flow<Map<Long, Long>> =
+        dao.observeTotalsByCategory(
+            fromEpochDay = month.atDay(1).toEpochDay(),
+            toEpochDay = month.atEndOfMonth().toEpochDay(),
+            type = TransactionType.EXPENSE.name,
+        ).map { rows -> rows.associate { it.categoryId to it.totalCents } }
 }

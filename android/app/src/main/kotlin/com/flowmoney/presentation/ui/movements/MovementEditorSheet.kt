@@ -46,19 +46,17 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.flowmoney.R
 import com.flowmoney.domain.model.Category
 import com.flowmoney.domain.model.TransactionRules
 import com.flowmoney.domain.model.TransactionType
+import com.flowmoney.presentation.components.AmountField
 import com.flowmoney.presentation.components.CategoryAvatar
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
 import java.time.LocalDate
 
 private const val MILLIS_PER_DAY = 86_400_000L
-private const val AMOUNT_INPUT_MAX = 14
 
 /** Hoja inferior para crear o editar un movimiento. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,7 +78,6 @@ fun MovementEditorForm(
 ) {
     val error = editor.error
     val errorField = error?.field
-    val currencySymbol = MoneyFormat.currencySymbol()
 
     Column(
         modifier = modifier
@@ -99,20 +96,11 @@ fun MovementEditorForm(
 
         val errorText = error?.text()
         val amountError = errorText.takeIf { errorField == MovementField.AMOUNT }
-        OutlinedTextField(
+        AmountField(
             value = editor.amountText,
-            onValueChange = { text ->
-                // Solo dígitos y separador decimal; el dominio valida el formato final.
-                val clean = text.filter { it.isDigit() || it == '.' || it == ',' }.take(AMOUNT_INPUT_MAX)
-                onEvent(MovementsEvent.AmountChanged(clean))
-            },
-            label = { Text(stringResource(R.string.movement_field_amount)) },
-            prefix = if (currencySymbol.isNotEmpty()) { { Text("$currencySymbol ") } } else null,
-            singleLine = true,
-            isError = amountError != null,
-            supportingText = amountError?.let { { Text(it) } },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
-            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { onEvent(MovementsEvent.AmountChanged(it)) },
+            label = stringResource(R.string.movement_field_amount),
+            error = amountError,
         )
 
         val descriptionError = errorText.takeIf { errorField == MovementField.DESCRIPTION }

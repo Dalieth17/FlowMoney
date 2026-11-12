@@ -41,3 +41,9 @@ data class TransactionWithCategoryRow(
     @Embedded val transaction: TransactionEntity,
     @Embedded(prefix = "cat_") val category: CategoryEntity,
 )
+
+/** Fila de una suma agrupada por categoría. */
+data class CategoryTotalRow(
+    @ColumnInfo(name = "category_id") val categoryId: Long,
+    @ColumnInfo(name = "total_cents") val totalCents: Long,
+)

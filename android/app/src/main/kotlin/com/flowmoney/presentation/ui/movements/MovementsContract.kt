@@ -1,5 +1,6 @@
 package com.flowmoney.presentation.ui.movements
 
+import com.flowmoney.domain.model.BudgetStatus
 import com.flowmoney.domain.model.Category
 import com.flowmoney.domain.model.Money
 import com.flowmoney.domain.model.MonthSummary
@@ -116,6 +117,9 @@ sealed interface MovementsMessage {
     data object Updated : MovementsMessage
 
     data object Deleted : MovementsMessage
+
+    /** Se guardó un gasto y su categoría llegó al aviso del presupuesto (80 % o más). */
+    data class BudgetAlert(val status: BudgetStatus) : MovementsMessage
 
     data class Failed(val error: TransactionError) : MovementsMessage
 }

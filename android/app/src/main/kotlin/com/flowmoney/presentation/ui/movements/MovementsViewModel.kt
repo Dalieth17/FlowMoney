@@ -3,9 +3,11 @@ package com.flowmoney.presentation.ui.movements
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowmoney.domain.common.Outcome
+import com.flowmoney.domain.model.BudgetLevel
 import com.flowmoney.domain.model.MonthSummary
 import com.flowmoney.domain.model.TransactionFilter
 import com.flowmoney.domain.model.TransactionType
+import com.flowmoney.domain.usecase.budget.CheckBudgetUseCase
 import com.flowmoney.domain.usecase.category.ObserveCategoriesUseCase
 import com.flowmoney.domain.usecase.transaction.DeleteTransactionUseCase
 import com.flowmoney.domain.usecase.transaction.ObserveTransactionsUseCase
@@ -35,6 +37,7 @@ class MovementsViewModel @Inject constructor(
     observeCategories: ObserveCategoriesUseCase,
     private val saveTransaction: SaveTransactionUseCase,
     private val deleteTransaction: DeleteTransactionUseCase,
+    private val checkBudget: CheckBudgetUseCase,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -120,11 +123,21 @@ class MovementsViewModel @Inject constructor(
                     editor.value = null
                     // Mostrar el mes donde quedó el movimiento, para que el usuario lo vea.
                     filter.update { it.copy(month = YearMonth.from(current.date)) }
-                    _messages.send(if (current.isNew) MovementsMessage.Created else MovementsMessage.Updated)
+                    _messages.send(savedMessage(current))
                 }
                 is Outcome.Failure -> editor.update { it?.copy(isSaving = false, error = result.error) }
             }
         }
+    }
+
+    /** Si el gasto deja su categoría cerca o por encima del presupuesto, el aviso lo dice. */
+    private suspend fun savedMessage(saved: MovementEditorState): MovementsMessage {
+        val categoryId = saved.categoryId
+        if (saved.type == TransactionType.EXPENSE && categoryId != null) {
+            val status = checkBudget(categoryId, YearMonth.from(saved.date))
+            if (status != null && status.level != BudgetLevel.ON_TRACK) return MovementsMessage.BudgetAlert(status)
+        }
+        return if (saved.isNew) MovementsMessage.Created else MovementsMessage.Updated
     }
 
     private fun confirmDelete() {
