@@ -16,10 +16,16 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -29,13 +35,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.flowmoney.R
+import com.flowmoney.presentation.format.LocalMoneyFormatter
+import com.flowmoney.presentation.format.MoneyFormatter
 import com.flowmoney.presentation.ui.advisor.AdvisorScreen
 import com.flowmoney.presentation.ui.budgets.BudgetsScreen
 import com.flowmoney.presentation.ui.categories.CategoriesScreen
+import com.flowmoney.presentation.ui.currency.CurrencyChoiceScreen
+import com.flowmoney.presentation.ui.currency.CurrencyDialog
+import com.flowmoney.presentation.ui.currency.CurrencyUiState
+import com.flowmoney.presentation.ui.currency.CurrencyViewModel
 import com.flowmoney.presentation.ui.movements.MovementsScreen
 import com.flowmoney.presentation.ui.reports.ReportsScreen
-import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
+import kotlinx.serialization.Serializable
 
 /** Destinos con tipos (Navigation 2.8): el compilador valida rutas y argumentos. */
 @Serializable
@@ -67,11 +79,39 @@ private enum class TopLevelTab(
     CATEGORIES(CategoriesDestination, CategoriesDestination::class, R.string.nav_categories, Icons.Rounded.Category),
 }
 
-/** Raíz de la interfaz: barra de navegación inferior + grafo de pantallas. */
+/**
+ * Raíz de la interfaz. En el primer uso pide la moneda; después provee su formato a toda la app
+ * ([LocalMoneyFormatter]) y muestra la navegación.
+ */
+@Composable
+fun FlowMoneyApp(modifier: Modifier = Modifier, currencyViewModel: CurrencyViewModel = hiltViewModel()) {
+    val currencyState by currencyViewModel.uiState.collectAsStateWithLifecycle()
+    var showCurrencyDialog by rememberSaveable { mutableStateOf(false) }
+
+    when (val state = currencyState) {
+        CurrencyUiState.Loading -> Unit
+        CurrencyUiState.NeedsChoice -> CurrencyChoiceScreen(onChoose = currencyViewModel::choose, modifier = modifier)
+        is CurrencyUiState.Ready -> {
+            CompositionLocalProvider(LocalMoneyFormatter provides MoneyFormatter.of(state.currency)) {
+                FlowMoneyNavHost(modifier = modifier, onCurrencyClick = { showCurrencyDialog = true })
+            }
+            if (showCurrencyDialog) {
+                CurrencyDialog(
+                    current = state.currency,
+                    onChoose = currencyViewModel::choose,
+                    onDismiss = { showCurrencyDialog = false },
+                )
+            }
+        }
+    }
+}
+
+/** Barra de navegación inferior + grafo de pantallas. */
 @Composable
 fun FlowMoneyNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    onCurrencyClick: () -> Unit = {},
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -107,7 +147,7 @@ fun FlowMoneyNavHost(
             // Cada pantalla tiene su propio Scaffold: no debe volver a sumar la barra de navegación.
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
-            composable<MovementsDestination> { MovementsScreen() }
+            composable<MovementsDestination> { MovementsScreen(onCurrencyClick = onCurrencyClick) }
             composable<BudgetsDestination> { BudgetsScreen() }
             composable<ReportsDestination> { ReportsScreen() }
             composable<AdvisorDestination> { AdvisorScreen() }

@@ -39,7 +39,7 @@ si sirves por HTTPS.
 | **Categorías**   | Predeterminadas + propias con ícono y color.                                                      |
 | **Presupuestos** | Límite mensual por categoría; aviso al 80 % y al superarlo.                                       |
 | **Reportes**     | Dona por categoría, barras de 6 meses, tasa de ahorro, exportar a PDF (imprimir).                 |
-| **Perfil**       | Nombre, moneda ($, S/, US$, €), cambio de contraseña, exportar todo, restaurar ejemplo.           |
+| **Perfil**       | Nombre, moneda (pesos COP o dólares USD), cambio de contraseña, exportar todo, restaurar ejemplo. |
 | **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador).     |
 
 ## Arquitectura
@@ -169,6 +169,11 @@ Estado:
     emergencia, límites sugeridos…).
   - _Preguntas_ en lenguaje natural: «¿puedo comprar algo de 800?», «¿cuánto puedo gastar por día?»,
     «¿cómo ahorro más?», «¿en qué gasto más?», deudas, inversión, proyección y más.
+
+- **Moneda** — al abrir la app por primera vez se elige **pesos colombianos (COP)** o **dólares
+  (USD)**; se cambia después con el botón de moneda en Movimientos. COP se muestra como
+  `$ 4.500.000` (sin centavos si no los hay) y USD como `US$ 1,234.56`. Los montos se pueden
+  escribir con separador de miles (`4.500.000`, `1,234.50`). Cambiar de moneda no convierte montos.
 
 La base de datos se actualiza con migraciones de Room (probadas en `MigrationTest`), nunca borrando
 datos. Los porcentajes se reparten de modo que siempre sumen 100.

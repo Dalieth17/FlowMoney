@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flowmoney.R
 import com.flowmoney.domain.model.MonthSummary
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.LocalMoneyFormatter
 
 /** Ingresos · Gastos · Balance en tres columnas: el resumen de un mes (Movimientos y Reportes). */
 @Composable
@@ -23,19 +23,19 @@ fun MonthTotals(summary: MonthSummary, modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         TotalValue(
             label = stringResource(R.string.summary_income),
-            value = MoneyFormat.format(summary.incomeCents),
+            value = LocalMoneyFormatter.current.format(summary.incomeCents),
             color = colors.primary,
             modifier = Modifier.weight(1f),
         )
         TotalValue(
             label = stringResource(R.string.summary_expense),
-            value = MoneyFormat.format(summary.expenseCents),
+            value = LocalMoneyFormatter.current.format(summary.expenseCents),
             color = colors.error,
             modifier = Modifier.weight(1f),
         )
         TotalValue(
             label = stringResource(R.string.summary_balance),
-            value = MoneyFormat.format(summary.balanceCents),
+            value = LocalMoneyFormatter.current.format(summary.balanceCents),
             color = if (summary.balanceCents < 0) colors.error else colors.onSurface,
             modifier = Modifier.weight(1f),
         )

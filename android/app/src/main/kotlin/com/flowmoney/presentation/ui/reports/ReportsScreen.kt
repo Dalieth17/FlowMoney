@@ -71,7 +71,7 @@ import com.flowmoney.domain.model.MonthlyReport
 import com.flowmoney.domain.model.WeekFlow
 import com.flowmoney.presentation.components.MonthSelector
 import com.flowmoney.presentation.components.MonthTotals
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.LocalMoneyFormatter
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import com.flowmoney.presentation.ui.reports.export.ReportHtml
 import com.flowmoney.util.HtmlPrinter
@@ -102,13 +102,14 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
     val context = LocalContext.current
     // Imprimir necesita la Activity; el ViewModel no la conoce (ni debe).
     val printer = remember(context) { context.findActivity()?.let { HtmlPrinter(it) } }
+    val money = LocalMoneyFormatter.current
 
     ReportsContent(
         state = state,
         snackbarHostState = snackbarHostState,
         onEvent = viewModel::onEvent,
         onExport = { report ->
-            val document = ReportDocumentFactory.create(report, context.resources, LocalDate.now())
+            val document = ReportDocumentFactory.create(report, context.resources, LocalDate.now(), money)
             val started = printer?.print(jobName = document.title, html = ReportHtml.render(document)) == true
             if (!started) {
                 scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.reports_export_failed)) }
@@ -297,7 +298,7 @@ private fun DonutChart(shares: List<CategoryShare>, modifier: Modifier = Modifie
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = MoneyFormat.format(totalCents),
+                text = LocalMoneyFormatter.current.format(totalCents),
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -312,7 +313,7 @@ private fun DonutChart(shares: List<CategoryShare>, modifier: Modifier = Modifie
 private fun ShareRow(share: CategoryShare) {
     val resources = LocalContext.current.resources
     val color = share.category.color.toColorOrNull() ?: MaterialTheme.colorScheme.secondary
-    val amount = MoneyFormat.format(share.amountCents)
+    val amount = LocalMoneyFormatter.current.format(share.amountCents)
     val percent = share.percentText(resources)
     val description = stringResource(R.string.reports_share_description, share.category.name, amount, percent)
 
@@ -392,7 +393,7 @@ private fun FlowBarChart(bars: List<FlowBar>) {
     val maxCents = bars.maxOf { maxOf(it.incomeCents, it.expenseCents) }.coerceAtLeast(1L)
 
     Column(Modifier.fillMaxWidth().clearAndSetSemantics { }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(MoneyFormat.format(maxCents), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+        Text(LocalMoneyFormatter.current.format(maxCents), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
         HorizontalDivider(color = colors.outlineVariant)
         Row(Modifier.fillMaxWidth().height(BarsHeight), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             bars.forEach { bar ->
@@ -469,8 +470,8 @@ private fun RowScope.HeaderCell(color: Color, label: String) {
 
 @Composable
 private fun FlowTableRow(bar: FlowBar) {
-    val income = MoneyFormat.format(bar.incomeCents)
-    val expense = MoneyFormat.format(bar.expenseCents)
+    val income = LocalMoneyFormatter.current.format(bar.incomeCents)
+    val expense = LocalMoneyFormatter.current.format(bar.expenseCents)
     val description = stringResource(R.string.reports_flow_row_description, bar.label, income, expense)
 
     // Una sola frase para TalkBack: "Semana 1 · 1–7: ingresos …, gastos …".

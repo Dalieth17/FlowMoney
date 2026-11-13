@@ -133,7 +133,7 @@ class BudgetsViewModelTest {
     fun `editar precarga el limite y lo reemplaza`() = runTest {
         subscribe()
         viewModel.onEvent(BudgetsEvent.EditClicked(state.overview.budgets.single()))
-        assertEquals("100.00", state.editor!!.amountText)
+        assertEquals("100", state.editor!!.amountText)
         assertFalse(state.editor!!.isNew)
 
         viewModel.onEvent(BudgetsEvent.AmountChanged("200"))

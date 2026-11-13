@@ -28,7 +28,7 @@ import com.flowmoney.domain.model.BudgetRules
 import com.flowmoney.presentation.components.AmountField
 import com.flowmoney.presentation.components.CategoryAvatar
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.LocalMoneyFormatter
 
 /** Hoja inferior para definir, cambiar o quitar el límite de una categoría. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +71,7 @@ fun BudgetEditorForm(editor: BudgetEditorState, onEvent: (BudgetsEvent) -> Unit,
             onValueChange = { onEvent(BudgetsEvent.AmountChanged(it)) },
             label = stringResource(R.string.budget_field_limit),
             error = editor.error?.text(),
-            supportingText = stringResource(R.string.budget_spent_so_far, MoneyFormat.format(editor.spentCents)),
+            supportingText = stringResource(R.string.budget_spent_so_far, LocalMoneyFormatter.current.format(editor.spentCents)),
             imeAction = ImeAction.Done,
             onDone = { onEvent(BudgetsEvent.SaveClicked) },
         )

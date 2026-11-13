@@ -10,6 +10,7 @@ import com.flowmoney.domain.advisor.Insight
 import com.flowmoney.domain.advisor.RecurringExpense
 import com.flowmoney.domain.advisor.SavingCut
 import com.flowmoney.domain.advisor.ScorePart
+import com.flowmoney.domain.model.AppCurrency
 import com.flowmoney.domain.model.BudgetLevel
 import com.flowmoney.domain.model.BudgetStatus
 import java.time.YearMonth
@@ -33,7 +34,12 @@ data class AdviceText(
 class AdvisorWriter(
     private val money: (Long) -> String,
     private val monthName: (YearMonth) -> String,
+    currency: AppCurrency = AppCurrency.COP,
 ) {
+    // Ejemplos con cifras creíbles para cada moneda: 500 dólares equivalen a cientos de miles de pesos.
+    private val samplePurchase = if (currency == AppCurrency.COP) "500.000" else "500"
+    private val samplePhone = if (currency == AppCurrency.COP) "1.500.000" else "1500"
+
     val disclaimer: String =
         "Consejos generados en tu teléfono a partir de tus movimientos: tus datos no salen del dispositivo. " +
             "Son orientativos y educativos; para decisiones grandes consulta a un asesor financiero certificado."
@@ -44,7 +50,7 @@ class AdvisorWriter(
         "¿Cuánto puedo gastar por día?",
         "¿Cómo ahorro más?",
         "¿En qué gasto más?",
-        "¿Puedo comprar algo de 500?",
+        "¿Puedo comprar algo de $samplePurchase?",
         "¿Cómo cierro el mes?",
         "¿Qué suscripciones tengo?",
         "¿Cuánto necesito de fondo de emergencia?",
@@ -359,7 +365,7 @@ class AdvisorWriter(
         AdvisorAnswer.AffordabilityNeedsPrice -> AdviceText(
             title = "¿Cuánto cuesta?",
             body = listOf(
-                "Dime el precio y lo comparo con tus números del mes. Por ejemplo: «¿Puedo comprar un celular de 1500?».",
+                "Dime el precio y lo comparo con tus números del mes. Por ejemplo: «¿Puedo comprar un celular de $samplePhone?».",
             ),
         )
 

@@ -70,7 +70,8 @@ import com.flowmoney.domain.model.DefaultCategories
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.LocalMoneyFormatter
+import com.flowmoney.presentation.format.MoneyFormatter
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import java.time.LocalDate
 import java.time.YearMonth
@@ -81,10 +82,12 @@ fun AdvisorScreen(viewModel: AdvisorViewModel = hiltViewModel()) {
     AdvisorContent(state = state, writer = rememberAdvisorWriter(), onEvent = viewModel::onEvent)
 }
 
-/** Redactor con la moneda y el idioma del teléfono. */
+/** Redactor con la moneda elegida y el idioma del teléfono. */
 @Composable
-fun rememberAdvisorWriter(): AdvisorWriter =
-    remember { AdvisorWriter(money = { MoneyFormat.format(it) }, monthName = { DateFormat.monthName(it) }) }
+fun rememberAdvisorWriter(): AdvisorWriter {
+    val money = LocalMoneyFormatter.current
+    return remember(money) { AdvisorWriter(money = money::format, monthName = { DateFormat.monthName(it) }, currency = money.currency) }
+}
 
 /** UI sin estado: fácil de previsualizar y de probar. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -419,7 +422,7 @@ private val previewReport: AdvisorReport by lazy {
     FinancialAdvisor.analyze(AdvisorInput(today, categories, transactions, emptyList()))
 }
 
-private val previewWriter = AdvisorWriter(money = { MoneyFormat.format(it) }, monthName = { DateFormat.monthName(it) })
+private val previewWriter = AdvisorWriter(money = MoneyFormatter.Default::format, monthName = { DateFormat.monthName(it) })
 
 @Preview(name = "Análisis", showBackground = true, heightDp = 1800)
 @Preview(name = "Análisis oscuro", showBackground = true, heightDp = 1800, uiMode = Configuration.UI_MODE_NIGHT_YES)

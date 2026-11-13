@@ -65,7 +65,7 @@ import com.flowmoney.domain.model.CategorySpending
 import com.flowmoney.presentation.components.CategoryAvatar
 import com.flowmoney.presentation.components.MonthSelector
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.LocalMoneyFormatter
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import java.time.YearMonth
 
@@ -195,8 +195,8 @@ private fun BudgetSummaryCard(overview: BudgetOverview) {
             Text(
                 text = stringResource(
                     R.string.budgets_amount_of_limit,
-                    MoneyFormat.format(overview.spentCents),
-                    MoneyFormat.format(overview.limitCents),
+                    LocalMoneyFormatter.current.format(overview.spentCents),
+                    LocalMoneyFormatter.current.format(overview.limitCents),
                 ),
                 style = MaterialTheme.typography.titleLarge,
             )
@@ -205,7 +205,7 @@ private fun BudgetSummaryCard(overview: BudgetOverview) {
             if (alerts.isNotEmpty()) AlertNote(alerts.joinToString(" · "))
             if (overview.unbudgetedSpentCents > 0) {
                 Text(
-                    text = stringResource(R.string.budgets_unbudgeted_extra, MoneyFormat.format(overview.unbudgetedSpentCents)),
+                    text = stringResource(R.string.budgets_unbudgeted_extra, LocalMoneyFormatter.current.format(overview.unbudgetedSpentCents)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -259,8 +259,8 @@ private fun BudgetCard(status: BudgetStatus, onClick: () -> Unit) {
                     Text(
                         text = stringResource(
                             R.string.budgets_amount_of_limit,
-                            MoneyFormat.format(status.spentCents),
-                            MoneyFormat.format(status.limitCents),
+                            LocalMoneyFormatter.current.format(status.spentCents),
+                            LocalMoneyFormatter.current.format(status.limitCents),
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -319,9 +319,9 @@ private fun LevelBadge(level: BudgetLevel) {
 
 @Composable
 private fun remainingText(remainingCents: Long): String = when {
-    remainingCents > 0 -> stringResource(R.string.budgets_remaining, MoneyFormat.format(remainingCents))
+    remainingCents > 0 -> stringResource(R.string.budgets_remaining, LocalMoneyFormatter.current.format(remainingCents))
     remainingCents == 0L -> stringResource(R.string.budgets_limit_reached)
-    else -> stringResource(R.string.budgets_over_by, MoneyFormat.format(-remainingCents))
+    else -> stringResource(R.string.budgets_over_by, LocalMoneyFormatter.current.format(-remainingCents))
 }
 
 @Composable
@@ -381,7 +381,7 @@ private fun UnbudgetedCard(items: List<CategorySpending>, onEvent: (BudgetsEvent
 private fun UnbudgetedRow(spending: CategorySpending, onClick: () -> Unit) {
     val category = spending.category
     val supporting = if (spending.spentCents > 0) {
-        stringResource(R.string.budgets_unbudgeted_spent, MoneyFormat.format(spending.spentCents))
+        stringResource(R.string.budgets_unbudgeted_spent, LocalMoneyFormatter.current.format(spending.spentCents))
     } else {
         stringResource(R.string.budgets_unbudgeted_none)
     }

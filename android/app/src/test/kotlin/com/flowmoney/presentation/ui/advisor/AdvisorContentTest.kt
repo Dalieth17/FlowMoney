@@ -14,7 +14,7 @@ import com.flowmoney.domain.model.DefaultCategories
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.MoneyFormatter
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -31,7 +31,7 @@ class AdvisorContentTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private val writer = AdvisorWriter(money = { MoneyFormat.format(it) }, monthName = { DateFormat.monthName(it) })
+    private val writer = AdvisorWriter(money = MoneyFormatter.Default::format, monthName = { DateFormat.monthName(it) })
     private val categories = DefaultCategories.all.mapIndexed { index, category -> category.copy(id = index + 1L) }
     private val today = LocalDate.of(2026, 11, 20)
 

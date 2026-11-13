@@ -30,6 +30,8 @@ const els = {
   error: $('auth-err'),
   nameField: $('name-field'),
   name: $('f-name'),
+  currencyField: $('currency-field'),
+  currency: $('f-currency'),
   email: $('f-email'),
   password: $('f-password'),
   toggle: $('pw-toggle'),
@@ -61,6 +63,7 @@ function setMode(next) {
   els.tabLogin.classList.toggle('active', isLogin);
   els.tabRegister.classList.toggle('active', !isLogin);
   els.nameField.hidden = isLogin;
+  els.currencyField.hidden = isLogin;
   els.title.textContent = copy.title;
   els.subtitle.textContent = copy.subtitle;
   els.submit.textContent = copy.submit;
@@ -102,7 +105,8 @@ els.form.addEventListener('submit', async (e) => {
   els.submit.disabled = true;
   els.submit.textContent = COPY[mode].busy;
   try {
-    if (mode === 'register') await api.register({ ...credentials, name: els.name.value.trim() });
+    if (mode === 'register')
+      await api.register({ ...credentials, name: els.name.value.trim(), currency: els.currency.value });
     else await api.login(credentials);
     location.replace('app.html');
   } catch (err) {

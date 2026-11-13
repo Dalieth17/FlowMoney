@@ -12,7 +12,8 @@ z.setErrorMap((issue, ctx) => {
   return { message: ctx.defaultError };
 });
 
-const CURRENCIES = Object.freeze(['$', 'S/', 'US$', '€']);
+/** Monedas que maneja la app: peso colombiano y dólar estadounidense (códigos ISO 4217). */
+const CURRENCIES = Object.freeze(['COP', 'USD']);
 const TRANSACTION_TYPES = Object.freeze(['INCOME', 'EXPENSE']);
 const ACCOUNT_TYPES = Object.freeze(['CASH', 'BANK', 'SAVINGS']);
 const MAX_AMOUNT = 9_999_999_999.99; // DECIMAL(12,2)
@@ -29,7 +30,9 @@ const personName = z.string().trim().min(2, 'Escribe tu nombre').max(80, 'Nombre
 const positiveId = (msg) => z.coerce.number({ invalid_type_error: msg }).int(msg).positive(msg);
 
 // ---- Auth / perfil ----
-const registerSchema = z.object({ name: personName, email, password });
+const currency = z.enum(CURRENCIES, { errorMap: () => ({ message: 'Moneda no válida' }) });
+
+const registerSchema = z.object({ name: personName, email, password, currency: currency.default('COP') });
 
 const loginSchema = z.object({
   email,
@@ -38,7 +41,7 @@ const loginSchema = z.object({
 
 const profileSchema = z.object({
   name: personName,
-  currency: z.enum(CURRENCIES, { errorMap: () => ({ message: 'Moneda no válida' }) }),
+  currency,
 });
 
 const changePasswordSchema = z

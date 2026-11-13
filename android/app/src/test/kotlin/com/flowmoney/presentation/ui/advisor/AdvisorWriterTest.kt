@@ -108,4 +108,13 @@ class AdvisorWriterTest {
     }
 
     private fun writerMoney(cents: Long) = "S/ %d.%02d".format(cents / 100, cents % 100)
+
+    @Test
+    fun `los ejemplos de compra usan cifras de la moneda elegida`() {
+        fun purchase(currency: com.flowmoney.domain.model.AppCurrency) =
+            AdvisorWriter(money = { it.toString() }, monthName = { it.toString() }, currency = currency)
+                .suggestedQuestions.single { "comprar" in it }
+        assertEquals("¿Puedo comprar algo de 500.000?", purchase(com.flowmoney.domain.model.AppCurrency.COP))
+        assertEquals("¿Puedo comprar algo de 500?", purchase(com.flowmoney.domain.model.AppCurrency.USD))
+    }
 }

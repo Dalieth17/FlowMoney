@@ -17,6 +17,7 @@ describe('registerSchema', () => {
     const r = registerSchema.parse({ name: ' Ana ', email: '  ANA@Mail.COM ', password: 'secret123' });
     assert.equal(r.email, 'ana@mail.com');
     assert.equal(r.name, 'Ana');
+    assert.equal(r.currency, 'COP', 'la moneda por defecto es el peso colombiano');
   });
 
   test('rechaza contraseñas cortas con mensaje en español', () => {
@@ -82,8 +83,10 @@ describe('categorySchema', () => {
 });
 
 describe('perfil', () => {
-  test('solo acepta monedas soportadas', () => {
-    assert.equal(profileSchema.safeParse({ name: 'Ana', currency: 'S/' }).success, true);
+  test('solo acepta pesos colombianos o dólares', () => {
+    assert.equal(profileSchema.safeParse({ name: 'Ana', currency: 'COP' }).success, true);
+    assert.equal(profileSchema.safeParse({ name: 'Ana', currency: 'USD' }).success, true);
+    assert.equal(firstError(profileSchema.safeParse({ name: 'Ana', currency: '$' })), 'Moneda no válida');
     assert.equal(firstError(profileSchema.safeParse({ name: 'Ana', currency: 'BTC' })), 'Moneda no válida');
   });
 

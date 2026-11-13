@@ -16,7 +16,7 @@ import com.flowmoney.domain.model.MonthSummary
 import com.flowmoney.domain.model.MonthlyReport
 import com.flowmoney.domain.model.WeekFlow
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.MoneyFormatter
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -125,8 +125,8 @@ class ReportsContentTest {
         composeRule.setContent { FlowMoneyTheme { CategoriesCard(report.expensesByCategory) } }
 
         // Cada fila es una sola frase: nombre, monto y porcentaje (el monto, con el formato del locale).
-        composeRule.onNodeWithContentDescription("Alimentación: ${MoneyFormat.format(45_000)}, 75 % del gasto").assertExists()
-        composeRule.onNodeWithContentDescription("Transporte: ${MoneyFormat.format(15_000)}, 25 % del gasto").assertExists()
+        composeRule.onNodeWithContentDescription("Alimentación: ${MoneyFormatter.Default.format(45_000)}, 75 % del gasto").assertExists()
+        composeRule.onNodeWithContentDescription("Transporte: ${MoneyFormatter.Default.format(15_000)}, 25 % del gasto").assertExists()
     }
 
     @Test

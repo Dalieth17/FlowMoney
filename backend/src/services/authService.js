@@ -10,15 +10,15 @@ const { seedUserData } = require('../db/seed');
 let dummyHash;
 const getDummyHash = async () => (dummyHash ??= await hashPassword('flowmoney-dummy-password'));
 
-async function register({ name, email, password }) {
+async function register({ name, email, password, currency = 'COP' }) {
   if (await userRepository.existsByEmail(email)) {
     throw HttpError.conflict('Ese correo ya está registrado');
   }
   const passwordHash = await hashPassword(password);
   try {
     return await withTransaction(async (conn) => {
-      const userId = await userRepository.create({ name, email, passwordHash }, conn);
-      await seedUserData(userId, conn);
+      const userId = await userRepository.create({ name, email, passwordHash, currency }, conn);
+      await seedUserData(userId, conn, new Date(), currency);
       return userRepository.findById(userId, conn);
     });
   } catch (err) {

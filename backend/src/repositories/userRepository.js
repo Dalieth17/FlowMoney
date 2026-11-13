@@ -32,11 +32,12 @@ async function findPasswordHash(id, db = pool) {
   return rows[0]?.password_hash ?? null;
 }
 
-async function create({ name, email, passwordHash }, db = pool) {
-  const [result] = await db.query('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)', [
+async function create({ name, email, passwordHash, currency = 'COP' }, db = pool) {
+  const [result] = await db.query('INSERT INTO users (name, email, password_hash, currency) VALUES (?, ?, ?, ?)', [
     name,
     email,
     passwordHash,
+    currency,
   ]);
   return result.insertId;
 }

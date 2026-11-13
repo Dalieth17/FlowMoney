@@ -19,10 +19,10 @@ before(async () => {
 after(() => closePool());
 
 /** Registra un usuario nuevo y devuelve un agente con su cookie de sesión. */
-async function signUp(name = 'Ana') {
+async function signUp(name = 'Ana', extra = {}) {
   const agent = request.agent(app);
   const email = uniqueEmail(name.toLowerCase());
-  const res = await agent.post('/api/auth/register').send({ name, email, password: PASSWORD });
+  const res = await agent.post('/api/auth/register').send({ name, email, password: PASSWORD, ...extra });
   assert.equal(res.status, 201, JSON.stringify(res.body));
   const { body: data } = await agent.get('/api/bootstrap').expect(200);
   return { agent, email, data };
@@ -43,7 +43,7 @@ describe('autenticación', () => {
   test('el registro abre sesión y siembra datos de ejemplo', async () => {
     const { data } = await signUp();
     assert.equal(data.user.name, 'Ana');
-    assert.equal(data.user.currency, '$');
+    assert.equal(data.user.currency, 'COP', 'sin elegir, la moneda es el peso colombiano');
     assert.equal(data.categories.length, 9);
     assert.equal(data.accounts.length, 2);
     assert.equal(data.transactions.length, 17);
@@ -52,6 +52,23 @@ describe('autenticación', () => {
       data.transactions.every((t) => t.accountId !== null),
       'todo movimiento sembrado tiene cuenta',
     );
+  });
+
+  test('el registro guarda la moneda elegida y siembra montos acordes', async () => {
+    const { data: cop } = await signUp('Ana', { currency: 'COP' });
+    const { data: usd } = await signUp('Bob', { currency: 'USD' });
+    assert.equal(usd.user.currency, 'USD');
+    const salary = (d) => d.transactions.find((t) => t.description === 'Sueldo del mes').amount;
+    assert.equal(salary(cop), 4500000);
+    assert.equal(salary(usd), 4200);
+    assert.equal(usd.transactions.length, 17);
+  });
+
+  test('rechaza una moneda no soportada al registrarse', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ name: 'Ana', email: uniqueEmail('ana'), password: PASSWORD, currency: 'EUR' });
+    assert.equal(res.status, 400);
   });
 
   test('no permite correos duplicados', async () => {
@@ -197,9 +214,9 @@ describe('presupuestos', () => {
 describe('perfil', () => {
   test('actualiza nombre y moneda', async () => {
     const { agent } = await signUp();
-    const res = await agent.put('/api/profile').send({ name: 'Ana Pérez', currency: 'S/' }).expect(200);
+    const res = await agent.put('/api/profile').send({ name: 'Ana Pérez', currency: 'USD' }).expect(200);
     assert.equal(res.body.name, 'Ana Pérez');
-    assert.equal(res.body.currency, 'S/');
+    assert.equal(res.body.currency, 'USD');
     await agent.put('/api/profile').send({ name: 'Ana', currency: 'XYZ' }).expect(400);
   });
 
@@ -228,5 +245,12 @@ describe('datos', () => {
     const { body } = await agent.get('/api/bootstrap').expect(200);
     assert.equal(body.transactions.length, 17);
     assert.equal(body.categories.length, 9);
+  });
+
+  test('reiniciar usa los montos de la moneda del usuario', async () => {
+    const { agent } = await signUp('Bob', { currency: 'USD' });
+    await agent.post('/api/data/reset').expect(204);
+    const { body } = await agent.get('/api/bootstrap').expect(200);
+    assert.equal(body.transactions.find((t) => t.description === 'Sueldo del mes').amount, 4200);
   });
 });

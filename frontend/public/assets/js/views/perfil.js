@@ -25,14 +25,14 @@ function personalPanel() {
   const currency = h(
     'select',
     { class: 'input' },
-    CURRENCIES.map((c) => h('option', { value: c.symbol, selected: c.symbol === user.currency }, c.label)),
+    CURRENCIES.map((c) => h('option', { value: c.code, selected: c.code === user.currency }, c.label)),
   );
   const submit = h('button', { type: 'submit', class: 'btn btn-primary' }, 'Guardar cambios');
 
   const form = h('form', { class: 'form', novalidate: true }, [
     field('Nombre', name),
     field('Correo', email, 'El correo es tu usuario para ingresar; no se puede cambiar.'),
-    field('Moneda', currency, 'Se usa para mostrar todos los montos.'),
+    field('Moneda', currency, 'Cambiarla no convierte tus montos: solo cambia cómo se muestran.'),
     h('div', { class: 'modal-actions' }, [h('div', { class: 'spacer' }), submit]),
   ]);
   form.addEventListener('submit', async (e) => {

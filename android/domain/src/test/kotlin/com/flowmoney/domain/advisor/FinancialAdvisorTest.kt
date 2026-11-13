@@ -220,4 +220,12 @@ class FinancialAdvisorTest {
         assertEquals(HealthScore.Grade.NEEDS_ATTENTION, score.grade)
         assertNotNull(score.parts.firstOrNull { it.kind == ScorePart.Kind.SAVINGS })
     }
+
+    @Test
+    fun `los limites sugeridos se redondean a cifras faciles en dolares y en pesos`() {
+        assertEquals(108_000L, FinancialAdvisor.roundUp(107_200))
+        assertEquals(65_400_000L, FinancialAdvisor.roundUp(65_347_800))
+        assertEquals(1_000L, FinancialAdvisor.roundUp(1))
+        assertEquals(500_000_000L, FinancialAdvisor.roundUp(500_000_000))
+    }
 }

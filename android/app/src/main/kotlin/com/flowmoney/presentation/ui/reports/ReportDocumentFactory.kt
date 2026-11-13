@@ -5,7 +5,7 @@ import androidx.annotation.StringRes
 import com.flowmoney.R
 import com.flowmoney.domain.model.MonthlyReport
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.MoneyFormatter
 import com.flowmoney.presentation.ui.reports.export.CategoryRow
 import com.flowmoney.presentation.ui.reports.export.CategorySection
 import com.flowmoney.presentation.ui.reports.export.Figure
@@ -16,17 +16,22 @@ import com.flowmoney.presentation.ui.reports.export.Tone
 import java.time.LocalDate
 import java.util.Locale
 
-/** Traduce un [MonthlyReport] al contenido del PDF: textos de recursos y montos con el formato del teléfono. */
+/** Traduce un [MonthlyReport] al contenido del PDF: textos de recursos y montos en la moneda elegida. */
 object ReportDocumentFactory {
-    fun create(report: MonthlyReport, resources: Resources, today: LocalDate): ReportDocument {
+    fun create(
+        report: MonthlyReport,
+        resources: Resources,
+        today: LocalDate,
+        money: MoneyFormatter = MoneyFormatter.Default,
+    ): ReportDocument {
         val summary = report.summary
         val figures = buildList {
-            add(Figure(resources.getString(R.string.summary_income), MoneyFormat.format(summary.incomeCents), Tone.INCOME))
-            add(Figure(resources.getString(R.string.summary_expense), MoneyFormat.format(summary.expenseCents), Tone.EXPENSE))
+            add(Figure(resources.getString(R.string.summary_income), money.format(summary.incomeCents), Tone.INCOME))
+            add(Figure(resources.getString(R.string.summary_expense), money.format(summary.expenseCents), Tone.EXPENSE))
             add(
                 Figure(
                     label = resources.getString(R.string.summary_balance),
-                    value = MoneyFormat.format(summary.balanceCents),
+                    value = money.format(summary.balanceCents),
                     tone = if (summary.balanceCents < 0) Tone.EXPENSE else Tone.NEUTRAL,
                 ),
             )
@@ -54,12 +59,12 @@ object ReportDocumentFactory {
                 amountHeader = resources.getString(R.string.report_doc_amount),
                 shareHeader = resources.getString(R.string.report_doc_share),
                 totalLabel = resources.getString(R.string.reports_total),
-                totalAmount = MoneyFormat.format(report.expensesByCategory.sumOf { it.amountCents }),
+                totalAmount = money.format(report.expensesByCategory.sumOf { it.amountCents }),
                 rows = report.expensesByCategory.map { share ->
                     CategoryRow(
                         name = share.category.name,
                         colorHex = share.category.color,
-                        amount = MoneyFormat.format(share.amountCents),
+                        amount = money.format(share.amountCents),
                         share = share.percentText(resources),
                         weightCents = share.amountCents,
                     )
@@ -82,8 +87,8 @@ object ReportDocumentFactory {
             FlowRow(
                 label = bar.label,
                 shortLabel = bar.shortLabel,
-                income = MoneyFormat.format(bar.incomeCents),
-                expense = MoneyFormat.format(bar.expenseCents),
+                income = money.format(bar.incomeCents),
+                expense = money.format(bar.expenseCents),
                 incomeCents = bar.incomeCents,
                 expenseCents = bar.expenseCents,
             )

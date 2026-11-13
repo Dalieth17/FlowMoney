@@ -39,7 +39,9 @@ frontend/tests/ tests de domain/ y format (node:test)
 - Frontend: vistas montan con `mount(root, ...)` (nunca `append(null)`); texto siempre por
   `h()`/textContent; `html:` solo para SVG propio. Lógica pura en `domain/` (+ test).
 - Montos DECIMAL(12,2) → number; fechas epoch ms (BIGINT); mes 0‑based (como JS Date).
-- Moneda por usuario (`users.currency`: `$`, `S/`, `US$`, `€`); `setCurrency()` en el store.
+- Moneda por usuario (`users.currency`: `COP` | `USD`, por defecto COP; migración 004). Se elige al
+  registrarse (login.html) y en Perfil. `format.js`: `setCurrency(code)`, COP "$ 4.500.000" (es-CO, decimales
+  solo si hay centavos), USD "US$ 1,234.56". `seedUserData(..., currency)` siembra un mes colombiano o en dólares.
 - Prettier (120 col, comillas simples) y ESLint flat config en la raíz; HTML fuera de Prettier.
 - Docker: web en 8080 (`WEB_PORT`); MySQL publicado solo en `127.0.0.1:3309` (`MYSQL_PORT`, nunca
   3306: el usuario tiene un MySQL local). Dentro de la red de Docker la API usa `db:3306`.
@@ -60,7 +62,10 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 - Ids `Long`; colores "#RRGGBB"; íconos = clave de Material (catálogo en `CategoryVisuals.kt`).
 - Textos en `res/values/strings.xml`; errores de dominio → texto en `CategoryTexts.kt` /
   `MovementTexts.kt`.
-- Dinero en céntimos `Long` (`Money.parseToCents` acepta "12,50" o "12.50"); fechas `LocalDate`
+- Moneda: `AppCurrency { COP, USD }` en SharedPreferences (`CurrencyRepositoryImpl`); `FlowMoneyApp` pide
+  elegirla en el primer uso y provee `LocalMoneyFormatter` (`MoneyFormatter`; en tests, `MoneyFormatter.Default` = COP).
+  Nunca formatear dinero con el locale del teléfono.
+- Dinero en céntimos `Long` (`Money.parseToCents` acepta "12,50", "12.50", "4.500.000", "1,234.50"); fechas `LocalDate`
   guardadas como días‑época; `Clock` inyectado (`TimeModule`) para tests deterministas.
 - Esquema Room: subir `version` + `MIGRATION_X_Y` en `data/local/migrations/Migrations.kt` +
   caso en `MigrationTest` (crea la v1 a mano y migra). Sin migración destructiva.
@@ -91,4 +96,5 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 - [x] Android: módulo **Presupuestos** (BD v4: `budgets` por categoría y mes `aaaamm`; avisos 80/100 %)
 - [x] Android: módulo **Reportes** (dona + barras semana/mes, tasa de ahorro, export a PDF por impresión)
 - [x] Android: módulo **IA** (sugerencia de categoría + asesor con nota, recomendaciones y preguntas, todo local)
+- [x] Moneda elegible: pesos colombianos (COP) o dólares (USD) en web y Android
 - Ideas web: recuperar contraseña por correo, movimientos recurrentes, gráfico por cuenta.

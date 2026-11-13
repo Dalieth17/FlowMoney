@@ -1,8 +1,11 @@
 package com.flowmoney.presentation.format
 
+import androidx.compose.runtime.staticCompositionLocalOf
+import com.flowmoney.domain.model.AppCurrency
 import com.flowmoney.domain.model.TransactionType
 import java.math.BigDecimal
-import java.text.NumberFormat
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -11,37 +14,53 @@ import java.util.Locale
 import kotlin.math.abs
 
 /**
- * Montos con la moneda y el formato del teléfono ("S/ 12.50" en Perú, "12,50 €" en España).
- * Si el idioma no define una moneda, se muestra el número con 2 decimales.
+ * Montos en la moneda que eligió la persona (no la del teléfono):
+ * - COP: "$ 4.500.000" (punto de miles; centavos ",50" solo si los hay).
+ * - USD: "US$ 1,234.56" (coma de miles y siempre 2 decimales).
+ * Los símbolos se fijan a mano para que el resultado no dependa del idioma del teléfono.
  */
-object MoneyFormat {
-    private const val UNKNOWN_CURRENCY = "XXX"
-
-    private fun formatter(locale: Locale): NumberFormat {
-        val currency = NumberFormat.getCurrencyInstance(locale)
-        if (currency.currency?.currencyCode != UNKNOWN_CURRENCY) return currency
-        return NumberFormat.getNumberInstance(locale).apply {
-            minimumFractionDigits = 2
-            maximumFractionDigits = 2
+class MoneyFormatter(val currency: AppCurrency) {
+    private val symbols = when (currency) {
+        AppCurrency.COP -> DecimalFormatSymbols(Locale.ROOT).apply {
+            groupingSeparator = '.'
+            decimalSeparator = ','
+        }
+        AppCurrency.USD -> DecimalFormatSymbols(Locale.ROOT).apply {
+            groupingSeparator = ','
+            decimalSeparator = '.'
         }
     }
+    private val withCents = DecimalFormat("#,##0.00", symbols)
+    private val wholeUnits = DecimalFormat("#,##0", symbols)
 
-    fun format(cents: Long, locale: Locale = Locale.getDefault()): String =
-        formatter(locale).format(BigDecimal.valueOf(cents, 2))
-
-    /** Con signo según el tipo: "+S/ 10.00" o "−S/ 10.00". */
-    fun signed(cents: Long, type: TransactionType, locale: Locale = Locale.getDefault()): String {
-        val sign = if (type == TransactionType.INCOME) "+" else "−"
-        return sign + format(abs(cents), locale)
+    /** Prefijo del campo de monto y de cada cifra. */
+    val symbol: String = when (currency) {
+        AppCurrency.COP -> "$"
+        AppCurrency.USD -> "US$"
     }
 
-    /** Símbolo para el prefijo del campo de monto ("S/", "€"); vacío si no hay moneda. */
-    fun currencySymbol(locale: Locale = Locale.getDefault()): String =
-        NumberFormat.getCurrencyInstance(locale).currency
-            ?.takeIf { it.currencyCode != UNKNOWN_CURRENCY }
-            ?.getSymbol(locale)
-            .orEmpty()
+    fun format(cents: Long): String {
+        val value = BigDecimal.valueOf(abs(cents), 2)
+        val number = if (currency == AppCurrency.COP && cents % 100 == 0L) wholeUnits.format(value) else withCents.format(value)
+        return (if (cents < 0) "-" else "") + "$symbol $number"
+    }
+
+    /** Con signo según el tipo: "+$ 10.000" o "−$ 10.000". */
+    fun signed(cents: Long, type: TransactionType): String {
+        val sign = if (type == TransactionType.INCOME) "+" else "−"
+        return sign + format(abs(cents))
+    }
+
+    companion object {
+        /** Moneda por defecto (la misma que la web): peso colombiano. */
+        val Default = MoneyFormatter(AppCurrency.COP)
+
+        fun of(currency: AppCurrency): MoneyFormatter = if (currency == AppCurrency.COP) Default else MoneyFormatter(currency)
+    }
 }
+
+/** Formateador de la moneda activa; lo provee la raíz de la app. */
+val LocalMoneyFormatter = staticCompositionLocalOf { MoneyFormatter.Default }
 
 object DateFormat {
     /** "Noviembre 2026" */

@@ -43,7 +43,10 @@ object FinancialAdvisor {
     private const val SMALL_EXPENSES_MIN_SHARE = 0.03
     private const val BUDGET_SUGGESTION_SHARE = 0.10
     private const val BUDGET_SUGGESTION_FACTOR = 0.9
+    /** Paso mínimo de redondeo de un límite sugerido: 10 unidades de la moneda. */
     private const val BUDGET_ROUNDING_CENTS = 1_000L
+    /** Se conservan 3 cifras significativas: el paso crece mientras el cociente llegue a 1000. */
+    private const val ROUNDING_MAX_QUOTIENT = 1_000L
     private const val MAX_BUDGET_SUGGESTIONS = 2
     private const val SPENDING_DOWN_RATIO = 0.9
     private const val RECURRING_TOLERANCE = 0.1
@@ -380,7 +383,15 @@ object FinancialAdvisor {
     internal fun percentChange(value: Long, base: Long): Int = if (base <= 0) 0 else (((value - base) * 100.0) / base).roundToInt()
 
     /** Redondea hacia arriba a un número cómodo (múltiplo de 10 unidades) para sugerir límites. */
-    internal fun roundUp(cents: Long): Long = ceilDiv(cents, BUDGET_ROUNDING_CENTS) * BUDGET_ROUNDING_CENTS
+    /**
+     * Redondea hacia arriba a un número "fácil de recordar" conservando 3 cifras significativas
+     * (mínimo de a 10): 1 072 → 1 080 y, en pesos, 653 478 → 654 000. Así sirve para COP y USD.
+     */
+    internal fun roundUp(cents: Long): Long {
+        var step = BUDGET_ROUNDING_CENTS
+        while (cents / step >= ROUNDING_MAX_QUOTIENT) step *= 10
+        return ceilDiv(cents, step) * step
+    }
 
     private fun ceilDiv(a: Long, b: Long): Long = if (b <= 0) 0 else ceil(a.toDouble() / b).toLong()
 }

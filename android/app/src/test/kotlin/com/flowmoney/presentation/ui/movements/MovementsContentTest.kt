@@ -15,7 +15,7 @@ import com.flowmoney.domain.model.TransactionDetails
 import com.flowmoney.domain.model.TransactionError
 import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.MoneyFormatter
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -65,7 +65,7 @@ class MovementsContentTest {
 
         composeRule.onNodeWithText(DateFormat.month(YearMonth.of(2026, 11))).assertIsDisplayed()
         composeRule.onNodeWithText("Hoy").assertIsDisplayed()
-        composeRule.onNodeWithText(MoneyFormat.signed(1_250, TransactionType.EXPENSE)).assertIsDisplayed()
+        composeRule.onNodeWithText(MoneyFormatter.Default.signed(1_250, TransactionType.EXPENSE)).assertIsDisplayed()
 
         composeRule.onNodeWithText("Almuerzo").performClick()
         assertEquals(listOf<MovementsEvent>(MovementsEvent.EditClicked(lunch)), events)

@@ -50,6 +50,13 @@
           <label class="field-label" for="f-name">Nombre</label>
           <input class="input" type="text" id="f-name" autocomplete="name" maxlength="80" placeholder="¿Cómo te llamas?">
         </div>
+        <div class="field" id="currency-field" hidden>
+          <label class="field-label" for="f-currency">¿En qué moneda manejas tu dinero?</label>
+          <select class="input" id="f-currency">
+            <option value="COP" selected>Peso colombiano (COP)</option>
+            <option value="USD">Dólar estadounidense (USD)</option>
+          </select>
+        </div>
         <div class="field">
           <label class="field-label" for="f-email">Correo</label>
           <input class="input" type="email" id="f-email" autocomplete="email" maxlength="160" placeholder="tucorreo@ejemplo.com" required>

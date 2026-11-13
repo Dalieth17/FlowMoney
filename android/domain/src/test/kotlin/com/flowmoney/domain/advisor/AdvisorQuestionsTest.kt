@@ -125,6 +125,10 @@ class AdvisorQuestionsTest {
         assertEquals(9_990L, amount("99,90"))
         assertEquals(200_000L, amount("2 mil"))
         assertEquals(200_000L, amount("2k"))
+        assertEquals(50_000_000L, amount("500.000"))
+        assertEquals(150_000_000L, amount("1.500.000"))
+        assertEquals(300_000_000L, amount("3 millones"))
+        assertEquals(150_000_000L, amount("1.5M"))
         assertNull(amount("sin numeros"))
     }
 }

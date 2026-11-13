@@ -15,7 +15,7 @@ import com.flowmoney.domain.model.BudgetStatus
 import com.flowmoney.domain.model.Category
 import com.flowmoney.domain.model.CategorySpending
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.MoneyFormatter
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -60,13 +60,13 @@ class BudgetsContentTest {
         val transportStatus = BudgetStatus(transport, limitCents = 1_000, spentCents = 1_250)
         render(BudgetOverview(budgets = listOf(foodStatus, transportStatus)), events)
 
-        val foodAmounts = "${MoneyFormat.format(8_500)} de ${MoneyFormat.format(10_000)}"
+        val foodAmounts = "${MoneyFormatter.Default.format(8_500)} de ${MoneyFormatter.Default.format(10_000)}"
         composeRule.onNodeWithText(foodAmounts).assertIsDisplayed()
         composeRule.onNodeWithText("85 %").assertIsDisplayed()
         composeRule.onNodeWithText("125 %").assertIsDisplayed()
         composeRule.onNodeWithText("Cerca del límite").assertIsDisplayed()
         composeRule.onNodeWithText("Superado").assertIsDisplayed()
-        composeRule.onNodeWithText("Te pasaste por ${MoneyFormat.format(250)}").assertIsDisplayed()
+        composeRule.onNodeWithText("Te pasaste por ${MoneyFormatter.Default.format(250)}").assertIsDisplayed()
         composeRule.onNodeWithText("1 presupuesto superado · 1 cerca del límite").assertIsDisplayed()
 
         composeRule.onNodeWithText("Alimentación").performClick()
@@ -80,7 +80,7 @@ class BudgetsContentTest {
         render(BudgetOverview(unbudgeted = listOf(transportSpending, CategorySpending(food, 0))), events)
 
         composeRule.onNodeWithText("Aún no tienes presupuestos este mes").assertIsDisplayed()
-        composeRule.onNodeWithText("${MoneyFormat.format(1_200)} gastado este mes").assertIsDisplayed()
+        composeRule.onNodeWithText("${MoneyFormatter.Default.format(1_200)} gastado este mes").assertIsDisplayed()
         composeRule.onNodeWithText("Sin gastos este mes").assertIsDisplayed()
 
         composeRule.onNodeWithText("Transporte").performClick()
@@ -128,7 +128,7 @@ class BudgetsContentTest {
         val editor = BudgetEditorState.edit(BudgetStatus(food, limitCents = 10_000, spentCents = 4_000), november)
         renderForm(editor, events)
 
-        composeRule.onNodeWithText("Llevas gastado ${MoneyFormat.format(4_000)} este mes").assertIsDisplayed()
+        composeRule.onNodeWithText("Llevas gastado ${MoneyFormatter.Default.format(4_000)} este mes").assertIsDisplayed()
         composeRule.onNodeWithText("Quitar límite").performScrollTo().performClick()
         assertEquals(listOf<BudgetsEvent>(BudgetsEvent.DeleteClicked), events)
     }

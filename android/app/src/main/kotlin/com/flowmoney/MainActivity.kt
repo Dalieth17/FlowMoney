@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.flowmoney.presentation.navigation.FlowMoneyNavHost
+import com.flowmoney.presentation.navigation.FlowMoneyApp
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             FlowMoneyTheme {
-                FlowMoneyNavHost()
+                FlowMoneyApp()
             }
         }
     }

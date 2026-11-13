@@ -1,6 +1,7 @@
 // Operaciones sobre el conjunto de datos del usuario: carga inicial y reinicio.
 const { withTransaction } = require('../db/pool');
 const { seedUserData } = require('../db/seed');
+const userRepository = require('../repositories/userRepository');
 const profileService = require('./profileService');
 const categoryRepository = require('../repositories/categoryRepository');
 const accountRepository = require('../repositories/accountRepository');
@@ -27,7 +28,8 @@ async function resetToSample(userId) {
     await budgetRepository.removeAllByUser(userId, conn);
     await categoryRepository.removeAllByUser(userId, conn);
     await accountRepository.removeAllByUser(userId, conn);
-    await seedUserData(userId, conn);
+    const user = await userRepository.findById(userId, conn);
+    await seedUserData(userId, conn, new Date(), user?.currency);
   });
 }
 

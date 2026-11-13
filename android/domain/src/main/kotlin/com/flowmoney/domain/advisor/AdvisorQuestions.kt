@@ -133,7 +133,7 @@ object AdvisorQuestions {
         "que hago", "ayuda", "mis finanzas", "como me va",
     )
 
-    private val NUMBER = Regex("""(\d[\d.,]*)\s*(mil|k)?\b""")
+    private val NUMBER = Regex("""(\d[\d.,]*)\s*(millones|millon|mil|m|k)?\b""", RegexOption.IGNORE_CASE)
     private val DEBT_WORDS = listOf("tarjeta", "deuda", "prestamo", "credito", "cuota")
 
     fun answer(question: String, report: AdvisorReport): AdvisorAnswer {
@@ -184,13 +184,17 @@ object AdvisorQuestions {
     }
 
     /**
-     * Primer monto de la pregunta. Acepta "1500", "1,500", "1.500,50", "800.5", "2 mil" y "2k".
+     * Primer monto de la pregunta. Acepta "1500", "1,500", "1.500,50", "800.5", "2 mil", "2k", "3 millones" y "1.5M".
      * Un único separador seguido de exactamente 3 dígitos se toma como de miles.
      */
     internal fun parseAmount(text: String): Long? {
         val match = NUMBER.find(text) ?: return null
         val raw = match.groupValues[1].trimEnd('.', ',')
-        val multiplier = if (match.groupValues[2].isNotEmpty()) 1000 else 1
+        val multiplier = when (match.groupValues[2].lowercase()) {
+            "" -> 1L
+            "mil", "k" -> 1_000L
+            else -> 1_000_000L
+        }
         val lastDot = raw.lastIndexOf('.')
         val lastComma = raw.lastIndexOf(',')
         val decimalAt = when {

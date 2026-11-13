@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.CurrencyExchange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -27,6 +28,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -67,13 +69,13 @@ import com.flowmoney.presentation.components.CategoryAvatar
 import com.flowmoney.presentation.components.MonthSelector
 import com.flowmoney.presentation.components.MonthTotals
 import com.flowmoney.presentation.format.DateFormat
-import com.flowmoney.presentation.format.MoneyFormat
+import com.flowmoney.presentation.format.LocalMoneyFormatter
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import java.time.LocalDate
 import java.time.YearMonth
 
 @Composable
-fun MovementsScreen(viewModel: MovementsViewModel = hiltViewModel()) {
+fun MovementsScreen(onCurrencyClick: () -> Unit = {}, viewModel: MovementsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val resources = LocalContext.current.resources
@@ -82,7 +84,12 @@ fun MovementsScreen(viewModel: MovementsViewModel = hiltViewModel()) {
         viewModel.messages.collect { message -> snackbarHostState.showSnackbar(message.text(resources)) }
     }
 
-    MovementsContent(state = state, snackbarHostState = snackbarHostState, onEvent = viewModel::onEvent)
+    MovementsContent(
+        state = state,
+        snackbarHostState = snackbarHostState,
+        onEvent = viewModel::onEvent,
+        onCurrencyClick = onCurrencyClick,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,10 +99,21 @@ fun MovementsContent(
     snackbarHostState: SnackbarHostState,
     onEvent: (MovementsEvent) -> Unit,
     modifier: Modifier = Modifier,
+    onCurrencyClick: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.movements_title)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.movements_title)) },
+                actions = {
+                    // La moneda se elige al empezar; aquí se puede cambiar después.
+                    IconButton(onClick = onCurrencyClick) {
+                        Icon(Icons.Rounded.CurrencyExchange, contentDescription = stringResource(R.string.currency_change))
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { onEvent(MovementsEvent.AddClicked) },
@@ -251,7 +269,7 @@ private fun MovementRow(details: TransactionDetails, onEvent: (MovementsEvent) -
         leadingContent = { CategoryAvatar(iconKey = category.icon, colorHex = category.color) },
         trailingContent = {
             Text(
-                MoneyFormat.signed(transaction.amountCents, transaction.type),
+                LocalMoneyFormatter.current.signed(transaction.amountCents, transaction.type),
                 style = MaterialTheme.typography.titleSmall,
                 color = amountColor,
             )

@@ -5,6 +5,7 @@ import {
   signedMoney,
   signedBalance,
   setCurrency,
+  getCurrency,
   isoDate,
   isoDateToMs,
   compact,
@@ -12,36 +13,40 @@ import {
 import { csvCell, toCsv } from '../public/assets/js/domain/csv.js';
 
 describe('money', () => {
-  afterEach(() => setCurrency('$'));
+  afterEach(() => setCurrency('COP'));
 
-  test('formatea con separador de miles y 2 decimales', () => {
-    assert.equal(money(1639.5), '$1,639.50');
-    assert.equal(money(-20), '-$20.00');
-    assert.equal(money(undefined), '$0.00');
+  test('pesos colombianos: punto de miles y sin decimales si no hay centavos', () => {
+    assert.equal(money(4500000), '$ 4.500.000');
+    assert.equal(money(1639.5), '$ 1.639,50');
+    assert.equal(money(-20000), '-$ 20.000');
+    assert.equal(money(undefined), '$ 0');
+    assert.equal(getCurrency(), 'COP');
   });
 
-  test('respeta la moneda del usuario ("S/" lleva espacio)', () => {
-    setCurrency('S/');
-    assert.equal(money(25), 'S/ 25.00');
-    setCurrency('€');
-    assert.equal(money(25), '€25.00');
+  test('dólares: coma de miles y siempre 2 decimales', () => {
+    setCurrency('USD');
+    assert.equal(money(1639.5), 'US$ 1,639.50');
+    assert.equal(money(25), 'US$ 25.00');
+    assert.equal(getCurrency(), 'USD');
   });
 
   test('ignora monedas no soportadas', () => {
     setCurrency('BTC');
-    assert.equal(money(1), '$1.00');
+    assert.equal(money(1), '$ 1');
   });
 
   test('signos de movimientos y balances', () => {
-    assert.equal(signedMoney(10, 'INCOME'), '+$10.00');
-    assert.equal(signedMoney(10, 'EXPENSE'), '−$10.00');
-    assert.equal(signedBalance(-5), '−$5.00');
+    assert.equal(signedMoney(10000, 'INCOME'), '+$ 10.000');
+    assert.equal(signedMoney(10000, 'EXPENSE'), '−$ 10.000');
+    assert.equal(signedBalance(-5000), '−$ 5.000');
   });
 
   test('números compactos para ejes', () => {
     assert.equal(compact(1200), '1.2k');
     assert.equal(compact(2000), '2k');
     assert.equal(compact(950), '950');
+    assert.equal(compact(4500000), '4.5M');
+    assert.equal(compact(2000000), '2M');
   });
 });
 
