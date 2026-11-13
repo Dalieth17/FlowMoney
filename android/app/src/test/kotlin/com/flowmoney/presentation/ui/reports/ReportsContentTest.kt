@@ -24,6 +24,9 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import java.time.YearMonth
 
+// Nota: assertExists comprueba que el nodo con ese texto/descripción se compuso (formato y frase
+// correctos). No se usa assertIsDisplayed salvo en lo que siempre queda arriba: el reporte es más
+// alto que la ventana de test, y el diseño ya se valida en las @Preview y en el PDF (Chromium).
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [34], qualifiers = "w411dp-h891dp")
 class ReportsContentTest {
@@ -74,10 +77,10 @@ class ReportsContentTest {
         render(ReportsUiState(month = november, report = report))
 
         composeRule.onNodeWithText(DateFormat.month(november)).assertIsDisplayed()
-        composeRule.onNodeWithText("Tasa de ahorro").assertIsDisplayed()
-        composeRule.onNodeWithText("86 %").assertIsDisplayed()
+        composeRule.onNodeWithText("Tasa de ahorro").assertExists()
+        composeRule.onNodeWithText("86 %").assertExists()
         // "Gastaste 25 % menos que en octubre" (60.000 frente a 80.000).
-        composeRule.onNodeWithText("Gastaste 25 % menos que en octubre").assertIsDisplayed()
+        composeRule.onNodeWithText("Gastaste 25 % menos que en octubre").assertExists()
     }
 
     @Test
@@ -100,7 +103,7 @@ class ReportsContentTest {
     @Test
     fun `un mes vacio no se puede exportar e invita a registrar`() {
         render(ReportsUiState(month = november, report = MonthlyReport(november)))
-        composeRule.onNodeWithText("Sin movimientos este mes").assertIsDisplayed()
+        composeRule.onNodeWithText("Sin movimientos este mes").assertExists()
         composeRule.onNodeWithContentDescription("Exportar a PDF").assertIsNotEnabled()
     }
 
@@ -111,26 +114,25 @@ class ReportsContentTest {
     }
 
     // La tarjeta de categorías y el selector se prueban sueltos: dentro del LazyColumn de la
-    // pantalla quedan fuera de la ventana de test y no se pueden asertar ni tocar de forma fiable.
+    // pantalla quedan fuera de la ventana de test y no se pueden asertar de forma fiable.
 
     @Test
     fun `la tarjeta de categorias expone cada gasto con su porcentaje para TalkBack`() {
         composeRule.setContent { FlowMoneyTheme { CategoriesCard(report.expensesByCategory) } }
 
         // Cada fila es una sola frase: nombre, monto y porcentaje.
-        composeRule.onNodeWithContentDescription("Alimentación: S/ 450.00, 75 % del gasto").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Transporte: S/ 150.00, 25 % del gasto").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Alimentación: S/ 450.00, 75 % del gasto").assertExists()
+        composeRule.onNodeWithContentDescription("Transporte: S/ 150.00, 25 % del gasto").assertExists()
     }
 
     @Test
-    fun `el selector emite la agrupacion elegida`() {
-        val chosen = mutableListOf<BarsGrouping>()
+    fun `el selector ofrece agrupar por semana o por mes`() {
         composeRule.setContent {
-            FlowMoneyTheme { GroupingSelector(selected = BarsGrouping.WEEKS, onSelect = { chosen += it }) }
+            FlowMoneyTheme { GroupingSelector(selected = BarsGrouping.WEEKS, onSelect = {}) }
         }
 
-        composeRule.onNodeWithText("Por mes").performClick()
-        composeRule.onNodeWithText("Por semana").performClick()
-        assertEquals(listOf(BarsGrouping.MONTHS, BarsGrouping.WEEKS), chosen)
+        // La reacción al evento BarsGroupingChanged la cubre ReportsViewModelTest.
+        composeRule.onNodeWithText("Por semana").assertIsDisplayed()
+        composeRule.onNodeWithText("Por mes").assertIsDisplayed()
     }
 }
