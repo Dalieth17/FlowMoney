@@ -71,13 +71,18 @@ object ReportDocumentFactory {
                 },
             ),
             flows = listOf(
-                flowSection(R.string.report_doc_flow_by_week, report.weeks.map { it.toBar(resources) }, resources),
-                flowSection(R.string.report_doc_flow_by_month, report.months.map { it.toBar() }, resources),
+                flowSection(R.string.report_doc_flow_by_week, report.weeks.map { it.toBar(resources) }, resources, money),
+                flowSection(R.string.report_doc_flow_by_month, report.months.map { it.toBar() }, resources, money),
             ),
         )
     }
 
-    private fun flowSection(@StringRes title: Int, bars: List<FlowBar>, resources: Resources) = FlowSection(
+    private fun flowSection(
+        @StringRes title: Int,
+        bars: List<FlowBar>,
+        resources: Resources,
+        money: MoneyFormatter,
+    ) = FlowSection(
         title = resources.getString(title),
         emptyText = resources.getString(R.string.reports_flow_empty),
         periodHeader = resources.getString(R.string.reports_flow_period),
