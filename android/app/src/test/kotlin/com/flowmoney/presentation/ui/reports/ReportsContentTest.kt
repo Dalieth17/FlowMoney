@@ -16,6 +16,7 @@ import com.flowmoney.domain.model.MonthSummary
 import com.flowmoney.domain.model.MonthlyReport
 import com.flowmoney.domain.model.WeekFlow
 import com.flowmoney.presentation.format.DateFormat
+import com.flowmoney.presentation.format.MoneyFormat
 import com.flowmoney.presentation.theme.FlowMoneyTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -76,11 +77,14 @@ class ReportsContentTest {
     fun `muestra el mes el resumen y la tasa de ahorro`() {
         render(ReportsUiState(month = november, report = report))
 
+        // El mes y el nombre del mes anterior se arman con los mismos formateadores que la pantalla
+        // (el locale de test no es el español, así que no se escriben "octubre" ni "S/" a mano).
+        val previousMonth = DateFormat.monthName(november.minusMonths(1))
         composeRule.onNodeWithText(DateFormat.month(november)).assertIsDisplayed()
         composeRule.onNodeWithText("Tasa de ahorro").assertExists()
         composeRule.onNodeWithText("86 %").assertExists()
-        // "Gastaste 25 % menos que en octubre" (60.000 frente a 80.000).
-        composeRule.onNodeWithText("Gastaste 25 % menos que en octubre").assertExists()
+        // "Gastaste 25 % menos que en <mes anterior>" (60.000 frente a 80.000).
+        composeRule.onNodeWithText("Gastaste 25 % menos que en $previousMonth").assertExists()
     }
 
     @Test
@@ -120,9 +124,9 @@ class ReportsContentTest {
     fun `la tarjeta de categorias expone cada gasto con su porcentaje para TalkBack`() {
         composeRule.setContent { FlowMoneyTheme { CategoriesCard(report.expensesByCategory) } }
 
-        // Cada fila es una sola frase: nombre, monto y porcentaje.
-        composeRule.onNodeWithContentDescription("Alimentación: S/ 450.00, 75 % del gasto").assertExists()
-        composeRule.onNodeWithContentDescription("Transporte: S/ 150.00, 25 % del gasto").assertExists()
+        // Cada fila es una sola frase: nombre, monto y porcentaje (el monto, con el formato del locale).
+        composeRule.onNodeWithContentDescription("Alimentación: ${MoneyFormat.format(45_000)}, 75 % del gasto").assertExists()
+        composeRule.onNodeWithContentDescription("Transporte: ${MoneyFormat.format(15_000)}, 25 % del gasto").assertExists()
     }
 
     @Test
