@@ -160,6 +160,7 @@ Estado:
   gráficos van como SVG; el documento no usa JavaScript ni red).
 
 - **IA (todo en el teléfono, sin internet: tus datos no salen del dispositivo)**
+
   - _Sugerencia de categoría_ al escribir un movimiento: aprende de cómo clasificas tú, reconoce el
     nombre de tus categorías y usa las mismas palabras clave que la web. Se aplica sola mientras no
     elijas otra, y explica por qué la sugiere.
