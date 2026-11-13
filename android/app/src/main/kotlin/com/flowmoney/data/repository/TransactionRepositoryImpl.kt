@@ -43,6 +43,10 @@ class TransactionRepositoryImpl @Inject constructor(
             type = type.name,
         ).map { rows -> rows.associate { it.categoryId to it.totalCents } }
 
+    override fun observeRange(from: LocalDate, to: LocalDate): Flow<List<Transaction>> =
+        dao.observeBetween(from.toEpochDay(), to.toEpochDay(), type = null, categoryId = null)
+            .map { rows -> rows.map { it.transaction.toDomain() } }
+
     override fun observeDailyTotals(from: LocalDate, to: LocalDate): Flow<List<DailyTotal>> =
         dao.observeDailyTotals(from.toEpochDay(), to.toEpochDay()).map { rows ->
             rows.map { DailyTotal(LocalDate.ofEpochDay(it.dateEpochDay), it.type, it.totalCents) }

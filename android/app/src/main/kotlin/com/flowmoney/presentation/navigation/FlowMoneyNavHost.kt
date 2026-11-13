@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.DataUsage
@@ -28,6 +29,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.flowmoney.R
+import com.flowmoney.presentation.ui.advisor.AdvisorScreen
 import com.flowmoney.presentation.ui.budgets.BudgetsScreen
 import com.flowmoney.presentation.ui.categories.CategoriesScreen
 import com.flowmoney.presentation.ui.movements.MovementsScreen
@@ -46,6 +48,9 @@ data object BudgetsDestination
 data object ReportsDestination
 
 @Serializable
+data object AdvisorDestination
+
+@Serializable
 data object CategoriesDestination
 
 /** Pestañas de la barra inferior, en el orden en que se muestran. */
@@ -58,6 +63,7 @@ private enum class TopLevelTab(
     MOVEMENTS(MovementsDestination, MovementsDestination::class, R.string.nav_movements, Icons.AutoMirrored.Rounded.ReceiptLong),
     BUDGETS(BudgetsDestination, BudgetsDestination::class, R.string.nav_budgets, Icons.Rounded.DataUsage),
     REPORTS(ReportsDestination, ReportsDestination::class, R.string.nav_reports, Icons.Rounded.BarChart),
+    ADVISOR(AdvisorDestination, AdvisorDestination::class, R.string.nav_advisor, Icons.Rounded.AutoAwesome),
     CATEGORIES(CategoriesDestination, CategoriesDestination::class, R.string.nav_categories, Icons.Rounded.Category),
 }
 
@@ -104,6 +110,7 @@ fun FlowMoneyNavHost(
             composable<MovementsDestination> { MovementsScreen() }
             composable<BudgetsDestination> { BudgetsScreen() }
             composable<ReportsDestination> { ReportsScreen() }
+            composable<AdvisorDestination> { AdvisorScreen() }
             composable<CategoriesDestination> { CategoriesScreen() }
         }
     }

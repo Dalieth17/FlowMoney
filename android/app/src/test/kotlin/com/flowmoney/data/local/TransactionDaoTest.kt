@@ -119,6 +119,18 @@ class TransactionDaoTest {
     }
 
     @Test
+    fun `movimientos de un rango de fechas del mas reciente al mas antiguo`() = runTest {
+        add("Antes", LocalDate.of(2026, 9, 30))
+        add("Inicio", LocalDate.of(2026, 10, 1))
+        add("Medio", LocalDate.of(2026, 10, 15), TransactionType.INCOME, salaryId)
+        add("Fin", LocalDate.of(2026, 11, 30))
+        add("Despues", LocalDate.of(2026, 12, 1))
+
+        val range = repository.observeRange(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 30)).first()
+        assertEquals(listOf("Fin", "Medio", "Inicio"), range.map { it.description })
+    }
+
+    @Test
     fun `totales por dia y tipo dentro del rango incluidos los extremos`() = runTest {
         add("A", LocalDate.of(2026, 11, 1), cents = 1_000)
         add("B", LocalDate.of(2026, 11, 1), cents = 250)

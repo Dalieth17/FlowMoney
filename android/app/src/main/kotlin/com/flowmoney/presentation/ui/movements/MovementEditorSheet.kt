@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -48,6 +51,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.flowmoney.R
+import com.flowmoney.domain.advisor.SuggestionSource
+import com.flowmoney.domain.advisor.CategoryClassifier
 import com.flowmoney.domain.model.Category
 import com.flowmoney.domain.model.TransactionRules
 import com.flowmoney.domain.model.TransactionType
@@ -128,10 +133,11 @@ fun MovementEditorForm(
 
         CategoryPicker(
             categories = categories,
-            selectedId = editor.categoryId,
+            selectedId = editor.effectiveCategoryId,
             error = errorText.takeIf { errorField == MovementField.CATEGORY },
             onSelect = { onEvent(MovementsEvent.CategorySelected(it)) },
         )
+        SuggestionHint(editor, onEvent)
 
         DateField(editor.date) { onEvent(MovementsEvent.DateSelected(it)) }
 
@@ -168,6 +174,36 @@ fun MovementEditorForm(
                 Text(stringResource(R.string.action_save))
             }
         }
+    }
+}
+
+/** Explica la sugerencia de la IA, o permite volver a ella si el usuario eligió otra categoría. */
+@Composable
+private fun SuggestionHint(editor: MovementEditorState, onEvent: (MovementsEvent) -> Unit) {
+    val suggestion = editor.suggestion ?: return
+    if (suggestion.confidence < CategoryClassifier.AUTO_APPLY) return
+    val colors = MaterialTheme.colorScheme
+    if (editor.isSuggestionApplied) {
+        val reason = when (suggestion.source) {
+            SuggestionSource.HISTORY -> stringResource(R.string.movement_suggestion_reason_history, suggestion.matched)
+            SuggestionSource.CATEGORY_NAME -> stringResource(R.string.movement_suggestion_reason_name)
+            SuggestionSource.KEYWORD -> stringResource(R.string.movement_suggestion_reason_keyword, suggestion.matched)
+            SuggestionSource.INCOME_DEFAULT -> stringResource(R.string.movement_suggestion_reason_income)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
+            Text(
+                text = stringResource(R.string.movement_suggestion_applied, suggestion.category.name, reason),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
+            )
+        }
+    } else if (editor.categoryId != suggestion.category.id) {
+        AssistChip(
+            onClick = { onEvent(MovementsEvent.CategorySelected(suggestion.category.id)) },
+            label = { Text(stringResource(R.string.movement_suggestion_use, suggestion.category.name)) },
+            leadingIcon = { Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp)) },
+        )
     }
 }
 

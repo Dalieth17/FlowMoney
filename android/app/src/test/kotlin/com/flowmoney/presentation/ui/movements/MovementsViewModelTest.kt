@@ -1,5 +1,6 @@
 package com.flowmoney.presentation.ui.movements
 
+import com.flowmoney.domain.advisor.SuggestionSource
 import com.flowmoney.domain.model.Budget
 import com.flowmoney.domain.model.BudgetLevel
 import com.flowmoney.domain.model.DefaultCategories
@@ -9,6 +10,7 @@ import com.flowmoney.domain.model.TransactionType
 import com.flowmoney.domain.testing.FakeBudgetRepository
 import com.flowmoney.domain.testing.FakeCategoryRepository
 import com.flowmoney.domain.testing.FakeTransactionRepository
+import com.flowmoney.domain.usecase.advisor.SuggestCategoryUseCase
 import com.flowmoney.domain.usecase.budget.CheckBudgetUseCase
 import com.flowmoney.domain.usecase.category.ObserveCategoriesUseCase
 import com.flowmoney.domain.usecase.transaction.DeleteTransactionUseCase
@@ -70,6 +72,7 @@ class MovementsViewModelTest {
             SaveTransactionUseCase(transactions, categories),
             DeleteTransactionUseCase(transactions),
             CheckBudgetUseCase(budgets, categories, transactions),
+            SuggestCategoryUseCase(transactions),
             clock,
         )
     }
@@ -233,6 +236,56 @@ class MovementsViewModelTest {
 
         viewModel.onEvent(MovementsEvent.AmountChanged("0.01"))
         assertNull(state.editor!!.error)
+    }
+
+    @Test
+    fun `la IA sugiere la categoria al escribir y se usa si no eliges otra`() = runTest {
+        val messages = subscribe()
+        val transport = defaults.first { it.name == "Transporte" }
+        viewModel.onEvent(MovementsEvent.AddClicked)
+        viewModel.onEvent(MovementsEvent.AmountChanged("25"))
+        viewModel.onEvent(MovementsEvent.DescriptionChanged("Taxi al aeropuerto"))
+
+        val editor = state.editor!!
+        assertEquals(transport, editor.suggestion!!.category)
+        assertTrue(editor.isSuggestionApplied)
+        assertEquals(transport.id, editor.effectiveCategoryId)
+
+        viewModel.onEvent(MovementsEvent.SaveClicked)
+        assertEquals(transport.id, transactions.current.single { it.description == "Taxi al aeropuerto" }.categoryId)
+        assertEquals(listOf<MovementsMessage>(MovementsMessage.Created), messages)
+    }
+
+    @Test
+    fun `elegir una categoria a mano gana a la sugerencia`() = runTest {
+        subscribe()
+        viewModel.onEvent(MovementsEvent.AddClicked)
+        viewModel.onEvent(MovementsEvent.DescriptionChanged("Taxi"))
+        viewModel.onEvent(MovementsEvent.CategorySelected(food.id))
+
+        val editor = state.editor!!
+        assertFalse(editor.isSuggestionApplied)
+        assertEquals(food.id, editor.effectiveCategoryId)
+    }
+
+    @Test
+    fun `la sugerencia aprende de tus movimientos anteriores`() = runTest {
+        subscribe()
+        viewModel.onEvent(MovementsEvent.AddClicked)
+        viewModel.onEvent(MovementsEvent.DescriptionChanged("Cafe"))
+
+        val suggestion = state.editor!!.suggestion!!
+        assertEquals(food, suggestion.category)
+        assertEquals(SuggestionSource.HISTORY, suggestion.source)
+    }
+
+    @Test
+    fun `al editar un movimiento la IA no cambia su categoria`() = runTest {
+        subscribe()
+        val lunch = state.days.flatMap { it.items }.single { it.transaction.description == "Almuerzo" }
+        viewModel.onEvent(MovementsEvent.EditClicked(lunch))
+        viewModel.onEvent(MovementsEvent.DescriptionChanged("Taxi"))
+        assertEquals(food.id, state.editor!!.effectiveCategoryId)
     }
 
     @Test

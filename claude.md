@@ -70,6 +70,11 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 - Formularios: `XEditorSheet` (ModalBottomSheet) envuelve a `XEditorForm`, que es lo que se testea.
 - Tests de Compose: Robolectric usa una pantalla baja; con listas largas usar
   `@Config(qualifiers = "w411dp-h891dp")` y `performScrollTo()` antes de tocar botones.
+- IA (`domain/advisor`): `CategoryClassifier` (historial > nombre de categoría > `KeywordRules.kt`,
+  generado desde `frontend/.../rules.js`), `FinancialAdvisor` (análisis → `AdvisorReport` con
+  `Insight`s tipados), `AdvisorQuestions` (intención por palabras clave → `AdvisorAnswer`). Los
+  textos los redacta `presentation/ui/advisor/AdvisorWriter.kt` (Kotlin puro, testeable sin Android).
+  En Movimientos la sugerencia se _deriva_ en el ViewModel; se guarda `effectiveCategoryId`.
 - Reportes: la base da totales ya sumados (por categoría y por día); `ReportRules` arma semanas
   (bloques de 7 días), historial de 6 meses y porcentajes con `Percentages` (reparto que suma 100).
   El PDF es HTML+SVG (`export/ReportHtml`, Kotlin puro y testeado) impreso con `HtmlPrinter`
@@ -85,5 +90,5 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 - [x] Android: módulo **Movimientos** (BD v3, pantalla inicial con barra inferior)
 - [x] Android: módulo **Presupuestos** (BD v4: `budgets` por categoría y mes `aaaamm`; avisos 80/100 %)
 - [x] Android: módulo **Reportes** (dona + barras semana/mes, tasa de ahorro, export a PDF por impresión)
-- [ ] Android: IA (esperar confirmación entre módulos)
+- [x] Android: módulo **IA** (sugerencia de categoría + asesor con nota, recomendaciones y preguntas, todo local)
 - Ideas web: recuperar contraseña por correo, movimientos recurrentes, gráfico por cuenta.

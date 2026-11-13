@@ -48,6 +48,7 @@
     <string name="nav_movements">Movimientos</string>
     <string name="nav_budgets">Presupuestos</string>
     <string name="nav_reports">Reportes</string>
+    <string name="nav_advisor">Asesor</string>
     <string name="nav_categories">Categorías</string>
 
     <!-- Movimientos: lista -->
@@ -205,6 +206,43 @@
     <string name="report_doc_category">Categoría</string>
     <string name="report_doc_amount">Monto</string>
     <string name="report_doc_share">Parte</string>
+
+    <!-- Movimientos: sugerencia de categoría por IA -->
+    <string name="movement_suggestion_applied">Sugerido por la IA: %1$s · %2$s</string>
+    <string name="movement_suggestion_reason_history">ya anotaste «%1$s» así</string>
+    <string name="movement_suggestion_reason_keyword">por «%1$s»</string>
+    <string name="movement_suggestion_reason_name">menciona la categoría</string>
+    <string name="movement_suggestion_reason_income">los ingresos suelen ser sueldo</string>
+    <string name="movement_suggestion_use">Usar %1$s (sugerencia de la IA)</string>
+
+    <!-- Asesor (IA) -->
+    <string name="advisor_title">Asesor financiero</string>
+    <string name="advisor_tabs">Secciones del asesor</string>
+    <string name="advisor_tab_overview">Mi análisis</string>
+    <string name="advisor_tab_ask">Preguntar</string>
+    <string name="advisor_score_label">Salud financiera</string>
+    <string name="advisor_score_value">%1$d de 100</string>
+    <string name="advisor_score_part">%1$d/%2$d</string>
+    <string name="advisor_recommendations">Recomendaciones</string>
+    <string name="advisor_split_title">Regla 50/30/20</string>
+    <string name="advisor_split_body">Cómo se reparten tus ingresos del mes frente a lo recomendado.</string>
+    <string name="advisor_split_needs">Necesidades</string>
+    <string name="advisor_split_wants">Gustos</string>
+    <string name="advisor_split_savings">Ahorro</string>
+    <string name="advisor_split_value">%1$d %% (meta %2$d %%)</string>
+    <string name="advisor_split_description">%1$s: %2$d %% de tus ingresos, meta %3$d %%</string>
+    <string name="advisor_severity_critical">Urgente</string>
+    <string name="advisor_severity_warning">Atención</string>
+    <string name="advisor_severity_tip">Consejo</string>
+    <string name="advisor_severity_positive">¡Bien!</string>
+    <string name="advisor_empty_title">Aún no hay nada que analizar</string>
+    <string name="advisor_empty_body">Registra tus ingresos y gastos en Movimientos. Con tus datos te daré una nota de salud financiera, recomendaciones concretas y respuestas a tus preguntas.</string>
+    <string name="advisor_ask_label">Escribe tu pregunta</string>
+    <string name="advisor_ask_placeholder">Ej. ¿Puedo comprar un celular de 1500?</string>
+    <string name="advisor_send">Enviar pregunta</string>
+    <string name="advisor_try">Prueba con</string>
+    <string name="advisor_you_asked">Preguntaste</string>
+    <string name="advisor_clear">Borrar conversación</string>
 
     <!-- Íconos (etiquetas para lectores de pantalla) -->
     <string name="icon_restaurant">Comida</string>

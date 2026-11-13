@@ -63,6 +63,11 @@ class FakeTransactionRepository(
                 .mapValues { (_, items) -> items.sumOf { it.amountCents } }
         }
 
+    override fun observeRange(from: LocalDate, to: LocalDate): Flow<List<Transaction>> = state.map { list ->
+        list.filter { it.date in from..to }
+            .sortedWith(compareByDescending<Transaction> { it.date }.thenByDescending { it.id })
+    }
+
     override fun observeDailyTotals(from: LocalDate, to: LocalDate): Flow<List<DailyTotal>> = state.map { list ->
         list.filter { it.date in from..to }
             .groupBy { it.date to it.type }

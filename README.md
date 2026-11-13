@@ -159,8 +159,19 @@ Estado:
   por semana o por mes. Exporta el reporte a **PDF** con el diálogo de impresión del sistema (los
   gráficos van como SVG; el documento no usa JavaScript ni red).
 
-Sigue IA. La base de datos se actualiza con migraciones de Room (probadas en `MigrationTest`),
-nunca borrando datos. Los porcentajes se reparten de modo que siempre sumen 100.
+- **IA (todo en el teléfono, sin internet: tus datos no salen del dispositivo)**
+  - _Sugerencia de categoría_ al escribir un movimiento: aprende de cómo clasificas tú, reconoce el
+    nombre de tus categorías y usa las mismas palabras clave que la web. Se aplica sola mientras no
+    elijas otra, y explica por qué la sugiere.
+  - _Asesor financiero_: nota de salud financiera (0–100) con su desglose, cierre estimado del mes,
+    regla 50/30/20 y recomendaciones priorizadas con tus cifras (gasto mayor que ingreso, presupuestos
+    en riesgo con monto diario, categorías disparadas, gastos hormiga, suscripciones, fondo de
+    emergencia, límites sugeridos…).
+  - _Preguntas_ en lenguaje natural: «¿puedo comprar algo de 800?», «¿cuánto puedo gastar por día?»,
+    «¿cómo ahorro más?», «¿en qué gasto más?», deudas, inversión, proyección y más.
+
+La base de datos se actualiza con migraciones de Room (probadas en `MigrationTest`), nunca borrando
+datos. Los porcentajes se reparten de modo que siempre sumen 100.
 
 ```bash
 cd android && ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug

@@ -1,5 +1,7 @@
 package com.flowmoney.presentation.ui.movements
 
+import com.flowmoney.domain.advisor.CategoryClassifier
+import com.flowmoney.domain.advisor.CategorySuggestion
 import com.flowmoney.domain.model.BudgetStatus
 import com.flowmoney.domain.model.Category
 import com.flowmoney.domain.model.Money
@@ -43,8 +45,19 @@ data class MovementEditorState(
     val note: String = "",
     val error: TransactionError? = null,
     val isSaving: Boolean = false,
+    /** El usuario eligió la categoría (o ya venía dada): la IA deja de cambiarla sola. */
+    val categoryTouched: Boolean = false,
+    /** Sugerencia de la IA para la descripción actual; la calcula el ViewModel. */
+    val suggestion: CategorySuggestion? = null,
 ) {
     val isNew: Boolean get() = id == null
+
+    /** La sugerencia se aplica sola mientras el usuario no elija una categoría y la confianza sea alta. */
+    val isSuggestionApplied: Boolean
+        get() = !categoryTouched && suggestion != null && suggestion.confidence >= CategoryClassifier.AUTO_APPLY
+
+    /** Categoría que se guardará: la elegida o, si no hay, la sugerida. */
+    val effectiveCategoryId: Long? get() = if (isSuggestionApplied) suggestion?.category?.id else categoryId
 
     fun toDraft() = TransactionDraft(
         id = id,
@@ -52,7 +65,7 @@ data class MovementEditorState(
         description = description,
         date = date,
         type = type,
-        categoryId = categoryId,
+        categoryId = effectiveCategoryId,
         note = note,
     )
 
@@ -66,6 +79,7 @@ data class MovementEditorState(
                 description = description,
                 categoryId = categoryId,
                 note = note.orEmpty(),
+                categoryTouched = true,
             )
         }
     }

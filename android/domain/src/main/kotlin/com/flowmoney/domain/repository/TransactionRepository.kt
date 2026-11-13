@@ -27,6 +27,9 @@ interface TransactionRepository {
     /** Total del mes por id de categoría para un tipo de movimiento (las categorías sin movimientos no aparecen). */
     fun observeTotalsByCategory(month: YearMonth, type: TransactionType): Flow<Map<Long, Long>>
 
+    /** Movimientos entre dos fechas (ambas incluidas), del más reciente al más antiguo. */
+    fun observeRange(from: LocalDate, to: LocalDate): Flow<List<Transaction>>
+
     /** Totales por día y tipo entre dos fechas, ambas incluidas (los días sin movimientos no aparecen). */
     fun observeDailyTotals(from: LocalDate, to: LocalDate): Flow<List<DailyTotal>>
 }

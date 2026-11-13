@@ -7,6 +7,7 @@ import com.flowmoney.domain.model.BudgetLevel
 import com.flowmoney.domain.model.MonthSummary
 import com.flowmoney.domain.model.TransactionFilter
 import com.flowmoney.domain.model.TransactionType
+import com.flowmoney.domain.usecase.advisor.SuggestCategoryUseCase
 import com.flowmoney.domain.usecase.budget.CheckBudgetUseCase
 import com.flowmoney.domain.usecase.category.ObserveCategoriesUseCase
 import com.flowmoney.domain.usecase.transaction.DeleteTransactionUseCase
@@ -38,6 +39,7 @@ class MovementsViewModel @Inject constructor(
     private val saveTransaction: SaveTransactionUseCase,
     private val deleteTransaction: DeleteTransactionUseCase,
     private val checkBudget: CheckBudgetUseCase,
+    private val suggestCategory: SuggestCategoryUseCase,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -52,9 +54,24 @@ class MovementsViewModel @Inject constructor(
 
     // Cambiar de mes o de filtro cancela la consulta anterior y abre una nueva.
     private val transactions = filter.flatMapLatest { observeTransactions(it) }
+    private val categories = observeCategories()
+
+    // El formulario con la sugerencia de la IA para lo que se está escribiendo. Se deriva (no se
+    // guarda): siempre corresponde a la descripción, el tipo, las categorías y el historial actuales.
+    private val editorWithSuggestion =
+        combine(editor, categories, suggestCategory.observeHistory(today)) { form, categoryList, history ->
+            form?.let {
+                val suggestion = if (it.description.isBlank()) {
+                    null
+                } else {
+                    suggestCategory(it.description, it.type, categoryList, history.filter { past -> past.id != it.id })
+                }
+                it.copy(suggestion = suggestion)
+            }
+        }
 
     val uiState: StateFlow<MovementsUiState> =
-        combine(filter, transactions, observeCategories(), editor, pendingDelete) { filter, items, categories, editor, pending ->
+        combine(filter, transactions, categories, editorWithSuggestion, pendingDelete) { filter, items, categories, editor, pending ->
             MovementsUiState(
                 month = filter.month,
                 today = today,
@@ -87,7 +104,8 @@ class MovementsViewModel @Inject constructor(
             is MovementsEvent.TypeChanged -> editor.update { it?.copy(type = event.type, error = null) }
             is MovementsEvent.AmountChanged -> editor.update { it?.copy(amountText = event.text, error = null) }
             is MovementsEvent.DescriptionChanged -> editor.update { it?.copy(description = event.text, error = null) }
-            is MovementsEvent.CategorySelected -> editor.update { it?.copy(categoryId = event.categoryId, error = null) }
+            is MovementsEvent.CategorySelected ->
+                editor.update { it?.copy(categoryId = event.categoryId, categoryTouched = true, error = null) }
             is MovementsEvent.DateSelected -> editor.update { it?.copy(date = event.date, error = null) }
             is MovementsEvent.NoteChanged -> editor.update { it?.copy(note = event.text, error = null) }
             MovementsEvent.SaveClicked -> save()
@@ -109,13 +127,18 @@ class MovementsViewModel @Inject constructor(
             date = date,
             type = current.type ?: TransactionType.EXPENSE,
             categoryId = current.categoryId,
+            // Si se está filtrando por una categoría, esa manda: la IA no la cambia.
+            categoryTouched = current.categoryId != null,
         )
     }
 
     private fun save() {
-        val current = editor.value ?: return
-        if (current.isSaving) return // evita dobles toques
-        editor.value = current.copy(isSaving = true, error = null)
+        val form = editor.value ?: return
+        if (form.isSaving) return // evita dobles toques
+        // La sugerencia que el usuario está viendo (si sigue siendo para este mismo texto).
+        val shown = uiState.value.editor?.takeIf { it.description == form.description && it.type == form.type }
+        val current = form.copy(suggestion = shown?.suggestion)
+        editor.value = form.copy(isSaving = true, error = null)
 
         viewModelScope.launch {
             when (val result = saveTransaction(current.toDraft())) {
@@ -132,7 +155,7 @@ class MovementsViewModel @Inject constructor(
 
     /** Si el gasto deja su categoría cerca o por encima del presupuesto, el aviso lo dice. */
     private suspend fun savedMessage(saved: MovementEditorState): MovementsMessage {
-        val categoryId = saved.categoryId
+        val categoryId = saved.effectiveCategoryId
         if (saved.type == TransactionType.EXPENSE && categoryId != null) {
             val status = checkBudget(categoryId, YearMonth.from(saved.date))
             if (status != null && status.level != BudgetLevel.ON_TRACK) return MovementsMessage.BudgetAlert(status)
