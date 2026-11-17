@@ -4,6 +4,7 @@ import { store } from '../core/store.js';
 import { defineRoutes, mountRouter, render, shiftMonth } from '../core/router.js';
 import { monthLabel } from '../core/format.js';
 import { openMovementForm } from '../forms/movementForm.js';
+import { mountThemeSwitches, THEME_EVENT } from '../core/theme.js';
 import * as resumen from '../views/resumen.js';
 import * as movimientos from '../views/movimientos.js';
 import * as cuentas from '../views/cuentas.js';
@@ -45,6 +46,7 @@ function renderLoadError(err) {
 }
 
 async function init() {
+  mountThemeSwitches();
   $('new-mv').addEventListener('click', () => openMovementForm());
   $('prev-month').addEventListener('click', () => shiftMonth(-1));
   $('next-month').addEventListener('click', () => shiftMonth(1));
@@ -71,6 +73,8 @@ async function init() {
     renderUserCard();
     render();
   });
+  // Las gráficas (SVG y 3D) leen los colores del tema al dibujarse: se redibuja la vista.
+  document.addEventListener(THEME_EVENT, () => render());
 }
 
 init();

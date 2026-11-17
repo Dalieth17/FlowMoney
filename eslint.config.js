@@ -4,7 +4,7 @@ import globals from 'globals';
 
 export default [
   // Salidas generadas y el proyecto Android (Kotlin) quedan fuera del lint de JS.
-  { ignores: ['**/node_modules/**', '**/build/**', 'android/**'] },
+  { ignores: ['**/node_modules/**', '**/build/**', 'android/**', 'frontend/public/assets/vendor/**'] },
   js.configs.recommended,
   {
     files: ['frontend/public/**/*.js'],

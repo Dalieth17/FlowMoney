@@ -1,33 +1,86 @@
 /* tokens.css — sistema de diseño compartido (landing, login y panel). */
+/*
+ * Dos temas que elige la persona (selector en la barra superior y en Perfil):
+ *   green → "Verde y negro": lienzo casi negro, un solo acento verde (por defecto).
+ *   mono  → "Blanco y negro": lienzo blanco, solo tinta negra.
+ * Los nombres de las variables se conservan (paper, ink, pine…) para que todos los
+ * componentes cambien de tema sin tocarlos: cada tema redefine qué color es cada rol.
+ */
+:root,
+:root[data-theme='green'] {
+  color-scheme: dark;
+  /* Superficies: lienzo → tarjeta → elevada */
+  --paper: #08090a;
+  --paper-2: #161718;
+  --card: #0f1011;
+  --card-2: #161718;
+
+  /* Texto (--muted cumple AA sobre el lienzo y las tarjetas) */
+  --ink: #ffffff;
+  --ink-soft: #d0d6e0;
+  --muted: #8a8f98;
+
+  /* Acento único de acción e ingresos; neutros para lo demás; rojo solo para alertas */
+  --pine: #2fdc8a;
+  --pine-deep: #0f1011;
+  --sage: #2fdc8a;
+  --brass: #d0d6e0;
+  --brass-deep: #8a8f98;
+  --clay: #eb5757;
+
+  /* Texto sobre los rellenos de color */
+  --on-pine: #08090a;
+  --on-pine-deep: #ffffff;
+  --on-clay: #ffffff;
+
+  /* Líneas finas en lugar de sombras */
+  --line: #23252a;
+  --line-soft: #1b1d20;
+  --shadow: 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --radius: 12px;
+
+  /* Colores que lee el 3D (Three.js) */
+  --scene-grid: #23252a;
+  --scene-past: #1f9e63;
+}
+
+:root[data-theme='mono'] {
+  color-scheme: light;
+  --paper: #ffffff;
+  --paper-2: #f4f4f5;
+  --card: #ffffff;
+  --card-2: #f7f7f8;
+
+  --ink: #0a0a0a;
+  --ink-soft: #2b2b30;
+  --muted: #62626a;
+
+  --pine: #0a0a0a;
+  --pine-deep: #0a0a0a;
+  --sage: #62626a;
+  --brass: #3a3a40;
+  --brass-deep: #2b2b30;
+  --clay: #d93d3d;
+
+  --on-pine: #ffffff;
+  --on-pine-deep: #ffffff;
+  --on-clay: #ffffff;
+
+  --line: #e4e4e7;
+  --line-soft: #efeff1;
+  --shadow: 0 1px 2px rgba(10, 10, 10, 0.04);
+  --overlay: rgba(10, 10, 10, 0.35);
+  --radius: 12px;
+
+  --scene-grid: #e4e4e7;
+  --scene-past: #3a3a40;
+}
+
 :root {
-  /* Superficies */
-  --paper: #f1f4ef;
-  --paper-2: #e8ede5;
-  --card: #fbfcfa;
-  --card-2: #f4f7f2;
-
-  /* Texto (--muted cumple contraste AA 4.5:1 sobre --paper) */
-  --ink: #16231e;
-  --ink-soft: #43564d;
-  --muted: #56665d;
-
-  /* Marca: pino (ingresos), salvia, latón (saldo/acento), arcilla (gastos/alertas) */
-  --pine: #1f4d3a;
-  --pine-deep: #163a2b;
-  --sage: #6b8f7d;
-  --brass: #c08a3e;
-  --brass-deep: #9e6e27;
-  --clay: #c25a44;
-
-  /* Líneas, sombras, radios */
-  --line: #d7ded3;
-  --line-soft: #e4e9e0;
-  --shadow: 0 1px 2px rgba(22, 35, 30, 0.04), 0 16px 36px -24px rgba(22, 35, 30, 0.26);
-  --radius: 16px;
-
-  /* Tipografía */
-  --sans: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  /* Una sola familia (Inter) para todo, como pide el sistema de diseño */
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --serif: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 *,
@@ -46,6 +99,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
+  font-feature-settings: 'cv01', 'ss03';
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -62,7 +116,7 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--sage);
+  outline: 2px solid var(--pine);
   outline-offset: 2px;
 }
 
@@ -86,4 +140,60 @@ a {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Selector de tema (landing, login, panel y Perfil) */
+.theme-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.theme-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.theme-switch button[aria-pressed='true'] {
+  background: var(--card-2);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.theme-switch .sw {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.6);
+}
+
+/* Etiquetas HTML posicionadas sobre las escenas 3D */
+.label3d {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+  pointer-events: none;
+  font-size: 12px;
+  color: var(--ink-soft);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line);
+  border-radius: 4px;
+  padding: 3px 7px;
+}
+
+.label3d b {
+  color: var(--ink);
+  font-weight: 600;
 }

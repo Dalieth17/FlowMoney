@@ -1,18 +1,16 @@
 /* landing.css — página pública (index.html). Requiere tokens.css. */
 :root {
   --maxw: 1180px;
-  --radius: 18px;
-  --shadow: 0 1px 2px rgba(22, 35, 30, 0.04), 0 18px 40px -24px rgba(22, 35, 30, 0.28);
 }
 html {
   -webkit-text-size-adjust: 100%;
 }
 body {
   margin: 0;
-  background: radial-gradient(1200px 520px at 82% -8%, rgba(192, 138, 62, 0.1), transparent 60%),
-    radial-gradient(1000px 620px at -10% 8%, rgba(31, 77, 58, 0.1), transparent 55%), var(--paper);
+  background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
+  font-feature-settings: 'cv01', 'ss03';
   font-size: 17px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -30,7 +28,7 @@ header.top {
   top: 0;
   z-index: 40;
   backdrop-filter: saturate(1.1) blur(8px);
-  background: linear-gradient(var(--paper), rgba(241, 244, 239, 0.72));
+  background: linear-gradient(var(--paper), color-mix(in srgb, var(--paper) 72%, transparent));
   border-bottom: 1px solid var(--line-soft);
 }
 .top .bar {
@@ -111,11 +109,10 @@ header.top {
 }
 .btn-primary {
   background: var(--pine);
-  color: #f4f7f2;
-  box-shadow: 0 10px 22px -12px rgba(31, 77, 58, 0.75);
+  color: var(--on-pine);
 }
 .btn-primary:hover {
-  background: var(--pine-deep);
+  background: color-mix(in srgb, var(--pine) 86%, var(--ink));
 }
 .btn-ghost {
   background: transparent;
@@ -124,7 +121,7 @@ header.top {
 }
 .btn-ghost:hover {
   border-color: var(--sage);
-  background: rgba(107, 143, 125, 0.08);
+  background: color-mix(in srgb, var(--pine) 8%, transparent);
 }
 
 /* ---------- Hero ---------- */
@@ -191,18 +188,21 @@ h1 em {
   position: relative;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 26px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 22px 22px 18px;
   overflow: hidden;
 }
 .river-head {
   display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
   align-items: baseline;
   justify-content: space-between;
   margin: 2px 6px 12px;
 }
 .river-head .ttl {
+  white-space: nowrap;
   font-weight: 600;
   font-size: 15px;
   color: var(--ink);
@@ -230,6 +230,28 @@ h1 em {
   border-radius: 3px;
   display: inline-block;
 }
+/* Con WebGL el río es 3D (Three.js); sin WebGL queda el SVG de siempre. */
+canvas.flow3d {
+  display: none;
+}
+.river.has-3d canvas.flow3d {
+  display: block;
+  width: 100%;
+  height: 380px;
+}
+.river.has-3d svg.flow,
+.river.has-3d .river-legend,
+.river.has-3d .balance-tag {
+  display: none;
+}
+.flow-labels {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 18px;
+  height: 380px;
+  pointer-events: none;
+}
 svg.flow {
   display: block;
   width: 100%;
@@ -251,10 +273,10 @@ svg.flow {
   right: 26px;
   top: 70px;
   background: var(--pine);
-  color: #eaf2ec;
+  color: var(--on-pine);
   border-radius: 14px;
   padding: 12px 16px;
-  box-shadow: 0 14px 30px -14px rgba(22, 58, 43, 0.8);
+  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.5);
 }
 .balance-tag .k {
   font-size: 12.5px;
@@ -309,7 +331,7 @@ section.block {
   gap: 14px;
   padding: 16px 22px;
   border-bottom: 1px solid var(--line-soft);
-  background: linear-gradient(180deg, rgba(107, 143, 125, 0.07), transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--pine) 7%, transparent), transparent);
 }
 .dash-top .dots {
   display: flex;
@@ -323,13 +345,13 @@ section.block {
   display: inline-block;
 }
 .dash-top .dots i:nth-child(1) {
-  background: #d8b48c;
+  background: var(--line);
 }
 .dash-top .dots i:nth-child(2) {
-  background: #c9d3c3;
+  background: var(--line);
 }
 .dash-top .dots i:nth-child(3) {
-  background: #afc2b2;
+  background: var(--line);
 }
 .dash-top .path {
   color: var(--ink-soft);
@@ -388,8 +410,12 @@ section.block {
   letter-spacing: -0.01em;
 }
 .stat.bal {
-  background: linear-gradient(180deg, rgba(31, 77, 58, 0.07), rgba(31, 77, 58, 0.02));
-  border-color: rgba(31, 77, 58, 0.22);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pine) 7%, transparent),
+    color-mix(in srgb, var(--pine) 2%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--pine) 22%, transparent);
 }
 .stat.bal .v {
   color: var(--pine);
@@ -440,10 +466,10 @@ section.block {
   border-radius: 6px 6px 3px 3px;
 }
 .bars .inc {
-  background: linear-gradient(180deg, var(--sage), var(--pine));
+  background: var(--pine);
 }
 .bars .exp {
-  background: linear-gradient(180deg, #d98e6e, var(--clay));
+  background: var(--clay);
   border-radius: 3px 3px 6px 6px;
 }
 .bars .wk {
@@ -547,7 +573,7 @@ section.block {
   top: -4px;
   bottom: -4px;
   width: 2px;
-  background: rgba(22, 35, 30, 0.35);
+  background: color-mix(in srgb, var(--ink) 35%, transparent);
 }
 .bud-foot {
   display: flex;
@@ -701,8 +727,8 @@ section.block {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  background: rgba(31, 77, 58, 0.08);
-  border: 1px solid rgba(31, 77, 58, 0.2);
+  background: color-mix(in srgb, var(--pine) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pine) 20%, transparent);
   color: var(--pine);
   font-weight: 600;
   padding: 9px 14px;
@@ -738,7 +764,7 @@ section.block {
 }
 .mini.yes {
   background: var(--pine);
-  color: #f3f7f3;
+  color: var(--on-pine);
   border-color: var(--pine);
 }
 .mini.no {
@@ -782,8 +808,8 @@ section.block {
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: rgba(192, 138, 62, 0.12);
-  border: 1px solid rgba(192, 138, 62, 0.3);
+  background: color-mix(in srgb, var(--brass) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brass) 30%, transparent);
   display: grid;
   place-items: center;
   color: var(--brass-deep);
@@ -840,8 +866,9 @@ section.block {
 /* ---------- Footer / CTA ---------- */
 .closer {
   margin: 36px 0 56px;
-  background: linear-gradient(135deg, var(--pine-deep), var(--pine));
-  color: #e9f1eb;
+  background: var(--pine-deep);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--on-pine-deep);
   border-radius: 26px;
   padding: 48px 44px;
   position: relative;
@@ -855,7 +882,7 @@ section.block {
   width: 320px;
   height: 320px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(192, 138, 62, 0.5), transparent 68%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--pine) 40%, transparent), transparent 68%);
   opacity: 0.5;
 }
 .closer h2 {
@@ -868,7 +895,7 @@ section.block {
 }
 .closer p {
   margin: 0 0 26px;
-  color: #cfe0d4;
+  color: color-mix(in srgb, var(--on-pine-deep) 75%, transparent);
   max-width: 34em;
   font-size: 17px;
   position: relative;
@@ -877,19 +904,19 @@ section.block {
   position: relative;
 }
 .btn-brass {
-  background: var(--brass);
-  color: #2a1e07;
+  background: var(--pine);
+  color: var(--on-pine);
 }
 .btn-brass:hover {
-  background: #d29a4e;
+  background: color-mix(in srgb, var(--pine) 86%, var(--ink));
 }
 .btn-outline {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.4);
-  color: #eaf2ec;
+  border-color: color-mix(in srgb, var(--on-pine-deep) 40%, transparent);
+  color: var(--on-pine-deep);
 }
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--on-pine-deep) 10%, transparent);
 }
 
 footer.foot {

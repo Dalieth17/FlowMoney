@@ -1,6 +1,7 @@
 // Punto de entrada de login.html: ingresar o crear cuenta.
 import { api } from '../core/api.js';
 import { h } from '../ui/dom.js';
+import { mountThemeSwitches } from '../core/theme.js';
 
 const MIN_PASSWORD = 6;
 const COPY = {
@@ -124,3 +125,5 @@ api
 
 // login.html#registro abre directamente "Crear cuenta" (enlaces desde la landing).
 setMode(location.hash === '#registro' ? 'register' : 'login');
+
+mountThemeSwitches();

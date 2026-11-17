@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="dark light">
   <title>FlowMoney · Ingresar</title>
   <meta name="description" content="Ingresa a FlowMoney para administrar tus finanzas personales.">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&display=swap">
+  <script src="assets/js/theme-init.js"></script>
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/auth.css">
@@ -18,11 +19,11 @@
 <body>
   <aside class="brand-panel">
     <a class="bp-brand" href="index.html">
-      <img class="mark" src="assets/img/favicon.svg" alt="" width="32" height="32">
+      <svg class="mark" viewBox="0 0 32 32" width="32" height="32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="9" style="fill:var(--pine)"/><path d="M6 20c4 0 4-8 10-8s6 8 10 8" style="stroke:var(--on-pine)" stroke-width="2.4" stroke-linecap="round"/><path d="M6 24c4 0 4-5 10-5s6 5 10 5" style="stroke:var(--on-pine)" stroke-width="2.2" stroke-linecap="round" opacity=".55"/></svg>
       FlowMoney
     </a>
     <div class="bp-center">
-      <h1>Tu dinero,<br><em>claro</em> cada mes.</h1>
+      <h1>Tu dinero,<br>claro cada mes.</h1>
       <p>Registra ingresos y gastos, pon presupuestos y mira tu balance en un panel tranquilo.</p>
       <ul class="bp-points">
         <li><span class="tick" aria-hidden="true">✓</span> Presupuestos con aviso al superarte</li>
@@ -34,6 +35,7 @@
   </aside>
 
   <main class="form-panel">
+    <div class="theme-corner" data-theme-switch></div>
     <div class="auth-card">
       <h2 id="auth-title">Hola de nuevo</h2>
       <p class="auth-sub" id="auth-subtitle">Ingresa para ver tu balance.</p>

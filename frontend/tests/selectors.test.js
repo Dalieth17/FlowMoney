@@ -10,6 +10,8 @@ import {
   weeklyFlow,
   expenseByCategory,
   monthlySeries,
+  availableToSpend,
+  dailyExpense,
 } from '../public/assets/js/domain/selectors.js';
 
 const at = (y, m, d) => new Date(y, m, d, 12).getTime();
@@ -128,5 +130,70 @@ describe('agrupaciones', () => {
       { label: '11', income: 10, expense: 0 },
       { label: '0', income: 0, expense: 4 },
     ]);
+  });
+});
+
+describe('disponible para gastar', () => {
+  const budgets = [
+    { categoryId: 1, amount: 1000, month: 10, year: 2026 },
+    { categoryId: 2, amount: 500, month: 10, year: 2026 },
+    { categoryId: 1, amount: 9999, month: 9, year: 2026 },
+  ];
+  const list = [
+    tx(1, 'EXPENSE', 600, { categoryId: 1 }),
+    tx(2, 'EXPENSE', 300, { categoryId: 2 }),
+    tx(3, 'EXPENSE', 80, { categoryId: 3 }), // sin presupuesto: no cuenta
+    tx(4, 'INCOME', 5000, { categoryId: 1 }),
+  ];
+
+  test('reparte lo que queda entre los días que faltan, contando hoy', () => {
+    const a = availableToSpend(list, budgets, 10, 2026, new Date(2026, 10, 24, 9));
+    assert.equal(a.limit, 1500);
+    assert.equal(a.spent, 900);
+    assert.equal(a.remaining, 600);
+    assert.equal(a.daysLeft, 7); // 24 al 30 de noviembre
+    assert.ok(Math.abs(a.perDay - 600 / 7) < 1e-9);
+    assert.equal(a.aheadOfPace, 900 - 1500 * (24 / 30));
+  });
+
+  test('mes pasado: no quedan días; mes futuro: el mes completo', () => {
+    const past = availableToSpend(list, budgets, 10, 2026, new Date(2026, 11, 3));
+    assert.equal(past.daysLeft, 0);
+    assert.equal(past.perDay, 0);
+    const future = availableToSpend([], budgets, 10, 2026, new Date(2026, 9, 15));
+    assert.equal(future.daysLeft, 30);
+    assert.equal(future.perDay, 50);
+    assert.equal(future.aheadOfPace, 0);
+  });
+
+  test('si se pasó del límite el diario es cero y sin presupuestos devuelve null', () => {
+    const over = availableToSpend(
+      [tx(1, 'EXPENSE', 2000, { categoryId: 1 })],
+      budgets,
+      10,
+      2026,
+      new Date(2026, 10, 10),
+    );
+    assert.equal(over.remaining, -500);
+    assert.equal(over.perDay, 0);
+    assert.equal(availableToSpend(list, budgets, 3, 2026), null);
+  });
+
+  test('gasto diario y acumulado del mes', () => {
+    const days = dailyExpense(
+      [
+        tx(1, 'EXPENSE', 10, { date: at(2026, 10, 2) }),
+        tx(2, 'EXPENSE', 5, { date: at(2026, 10, 2) }),
+        tx(3, 'INCOME', 99, { date: at(2026, 10, 3) }),
+        tx(4, 'EXPENSE', 20, { date: at(2026, 10, 30) }),
+        tx(5, 'EXPENSE', 7, { date: at(2026, 9, 30) }),
+      ],
+      10,
+      2026,
+    );
+    assert.equal(days.length, 30);
+    assert.deepEqual(days[1], { day: 2, expense: 15, cumulative: 15 });
+    assert.equal(days[2].expense, 0);
+    assert.equal(days[29].cumulative, 35);
   });
 });

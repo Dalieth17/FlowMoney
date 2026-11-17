@@ -93,3 +93,48 @@ export function filterTransactions(list, { type = 'ALL', categoryId = 'ALL', acc
       (!q || t.description.toLowerCase().includes(q) || (t.note || '').toLowerCase().includes(q)),
   );
 }
+
+/**
+ * Cuánto queda para gastar en el mes según los presupuestos, y a qué ritmo.
+ * - limit/spent: suma de los presupuestos del mes y lo gastado en esas categorías.
+ * - daysLeft: días que faltan contando hoy (0 si el mes ya pasó; todo el mes si es futuro).
+ * - perDay: lo que queda repartido entre los días que faltan (nunca negativo).
+ * - aheadOfPace: cuánto se gastó por encima (+) o por debajo (−) del ritmo parejo a la fecha.
+ * Devuelve null si el mes no tiene presupuestos.
+ */
+export function availableToSpend(list, budgets, month, year, today = new Date()) {
+  const own = budgets.filter((b) => b.month === month && b.year === year);
+  if (!own.length) return null;
+  const limit = own.reduce((acc, b) => acc + b.amount, 0);
+  const spent = own.reduce((acc, b) => acc + spentInCategory(list, b.categoryId), 0);
+  const days = new Date(year, month + 1, 0).getDate();
+  const monthKey = year * 12 + month;
+  const todayKey = today.getFullYear() * 12 + today.getMonth();
+  // Días del mes ya "en juego" contando hoy: todos si el mes pasó, ninguno si es futuro.
+  let throughToday;
+  if (monthKey < todayKey) throughToday = days;
+  else if (monthKey > todayKey) throughToday = 0;
+  else throughToday = today.getDate();
+  const daysLeft = monthKey < todayKey ? 0 : days - Math.max(0, throughToday - 1);
+  const remaining = limit - spent;
+  const perDay = daysLeft > 0 ? Math.max(0, remaining) / daysLeft : 0;
+  const expectedByNow = (limit * throughToday) / days;
+  return { limit, spent, remaining, daysLeft, perDay, aheadOfPace: spent - expectedByNow };
+}
+
+/** Gasto de cada día del mes y su acumulado (para la gráfica 3D). */
+export function dailyExpense(list, month, year) {
+  const days = new Date(year, month + 1, 0).getDate();
+  const out = Array.from({ length: days }, (_, i) => ({ day: i + 1, expense: 0, cumulative: 0 }));
+  list.forEach((t) => {
+    const d = new Date(t.date);
+    if (t.type === 'EXPENSE' && d.getMonth() === month && d.getFullYear() === year)
+      out[d.getDate() - 1].expense += t.amount;
+  });
+  let acc = 0;
+  out.forEach((d) => {
+    acc += d.expense;
+    d.cumulative = acc;
+  });
+  return out;
+}

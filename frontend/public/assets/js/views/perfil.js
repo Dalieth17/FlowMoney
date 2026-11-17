@@ -5,6 +5,7 @@ import { panel } from '../ui/widgets.js';
 import { exportTransactionsCsv } from '../ui/exportCsv.js';
 import { store } from '../core/store.js';
 import { CURRENCIES, MONTHS, isoDate } from '../core/format.js';
+import { THEMES, getTheme, setTheme } from '../core/theme.js';
 
 const MIN_PASSWORD = 6;
 
@@ -12,7 +13,7 @@ export function render(root) {
   mount(
     root,
     h('div', { class: 'profile-grid' }, [
-      h('div', { class: 'profile-col' }, [personalPanel(), securityPanel()]),
+      h('div', { class: 'profile-col' }, [personalPanel(), appearancePanel(), securityPanel()]),
       h('div', { class: 'profile-col' }, [dataPanel()]),
     ]),
   );
@@ -45,6 +46,32 @@ function personalPanel() {
   });
 
   return panel('Tus datos', 'nombre y preferencias', form);
+}
+
+/** Tema de colores: se aplica al instante y se recuerda en este navegador. */
+function appearancePanel() {
+  const current = getTheme();
+  const options = THEMES.map((t) =>
+    h('label', { class: 'theme-opt' }, [
+      h('input', {
+        type: 'radio',
+        name: 'theme',
+        value: t.id,
+        checked: t.id === current,
+        onchange: () => setTheme(t.id),
+      }),
+      h('span', { class: `theme-prev ${t.id}`, 'aria-hidden': 'true' }, [h('i'), h('i'), h('i')]),
+      h('span', { class: 'theme-txt' }, [
+        h('b', {}, t.label),
+        h('span', {}, t.id === 'green' ? 'Fondo oscuro con acentos verdes.' : 'Fondo claro, solo tinta negra.'),
+      ]),
+    ]),
+  );
+  return panel(
+    'Apariencia',
+    'el tema de colores',
+    h('div', { class: 'theme-opts', role: 'radiogroup', 'aria-label': 'Tema' }, options),
+  );
 }
 
 function securityPanel() {
