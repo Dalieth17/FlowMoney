@@ -289,4 +289,14 @@
     <string name="currency_change_later">Podrás cambiarla después desde Movimientos.</string>
     <string name="currency_change">Cambiar moneda</string>
     <string name="currency_no_conversion">Cambiar la moneda no convierte tus montos: solo cambia cómo se muestran.</string>
+
+    <!-- Apariencia -->
+    <string name="appearance_title">Elige cómo se ve FlowMoney</string>
+    <string name="appearance_subtitle">Los dos temas muestran lo mismo; cambia solo el color. Quédate con el que leas mejor.</string>
+    <string name="theme_green">Verde y negro</string>
+    <string name="theme_green_description">Fondo oscuro con acentos verdes. Cómodo de noche.</string>
+    <string name="theme_mono">Blanco y negro</string>
+    <string name="theme_mono_description">Fondo claro, solo tinta negra. Máximo contraste de día.</string>
+    <string name="appearance_change_later">Puedes cambiarlo cuando quieras desde Movimientos.</string>
+    <string name="appearance_change">Cambiar tema</string>
 </resources>

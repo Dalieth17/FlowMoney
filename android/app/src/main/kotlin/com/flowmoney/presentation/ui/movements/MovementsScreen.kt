@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.CurrencyExchange
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -75,7 +76,11 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 @Composable
-fun MovementsScreen(onCurrencyClick: () -> Unit = {}, viewModel: MovementsViewModel = hiltViewModel()) {
+fun MovementsScreen(
+    onCurrencyClick: () -> Unit = {},
+    onThemeClick: () -> Unit = {},
+    viewModel: MovementsViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val resources = LocalContext.current.resources
@@ -89,6 +94,7 @@ fun MovementsScreen(onCurrencyClick: () -> Unit = {}, viewModel: MovementsViewMo
         snackbarHostState = snackbarHostState,
         onEvent = viewModel::onEvent,
         onCurrencyClick = onCurrencyClick,
+        onThemeClick = onThemeClick,
     )
 }
 
@@ -100,6 +106,7 @@ fun MovementsContent(
     onEvent: (MovementsEvent) -> Unit,
     modifier: Modifier = Modifier,
     onCurrencyClick: () -> Unit = {},
+    onThemeClick: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier,
@@ -108,6 +115,9 @@ fun MovementsContent(
                 title = { Text(stringResource(R.string.movements_title)) },
                 actions = {
                     // La moneda se elige al empezar; aquí se puede cambiar después.
+                    IconButton(onClick = onThemeClick) {
+                        Icon(Icons.Rounded.Palette, contentDescription = stringResource(R.string.appearance_change))
+                    }
                     IconButton(onClick = onCurrencyClick) {
                         Icon(Icons.Rounded.CurrencyExchange, contentDescription = stringResource(R.string.currency_change))
                     }

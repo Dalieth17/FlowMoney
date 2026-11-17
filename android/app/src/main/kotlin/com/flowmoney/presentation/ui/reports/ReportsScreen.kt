@@ -1,7 +1,6 @@
 package com.flowmoney.presentation.ui.reports
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,10 +45,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -69,6 +65,7 @@ import com.flowmoney.domain.model.MonthFlow
 import com.flowmoney.domain.model.MonthSummary
 import com.flowmoney.domain.model.MonthlyReport
 import com.flowmoney.domain.model.WeekFlow
+import com.flowmoney.presentation.components.Donut3D
 import com.flowmoney.presentation.components.MonthSelector
 import com.flowmoney.presentation.components.MonthTotals
 import com.flowmoney.presentation.format.LocalMoneyFormatter
@@ -81,15 +78,8 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 
-private val DonutSize = 176.dp
-private val DonutStroke = 26.dp
+private val DonutHeight = 190.dp
 private val BarsHeight = 140.dp
-
-/** Separación entre porciones de la dona, en grados. */
-private const val SEGMENT_GAP = 2f
-
-/** Una porción nunca se dibuja más fina que esto: así las categorías pequeñas siguen viéndose. */
-private const val MIN_SWEEP = 1f
 
 /** La columna del periodo es algo más ancha que las de montos. */
 private const val PERIOD_COLUMN_WEIGHT = 1.2f
@@ -261,50 +251,30 @@ internal fun CategoriesCard(shares: List<CategoryShare>) {
     }
 }
 
-/** Gráfico de dona: una porción por categoría, empezando arriba y en el sentido del reloj. */
+/** Dona 3D (una porción por categoría, más alta cuanto más pesa) y el total gastado debajo. */
 @Composable
 private fun DonutChart(shares: List<CategoryShare>, modifier: Modifier = Modifier) {
     val fallbackColor = MaterialTheme.colorScheme.secondary
     val segmentColors = shares.map { it.category.color.toColorOrNull() ?: fallbackColor }
     val totalCents = shares.sumOf { it.amountCents }
 
-    Box(modifier.size(DonutSize), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize()) {
-            if (totalCents <= 0L) return@Canvas
-            val strokeWidth = DonutStroke.toPx()
-            val diameter = size.minDimension - strokeWidth
-            val topLeft = Offset((size.width - diameter) / 2f, (size.height - diameter) / 2f)
-            // Con una sola categoría el anillo se cierra completo, sin separación.
-            val gap = if (shares.size > 1) SEGMENT_GAP else 0f
-            var startAngle = -90f
-            shares.forEachIndexed { index, share ->
-                val sweep = (share.amountCents.toDouble() / totalCents * 360.0).toFloat()
-                drawArc(
-                    color = segmentColors[index],
-                    startAngle = startAngle + gap / 2f,
-                    sweepAngle = (sweep - gap).coerceAtLeast(MIN_SWEEP),
-                    useCenter = false,
-                    topLeft = topLeft,
-                    size = Size(diameter, diameter),
-                    style = Stroke(width = strokeWidth),
-                )
-                startAngle += sweep
-            }
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = stringResource(R.string.reports_total),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = LocalMoneyFormatter.current.format(totalCents),
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = DonutSize - DonutStroke * 2 - 16.dp),
-            )
-        }
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Donut3D(
+            values = shares.map { it.amountCents },
+            colors = segmentColors,
+            modifier = Modifier.fillMaxWidth().height(DonutHeight).clearAndSetSemantics { },
+        )
+        Text(
+            text = stringResource(R.string.reports_total),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = LocalMoneyFormatter.current.format(totalCents),
+            style = MaterialTheme.typography.titleLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

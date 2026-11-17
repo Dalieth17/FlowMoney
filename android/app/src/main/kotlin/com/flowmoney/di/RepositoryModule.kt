@@ -3,10 +3,12 @@ package com.flowmoney.di
 import com.flowmoney.data.repository.BudgetRepositoryImpl
 import com.flowmoney.data.repository.CategoryRepositoryImpl
 import com.flowmoney.data.repository.CurrencyRepositoryImpl
+import com.flowmoney.data.repository.ThemeRepositoryImpl
 import com.flowmoney.data.repository.TransactionRepositoryImpl
 import com.flowmoney.domain.repository.BudgetRepository
 import com.flowmoney.domain.repository.CategoryRepository
 import com.flowmoney.domain.repository.CurrencyRepository
+import com.flowmoney.domain.repository.ThemeRepository
 import com.flowmoney.domain.repository.TransactionRepository
 import dagger.Binds
 import dagger.Module
@@ -33,4 +35,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCurrencyRepository(impl: CurrencyRepositoryImpl): CurrencyRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindThemeRepository(impl: ThemeRepositoryImpl): ThemeRepository
 }

@@ -38,6 +38,9 @@ import com.flowmoney.R
 import com.flowmoney.presentation.format.LocalMoneyFormatter
 import com.flowmoney.presentation.format.MoneyFormatter
 import com.flowmoney.presentation.ui.advisor.AdvisorScreen
+import com.flowmoney.presentation.ui.appearance.AppearanceViewModel
+import com.flowmoney.presentation.ui.appearance.ThemeChoiceScreen
+import com.flowmoney.presentation.ui.appearance.ThemeDialog
 import com.flowmoney.presentation.ui.budgets.BudgetsScreen
 import com.flowmoney.presentation.ui.categories.CategoriesScreen
 import com.flowmoney.presentation.ui.currency.CurrencyChoiceScreen
@@ -80,27 +83,49 @@ private enum class TopLevelTab(
 }
 
 /**
- * Raíz de la interfaz. En el primer uso pide la moneda; después provee su formato a toda la app
+ * Raíz de la interfaz. En el primer uso pide la moneda y el tema; después provee el formato de la moneda a toda la app
  * ([LocalMoneyFormatter]) y muestra la navegación.
  */
 @Composable
-fun FlowMoneyApp(modifier: Modifier = Modifier, currencyViewModel: CurrencyViewModel = hiltViewModel()) {
+fun FlowMoneyApp(
+    modifier: Modifier = Modifier,
+    currencyViewModel: CurrencyViewModel = hiltViewModel(),
+    appearanceViewModel: AppearanceViewModel = hiltViewModel(),
+) {
     val currencyState by currencyViewModel.uiState.collectAsStateWithLifecycle()
+    val appearance by appearanceViewModel.uiState.collectAsStateWithLifecycle()
     var showCurrencyDialog by rememberSaveable { mutableStateOf(false) }
+    var showThemeDialog by rememberSaveable { mutableStateOf(false) }
 
     when (val state = currencyState) {
         CurrencyUiState.Loading -> Unit
         CurrencyUiState.NeedsChoice -> CurrencyChoiceScreen(onChoose = currencyViewModel::choose, modifier = modifier)
-        is CurrencyUiState.Ready -> {
-            CompositionLocalProvider(LocalMoneyFormatter provides MoneyFormatter.of(state.currency)) {
-                FlowMoneyNavHost(modifier = modifier, onCurrencyClick = { showCurrencyDialog = true })
-            }
-            if (showCurrencyDialog) {
-                CurrencyDialog(
-                    current = state.currency,
-                    onChoose = currencyViewModel::choose,
-                    onDismiss = { showCurrencyDialog = false },
-                )
+        is CurrencyUiState.Ready -> when {
+            !appearance.isLoaded -> Unit
+            // Primer uso: después de la moneda se elige el tema.
+            !appearance.isChosen -> ThemeChoiceScreen(onChoose = appearanceViewModel::choose, modifier = modifier)
+            else -> {
+                CompositionLocalProvider(LocalMoneyFormatter provides MoneyFormatter.of(state.currency)) {
+                    FlowMoneyNavHost(
+                        modifier = modifier,
+                        onCurrencyClick = { showCurrencyDialog = true },
+                        onThemeClick = { showThemeDialog = true },
+                    )
+                }
+                if (showCurrencyDialog) {
+                    CurrencyDialog(
+                        current = state.currency,
+                        onChoose = currencyViewModel::choose,
+                        onDismiss = { showCurrencyDialog = false },
+                    )
+                }
+                if (showThemeDialog) {
+                    ThemeDialog(
+                        current = appearance.theme,
+                        onChoose = appearanceViewModel::choose,
+                        onDismiss = { showThemeDialog = false },
+                    )
+                }
             }
         }
     }
@@ -112,6 +137,7 @@ fun FlowMoneyNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     onCurrencyClick: () -> Unit = {},
+    onThemeClick: () -> Unit = {},
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -147,7 +173,7 @@ fun FlowMoneyNavHost(
             // Cada pantalla tiene su propio Scaffold: no debe volver a sumar la barra de navegación.
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
-            composable<MovementsDestination> { MovementsScreen(onCurrencyClick = onCurrencyClick) }
+            composable<MovementsDestination> { MovementsScreen(onCurrencyClick = onCurrencyClick, onThemeClick = onThemeClick) }
             composable<BudgetsDestination> { BudgetsScreen() }
             composable<ReportsDestination> { ReportsScreen() }
             composable<AdvisorDestination> { AdvisorScreen() }

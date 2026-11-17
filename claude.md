@@ -39,6 +39,11 @@ frontend/tests/ tests de domain/ y format (node:test)
 - Frontend: vistas montan con `mount(root, ...)` (nunca `append(null)`); texto siempre por
   `h()`/textContent; `html:` solo para SVG propio. Lógica pura en `domain/` (+ test).
 - Montos DECIMAL(12,2) → number; fechas epoch ms (BIGINT); mes 0‑based (como JS Date).
+- Temas web: `tokens.css` define `[data-theme=green|mono]` reasignando los mismos roles (`--paper`, `--ink`,
+  `--pine`…, más `--on-pine`); nunca colores fijos en componentes. `theme-init.js` (clásico, por la CSP)
+  aplica el tema guardado (`localStorage['flowmoney.theme']`); `core/theme.js` = selector y evento.
+  3D: Three.js r160 en `assets/vendor/three` (sin lint), `ui/three/*` con fallback 2D sin WebGL y quieto
+  con reduced-motion; se libera solo al salir el canvas del DOM.
 - Moneda por usuario (`users.currency`: `COP` | `USD`, por defecto COP; migración 004). Se elige al
   registrarse (login.html) y en Perfil. `format.js`: `setCurrency(code)`, COP "$ 4.500.000" (es-CO, decimales
   solo si hay centavos), USD "US$ 1,234.56". `seedUserData(..., currency)` siembra un mes colombiano o en dólares.
@@ -62,6 +67,10 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 - Ids `Long`; colores "#RRGGBB"; íconos = clave de Material (catálogo en `CategoryVisuals.kt`).
 - Textos en `res/values/strings.xml`; errores de dominio → texto en `CategoryTexts.kt` /
   `MovementTexts.kt`.
+- Tema Android: `AppTheme { GREEN, MONO }` en SharedPreferences (`ThemeRepositoryImpl`);
+  `AppearanceViewModel` (scope Activity) alimenta `FlowMoneyTheme(theme)` y la barra de estado;
+  se elige tras la moneda y se cambia con el ícono de paleta en Movimientos. Usar solo roles de
+  `MaterialTheme.colorScheme` (los dos esquemas están en `Theme.kt`). Dona 3D: `components/Donut3D.kt`.
 - Moneda: `AppCurrency { COP, USD }` en SharedPreferences (`CurrencyRepositoryImpl`); `FlowMoneyApp` pide
   elegirla en el primer uso y provee `LocalMoneyFormatter` (`MoneyFormatter`; en tests, `MoneyFormatter.Default` = COP).
   Nunca formatear dinero con el locale del teléfono.
@@ -97,4 +106,5 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 - [x] Android: módulo **Reportes** (dona + barras semana/mes, tasa de ahorro, export a PDF por impresión)
 - [x] Android: módulo **IA** (sugerencia de categoría + asesor con nota, recomendaciones y preguntas, todo local)
 - [x] Moneda elegible: pesos colombianos (COP) o dólares (USD) en web y Android
+- [x] Rediseño: temas Verde y negro / Blanco y negro elegibles, 3D (Three.js en web, Canvas en Android)
 - Ideas web: recuperar contraseña por correo, movimientos recurrentes, gráfico por cuenta.

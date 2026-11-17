@@ -30,17 +30,18 @@ si sirves por HTTPS.
 
 ## Funciones
 
-| Sección          | Qué hace                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------- |
-| **Cuenta**       | Registro e ingreso; sesiones revocables en el servidor (cookie httpOnly); contraseñas con scrypt. |
-| **Resumen**      | Ingresos, gastos y balance del mes, flujo semanal, gasto por categoría, alertas.                  |
-| **Movimientos**  | Alta, edición y borrado; búsqueda por texto; filtros por tipo, categoría y cuenta; CSV.           |
-| **Cuentas**      | Efectivo, banco y ahorros con saldo = saldo inicial + ingresos − gastos.                          |
-| **Categorías**   | Predeterminadas + propias con ícono y color.                                                      |
-| **Presupuestos** | Límite mensual por categoría; aviso al 80 % y al superarlo.                                       |
-| **Reportes**     | Dona por categoría, barras de 6 meses, tasa de ahorro, exportar a PDF (imprimir).                 |
-| **Perfil**       | Nombre, moneda (pesos COP o dólares USD), cambio de contraseña, exportar todo, restaurar ejemplo. |
-| **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador).     |
+| Sección          | Qué hace                                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| **Cuenta**       | Registro e ingreso; sesiones revocables en el servidor (cookie httpOnly); contraseñas con scrypt.       |
+| **Resumen**      | Ingresos, gastos y balance del mes, flujo semanal, gasto por categoría, alertas.                        |
+| **Movimientos**  | Alta, edición y borrado; búsqueda por texto; filtros por tipo, categoría y cuenta; CSV.                 |
+| **Cuentas**      | Efectivo, banco y ahorros con saldo = saldo inicial + ingresos − gastos.                                |
+| **Categorías**   | Predeterminadas + propias con ícono y color.                                                            |
+| **Presupuestos** | Límite mensual por categoría; aviso al 80 % y al superarlo.                                             |
+| **Reportes**     | Dona por categoría, barras de 6 meses, tasa de ahorro, exportar a PDF (imprimir).                       |
+| **Perfil**       | Nombre, moneda (pesos COP o dólares USD), tema, cambio de contraseña, exportar todo, restaurar ejemplo. |
+| **Apariencia**   | Dos temas a elección: **Verde y negro** (por defecto) o **Blanco y negro**. Escenas 3D con Three.js.    |
+| **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador).           |
 
 ## Arquitectura
 
@@ -171,6 +172,9 @@ Estado:
   - _Preguntas_ en lenguaje natural: «¿puedo comprar algo de 800?», «¿cuánto puedo gastar por día?»,
     «¿cómo ahorro más?», «¿en qué gasto más?», deudas, inversión, proyección y más.
 
+- **Tema** — después de la moneda se elige **Verde y negro** u **Blanco y negro**; se cambia luego con
+  el botón de paleta en Movimientos. Reportes muestra una dona 3D que gira (quieta si el sistema
+  desactiva las animaciones).
 - **Moneda** — al abrir la app por primera vez se elige **pesos colombianos (COP)** o **dólares
   (USD)**; se cambia después con el botón de moneda en Movimientos. COP se muestra como
   `$ 4.500.000` (sin centavos si no los hay) y USD como `US$ 1,234.56`. Los montos se pueden
