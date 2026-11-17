@@ -44,6 +44,11 @@ frontend/tests/ tests de domain/ y format (node:test)
   aplica el tema guardado (`localStorage['flowmoney.theme']`); `core/theme.js` = selector y evento.
   3D: Three.js r160 en `assets/vendor/three` (sin lint), `ui/three/*` con fallback 2D sin WebGL y quieto
   con reduced-motion; se libera solo al salir el canvas del DOM.
+- Legal (Colombia, Ley 1581/2012): `terminos.html` y `privacidad.html` (versión = `backend/src/config/legal.js`
+  `TERMS_VERSION`; si cambian los textos, subir ambas fechas). Registro exige `acceptTerms: true` y guarda
+  `users.terms_version/terms_accepted_at` (migración 005). `DELETE /api/profile {password}` borra la cuenta
+  (movimientos y presupuestos primero por el RESTRICT de categorías). Los `<span class="fill">[…]</span>`
+  son datos del responsable que el dueño debe completar.
 - Moneda por usuario (`users.currency`: `COP` | `USD`, por defecto COP; migración 004). Se elige al
   registrarse (login.html) y en Perfil. `format.js`: `setCurrency(code)`, COP "$ 4.500.000" (es-CO, decimales
   solo si hay centavos), USD "US$ 1,234.56". `seedUserData(..., currency)` siembra un mes colombiano o en dólares.

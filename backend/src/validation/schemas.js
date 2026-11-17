@@ -32,7 +32,17 @@ const positiveId = (msg) => z.coerce.number({ invalid_type_error: msg }).int(msg
 // ---- Auth / perfil ----
 const currency = z.enum(CURRENCIES, { errorMap: () => ({ message: 'Moneda no válida' }) });
 
-const registerSchema = z.object({ name: personName, email, password, currency: currency.default('COP') });
+// La autorización del tratamiento de datos debe ser previa, expresa e informada (Ley 1581 de 2012, art. 9).
+const acceptTerms = z.literal(true, {
+  errorMap: () => ({
+    message: 'Para crear la cuenta debes aceptar los Términos de uso y la Política de tratamiento de datos',
+  }),
+});
+
+const registerSchema = z.object({ name: personName, email, password, currency: currency.default('COP'), acceptTerms });
+
+/** Eliminar la cuenta pide la contraseña: es irreversible. */
+const deleteAccountSchema = z.object({ password: z.string().min(1, 'Escribe tu contraseña para confirmar') });
 
 const loginSchema = z.object({
   email,
@@ -114,6 +124,7 @@ module.exports = {
   loginSchema,
   profileSchema,
   changePasswordSchema,
+  deleteAccountSchema,
   categorySchema,
   accountSchema,
   transactionSchema,

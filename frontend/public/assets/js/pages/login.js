@@ -33,6 +33,8 @@ const els = {
   name: $('f-name'),
   currencyField: $('currency-field'),
   currency: $('f-currency'),
+  consentField: $('consent-field'),
+  terms: $('f-terms'),
   email: $('f-email'),
   password: $('f-password'),
   toggle: $('pw-toggle'),
@@ -65,6 +67,7 @@ function setMode(next) {
   els.tabRegister.classList.toggle('active', !isLogin);
   els.nameField.hidden = isLogin;
   els.currencyField.hidden = isLogin;
+  els.consentField.hidden = isLogin;
   els.title.textContent = copy.title;
   els.subtitle.textContent = copy.subtitle;
   els.submit.textContent = copy.submit;
@@ -83,6 +86,8 @@ function validate() {
   if (!els.email.value.trim()) return 'Escribe tu correo';
   if (!els.email.checkValidity()) return 'Correo no válido';
   if (els.password.value.length < MIN_PASSWORD) return `La contraseña debe tener al menos ${MIN_PASSWORD} caracteres`;
+  if (mode === 'register' && !els.terms.checked)
+    return 'Para crear la cuenta debes aceptar los Términos de uso y la Política de tratamiento de datos';
   return null;
 }
 
@@ -107,7 +112,12 @@ els.form.addEventListener('submit', async (e) => {
   els.submit.textContent = COPY[mode].busy;
   try {
     if (mode === 'register')
-      await api.register({ ...credentials, name: els.name.value.trim(), currency: els.currency.value });
+      await api.register({
+        ...credentials,
+        name: els.name.value.trim(),
+        currency: els.currency.value,
+        acceptTerms: els.terms.checked,
+      });
     else await api.login(credentials);
     location.replace('app.html');
   } catch (err) {

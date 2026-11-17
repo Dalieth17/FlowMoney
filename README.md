@@ -30,18 +30,19 @@ si sirves por HTTPS.
 
 ## Funciones
 
-| Sección          | Qué hace                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------- |
-| **Cuenta**       | Registro e ingreso; sesiones revocables en el servidor (cookie httpOnly); contraseñas con scrypt.       |
-| **Resumen**      | Ingresos, gastos y balance del mes, flujo semanal, gasto por categoría, alertas.                        |
-| **Movimientos**  | Alta, edición y borrado; búsqueda por texto; filtros por tipo, categoría y cuenta; CSV.                 |
-| **Cuentas**      | Efectivo, banco y ahorros con saldo = saldo inicial + ingresos − gastos.                                |
-| **Categorías**   | Predeterminadas + propias con ícono y color.                                                            |
-| **Presupuestos** | Límite mensual por categoría; aviso al 80 % y al superarlo.                                             |
-| **Reportes**     | Dona por categoría, barras de 6 meses, tasa de ahorro, exportar a PDF (imprimir).                       |
-| **Perfil**       | Nombre, moneda (pesos COP o dólares USD), tema, cambio de contraseña, exportar todo, restaurar ejemplo. |
-| **Apariencia**   | Dos temas a elección: **Verde y negro** (por defecto) o **Blanco y negro**. Escenas 3D con Three.js.    |
-| **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador).           |
+| Sección          | Qué hace                                                                                                                                                                     |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cuenta**       | Registro e ingreso; sesiones revocables en el servidor (cookie httpOnly); contraseñas con scrypt.                                                                            |
+| **Resumen**      | Ingresos, gastos y balance del mes, flujo semanal, gasto por categoría, alertas.                                                                                             |
+| **Movimientos**  | Alta, edición y borrado; búsqueda por texto; filtros por tipo, categoría y cuenta; CSV.                                                                                      |
+| **Cuentas**      | Efectivo, banco y ahorros con saldo = saldo inicial + ingresos − gastos.                                                                                                     |
+| **Categorías**   | Predeterminadas + propias con ícono y color.                                                                                                                                 |
+| **Presupuestos** | Límite mensual por categoría; aviso al 80 % y al superarlo.                                                                                                                  |
+| **Reportes**     | Dona por categoría, barras de 6 meses, tasa de ahorro, exportar a PDF (imprimir).                                                                                            |
+| **Perfil**       | Nombre, moneda (pesos COP o dólares USD), tema, cambio de contraseña, exportar todo, restaurar ejemplo.                                                                      |
+| **Legal**        | Términos de uso y Política de tratamiento de datos (Ley 1581 de 2012); aceptación obligatoria al registrarse, guardada con versión y fecha; eliminar la cuenta desde Perfil. |
+| **Apariencia**   | Dos temas a elección: **Verde y negro** (por defecto) o **Blanco y negro**. Escenas 3D con Three.js.                                                                         |
+| **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador).                                                                                |
 
 ## Arquitectura
 

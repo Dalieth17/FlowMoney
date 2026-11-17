@@ -21,7 +21,10 @@ after(() => closePool());
 /** Registra un usuario y devuelve su cookie de sesión tal cual (como la copiaría un atacante). */
 async function register(password = PASSWORD) {
   const email = uniqueEmail('sec');
-  const res = await request(app).post('/api/auth/register').send({ name: 'Sec', email, password }).expect(201);
+  const res = await request(app)
+    .post('/api/auth/register')
+    .send({ name: 'Sec', email, password, acceptTerms: true })
+    .expect(201);
   return { email, cookie: res.headers['set-cookie'][0].split(';')[0], userId: res.body.user.id };
 }
 

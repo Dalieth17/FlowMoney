@@ -153,30 +153,29 @@ a {
 }
 
 .theme-switch button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 26px;
   border: 0;
   background: none;
   color: var(--muted);
   font: inherit;
-  font-size: 12px;
-  padding: 5px 10px;
+  padding: 0;
   border-radius: 9999px;
   cursor: pointer;
+  opacity: 0.55;
+}
+
+.theme-switch button:hover {
+  opacity: 0.85;
 }
 
 .theme-switch button[aria-pressed='true'] {
+  opacity: 1;
   background: var(--card-2);
   color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--line);
-}
-
-.theme-switch .sw {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.6);
 }
 
 /* Etiquetas HTML posicionadas sobre las escenas 3D */

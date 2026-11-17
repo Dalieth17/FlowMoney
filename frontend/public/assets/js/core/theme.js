@@ -1,15 +1,17 @@
 // Tema elegido por la persona: "Verde y negro" (por defecto) o "Blanco y negro".
 // Se guarda en este navegador y se aplica con <html data-theme="…">.
 
+// Íconos del selector (SVG propio, sin datos del usuario): luna verde = tema oscuro con acento verde;
+// círculo mitad blanco y mitad negro = tema de alto contraste en blanco y negro.
+const ICONS = {
+  green:
+    '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20.4 14.6A8.5 8.5 0 0 1 9.4 3.6 8.5 8.5 0 1 0 20.4 14.6Z" fill="#2fdc8a"/></svg>',
+  mono: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="#ffffff" stroke="currentColor" stroke-width="1.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="#0a0a0a"/></svg>',
+};
+
 export const THEMES = Object.freeze([
-  { id: 'green', label: 'Verde y negro', short: 'Verde', compact: 'Verde', swatch: '#2fdc8a' },
-  {
-    id: 'mono',
-    label: 'Blanco y negro',
-    short: 'Blanco y negro',
-    compact: 'B/N',
-    swatch: 'linear-gradient(90deg, #ffffff 50%, #0a0a0a 50%)',
-  },
+  { id: 'green', label: 'Verde y negro', icon: ICONS.green },
+  { id: 'mono', label: 'Blanco y negro', icon: ICONS.mono },
 ]);
 export const DEFAULT_THEME = 'green';
 const KEY = 'flowmoney.theme';
@@ -42,17 +44,15 @@ export function mountThemeSwitches(root = document) {
     host.classList.add('theme-switch');
     host.setAttribute('role', 'group');
     host.setAttribute('aria-label', 'Tema de colores');
-    const compact = host.dataset.themeSwitch === 'compact';
     host.replaceChildren(
       ...THEMES.map((t) => {
         const b = document.createElement('button');
         b.type = 'button';
         b.dataset.theme = t.id;
-        b.title = t.label;
-        const sw = document.createElement('span');
-        sw.className = 'sw';
-        sw.style.background = t.swatch;
-        b.append(sw, compact ? t.compact : t.short);
+        // Solo ícono: el nombre del tema lo dan aria-label (lectores de pantalla) y title (al pasar el mouse).
+        b.title = `Tema ${t.label}`;
+        b.setAttribute('aria-label', `Tema ${t.label}`);
+        b.innerHTML = t.icon;
         b.addEventListener('click', () => setTheme(t.id));
         return b;
       }),

@@ -983,3 +983,9 @@ footer.foot {
     font-size: 16px;
   }
 }
+
+.foot-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}

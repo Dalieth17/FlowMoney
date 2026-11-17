@@ -50,4 +50,6 @@ export const api = {
   login: (payload) => request('/auth/login', { method: 'POST', body: payload }),
   logout: () => request('/auth/logout', { method: 'POST' }),
   me: () => request('/auth/me'),
+  /** Borra la cuenta y todos sus datos (pide la contraseña). */
+  deleteProfile: (password) => request('/profile', { method: 'DELETE', body: { password } }),
 };

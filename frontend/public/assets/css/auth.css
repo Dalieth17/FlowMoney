@@ -201,7 +201,71 @@ body {
   .brand-panel {
     display: none;
   }
+  .legal-mini {
+    display: block;
+  }
   .form-panel {
     min-height: 100vh;
   }
+}
+
+/* ---- Marco legal: resumen al fondo del panel de marca ---- */
+.bp-legal {
+  z-index: 1;
+  max-width: 34em;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--on-pine-deep) 62%, transparent);
+}
+.bp-legal p {
+  margin: 0 0 10px;
+}
+.bp-legal .bp-legal-t {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-pine-deep);
+}
+.bp-legal a {
+  color: var(--on-pine-deep);
+  text-underline-offset: 3px;
+}
+.bp-legal nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+/* ---- Casilla de aceptación (registro) ---- */
+.consent .check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.consent input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  flex: none;
+  accent-color: var(--pine);
+}
+.consent a {
+  color: var(--pine);
+  text-underline-offset: 2px;
+}
+
+/* En móvil el panel de marca se oculta: los enlaces legales quedan bajo el formulario. */
+.legal-mini {
+  display: none;
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.legal-mini a {
+  color: var(--ink-soft);
 }

@@ -1,6 +1,6 @@
 // Vista Perfil: datos personales, moneda, contraseña y gestión de datos.
 import { h, field, mount } from '../ui/dom.js';
-import { toast, confirmDialog, runAction } from '../ui/feedback.js';
+import { toast, confirmDialog, runAction, openModal, closeModal } from '../ui/feedback.js';
 import { panel } from '../ui/widgets.js';
 import { exportTransactionsCsv } from '../ui/exportCsv.js';
 import { store } from '../core/store.js';
@@ -161,6 +161,52 @@ function dataPanel() {
         ]),
         resetButton,
       ]),
+      h('div', { class: 'data-action danger' }, [
+        h('div', {}, [
+          h('p', { class: 'da-t' }, 'Eliminar mi cuenta'),
+          h('p', { class: 'da-s' }, 'Borra tu cuenta y todos tus datos de forma definitiva.'),
+        ]),
+        h('button', { class: 'btn ghost-danger sm', onclick: openDeleteAccount }, 'Eliminar cuenta'),
+      ]),
+      h('p', { class: 'legal-links' }, [
+        'Tus derechos sobre tus datos: ',
+        h(
+          'a',
+          { href: 'privacidad.html#derechos', target: '_blank', rel: 'noopener' },
+          'Política de tratamiento de datos',
+        ),
+        ' · ',
+        h('a', { href: 'terminos.html', target: '_blank', rel: 'noopener' }, 'Términos de uso'),
+      ]),
     ]),
   );
+}
+
+/**
+ * Derecho de supresión (Ley 1581 de 2012): explica qué se borra y pide la contraseña,
+ * porque no se puede deshacer.
+ */
+function openDeleteAccount() {
+  const password = h('input', { class: 'input', type: 'password', autocomplete: 'current-password', maxlength: '128' });
+  const submit = h('button', { type: 'submit', class: 'btn btn-danger' }, 'Eliminar definitivamente');
+  const form = h('form', { class: 'form', novalidate: true }, [
+    h('p', { class: 'confirm-msg' }, [
+      'Se borrarán de inmediato tu cuenta, tus movimientos, cuentas, categorías propias y presupuestos. ',
+      h('strong', {}, 'No se puede deshacer.'),
+      ' Si quieres conservar tu historial, exporta tus movimientos antes.',
+    ]),
+    field('Escribe tu contraseña para confirmar', password),
+    h('div', { class: 'modal-actions' }, [
+      h('div', { class: 'spacer' }),
+      h('button', { type: 'button', class: 'btn btn-ghost', onclick: closeModal }, 'Cancelar'),
+      submit,
+    ]),
+  ]);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!password.value) return toast('Escribe tu contraseña para confirmar', 'warn');
+    await runAction(submit, () => store.deleteProfile(password.value));
+  });
+  openModal('Eliminar mi cuenta', form);
+  password.focus();
 }

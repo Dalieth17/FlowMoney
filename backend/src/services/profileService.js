@@ -35,4 +35,17 @@ async function changePassword(userId, { currentPassword, newPassword }) {
   });
 }
 
-module.exports = { getProfile, updateProfile, changePassword };
+/**
+ * Derecho de supresión (Ley 1581 de 2012, art. 8 lit. e): borra la cuenta y todos sus datos.
+ * Pide la contraseña para que nadie con la sesión abierta lo haga por error.
+ */
+async function deleteAccount(userId, { password }) {
+  const hash = await userRepository.findPasswordHash(userId);
+  if (!hash) throw HttpError.unauthorized('Sesión inválida');
+  if (!(await verifyPassword(password, hash)).valid) {
+    throw HttpError.badRequest('La contraseña no es correcta');
+  }
+  await withTransaction((conn) => userRepository.removeWithData(userId, conn));
+}
+
+module.exports = { getProfile, updateProfile, changePassword, deleteAccount };

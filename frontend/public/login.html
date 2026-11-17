@@ -31,7 +31,16 @@
         <li><span class="tick" aria-hidden="true">✓</span> Categoría sugerida por IA al escribir</li>
       </ul>
     </div>
-    <p class="bp-foot">Tus datos quedan en tu cuenta, guardados de forma segura.</p>
+    <footer class="bp-legal">
+      <p class="bp-legal-t">Tus datos, tus reglas</p>
+      <p>FlowMoney trata tus datos personales según la <a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981" target="_blank" rel="noopener">Ley 1581 de 2012</a>: solo los usamos para prestarte el servicio, nunca los vendemos ni mostramos publicidad, y puedes conocerlos, corregirlos, exportarlos o eliminar tu cuenta cuando quieras. FlowMoney no es una entidad financiera y sus consejos son orientativos.</p>
+      <nav aria-label="Documentos legales">
+        <a href="terminos.html">Términos de uso</a>
+        <a href="privacidad.html">Tratamiento de datos</a>
+        <a href="privacidad.html#derechos">Tus derechos</a>
+        <a href="privacidad.html#cookies">Cookies</a>
+      </nav>
+    </footer>
   </aside>
 
   <main class="form-panel">
@@ -70,10 +79,17 @@
             <button type="button" class="toggle" id="pw-toggle" aria-pressed="false" aria-controls="f-password">Ver</button>
           </span>
         </div>
+        <div class="consent" id="consent-field" hidden>
+          <label class="check">
+            <input type="checkbox" id="f-terms">
+            <span>Acepto los <a href="terminos.html" target="_blank" rel="noopener">Términos de uso</a> y autorizo el tratamiento de mis datos personales según la <a href="privacidad.html" target="_blank" rel="noopener">Política de tratamiento de datos</a>.</span>
+          </label>
+        </div>
         <button type="submit" class="btn btn-primary" id="submit-btn">Ingresar</button>
       </form>
 
       <p class="auth-foot" id="auth-foot"></p>
+      <p class="legal-mini"><a href="terminos.html">Términos de uso</a> · <a href="privacidad.html">Tratamiento de datos</a></p>
     </div>
   </main>
 </body>

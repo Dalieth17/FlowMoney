@@ -14,10 +14,23 @@ const firstError = (result) => result.error.issues[0].message;
 
 describe('registerSchema', () => {
   test('normaliza el correo (trim + minúsculas)', () => {
-    const r = registerSchema.parse({ name: ' Ana ', email: '  ANA@Mail.COM ', password: 'secret123' });
+    const r = registerSchema.parse({
+      name: ' Ana ',
+      email: '  ANA@Mail.COM ',
+      password: 'secret123',
+      acceptTerms: true,
+    });
     assert.equal(r.email, 'ana@mail.com');
     assert.equal(r.name, 'Ana');
     assert.equal(r.currency, 'COP', 'la moneda por defecto es el peso colombiano');
+  });
+
+  test('exige aceptar los términos de forma expresa (true, no "true" ni ausente)', () => {
+    const base = { name: 'Ana', email: 'a@b.co', password: 'secret123' };
+    assert.equal(registerSchema.safeParse({ ...base, acceptTerms: true }).success, true);
+    for (const acceptTerms of [undefined, false, 'true', 1]) {
+      assert.match(firstError(registerSchema.safeParse({ ...base, acceptTerms })), /Términos de uso/);
+    }
   });
 
   test('rechaza contraseñas cortas con mensaje en español', () => {

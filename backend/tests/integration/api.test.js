@@ -8,6 +8,8 @@ const { uniqueEmail } = require('../helpers');
 const createApp = require('../../src/app');
 const { waitForDatabase, runMigrations } = require('../../src/db/migrate');
 const { closePool } = require('../../src/db/pool');
+const userRepository = require('../../src/repositories/userRepository');
+const { TERMS_VERSION } = require('../../src/config/legal');
 
 const app = createApp();
 const PASSWORD = 'secret123';
@@ -22,7 +24,9 @@ after(() => closePool());
 async function signUp(name = 'Ana', extra = {}) {
   const agent = request.agent(app);
   const email = uniqueEmail(name.toLowerCase());
-  const res = await agent.post('/api/auth/register').send({ name, email, password: PASSWORD, ...extra });
+  const res = await agent
+    .post('/api/auth/register')
+    .send({ name, email, password: PASSWORD, acceptTerms: true, ...extra });
   assert.equal(res.status, 201, JSON.stringify(res.body));
   const { body: data } = await agent.get('/api/bootstrap').expect(200);
   return { agent, email, data };
@@ -67,13 +71,33 @@ describe('autenticación', () => {
   test('rechaza una moneda no soportada al registrarse', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Ana', email: uniqueEmail('ana'), password: PASSWORD, currency: 'EUR' });
+      .send({ name: 'Ana', email: uniqueEmail('ana'), password: PASSWORD, currency: 'EUR', acceptTerms: true });
     assert.equal(res.status, 400);
+  });
+
+  test('sin aceptar los términos no se crea la cuenta', async () => {
+    for (const acceptTerms of [undefined, false, 'true']) {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({ name: 'Ana', email: uniqueEmail('ana'), password: PASSWORD, acceptTerms });
+      assert.equal(res.status, 400);
+      assert.match(res.body.error, /Términos de uso/);
+    }
+  });
+
+  test('guarda qué versión de los términos aceptó y cuándo', async () => {
+    const { data } = await signUp();
+    const consent = await userRepository.findConsent(data.user.id);
+    assert.equal(consent.version, TERMS_VERSION);
+    assert.ok(consent.acceptedAt instanceof Date);
+    assert.ok(Math.abs(Date.now() - consent.acceptedAt.getTime()) < 24 * 3600 * 1000);
   });
 
   test('no permite correos duplicados', async () => {
     const { email } = await signUp();
-    const res = await request(app).post('/api/auth/register').send({ name: 'Otra', email, password: PASSWORD });
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ name: 'Otra', email, password: PASSWORD, acceptTerms: true });
     assert.equal(res.status, 409);
   });
 
@@ -234,6 +258,29 @@ describe('perfil', () => {
       .expect(204);
     await request(app).post('/api/auth/login').send({ email, password: PASSWORD }).expect(401);
     await request(app).post('/api/auth/login').send({ email, password: 'nueva-clave' }).expect(200);
+  });
+});
+
+describe('eliminar la cuenta', () => {
+  test('pide la contraseña y borra la cuenta con todos sus datos', async () => {
+    const { agent, email, data } = await signUp();
+    await agent.delete('/api/profile').send({ password: 'otra-clave' }).expect(400);
+    await agent.delete('/api/profile').send({}).expect(400);
+
+    const res = await agent.delete('/api/profile').send({ password: PASSWORD }).expect(204);
+    assert.match(String(res.headers['set-cookie']), /fm_session=;/);
+    await agent.get('/api/bootstrap').expect(401);
+    await request(app).post('/api/auth/login').send({ email, password: PASSWORD }).expect(401);
+    assert.equal(await userRepository.findById(data.user.id), null);
+  });
+
+  test('el mismo correo puede volver a registrarse después', async () => {
+    const { agent, email } = await signUp();
+    await agent.delete('/api/profile').send({ password: PASSWORD }).expect(204);
+    await request(app)
+      .post('/api/auth/register')
+      .send({ name: 'Ana', email, password: PASSWORD, acceptTerms: true })
+      .expect(201);
   });
 });
 

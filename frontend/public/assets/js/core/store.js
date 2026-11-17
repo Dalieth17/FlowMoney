@@ -124,6 +124,11 @@ class Store {
     await api.post('/data/reset');
     await this.load();
   }
+  /** Derecho de supresión: borra la cuenta de usuario en el servidor y vuelve a la página pública. */
+  async deleteProfile(password) {
+    await api.deleteProfile(password);
+    location.replace('index.html');
+  }
   async logout() {
     try {
       await api.logout();

@@ -4,12 +4,14 @@ const { hashPassword, verifyPassword } = require('../utils/password');
 const userRepository = require('../repositories/userRepository');
 const { withTransaction } = require('../db/pool');
 const { seedUserData } = require('../db/seed');
+const { TERMS_VERSION } = require('../config/legal');
 
 // Hash ficticio para comparar cuando el correo no existe: así el tiempo de
 // respuesta no revela qué correos están registrados.
 let dummyHash;
 const getDummyHash = async () => (dummyHash ??= await hashPassword('flowmoney-dummy-password'));
 
+/** Crea la cuenta. La ruta ya validó que la persona aceptó los términos (acceptTerms). */
 async function register({ name, email, password, currency = 'COP' }) {
   if (await userRepository.existsByEmail(email)) {
     throw HttpError.conflict('Ese correo ya está registrado');
@@ -17,7 +19,10 @@ async function register({ name, email, password, currency = 'COP' }) {
   const passwordHash = await hashPassword(password);
   try {
     return await withTransaction(async (conn) => {
-      const userId = await userRepository.create({ name, email, passwordHash, currency }, conn);
+      const userId = await userRepository.create(
+        { name, email, passwordHash, currency, termsVersion: TERMS_VERSION },
+        conn,
+      );
       await seedUserData(userId, conn, new Date(), currency);
       return userRepository.findById(userId, conn);
     });

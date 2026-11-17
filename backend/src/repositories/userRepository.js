@@ -32,14 +32,30 @@ async function findPasswordHash(id, db = pool) {
   return rows[0]?.password_hash ?? null;
 }
 
-async function create({ name, email, passwordHash, currency = 'COP' }, db = pool) {
-  const [result] = await db.query('INSERT INTO users (name, email, password_hash, currency) VALUES (?, ?, ?, ?)', [
-    name,
-    email,
-    passwordHash,
-    currency,
-  ]);
+async function create({ name, email, passwordHash, currency = 'COP', termsVersion = null }, db = pool) {
+  const [result] = await db.query(
+    `INSERT INTO users (name, email, password_hash, currency, terms_version, terms_accepted_at)
+     VALUES (?, ?, ?, ?, ?, IF(? IS NULL, NULL, UTC_TIMESTAMP()))`,
+    [name, email, passwordHash, currency, termsVersion, termsVersion],
+  );
   return result.insertId;
+}
+
+/** Versión de los términos que aceptó y cuándo (prueba de la autorización). */
+async function findConsent(id, db = pool) {
+  const [rows] = await db.query('SELECT terms_version, terms_accepted_at FROM users WHERE id = ?', [id]);
+  return rows[0] ? { version: rows[0].terms_version, acceptedAt: rows[0].terms_accepted_at } : null;
+}
+
+/**
+ * Borra al usuario y todos sus datos. Primero movimientos y presupuestos: los movimientos
+ * bloquean el borrado de categorías (ON DELETE RESTRICT); el resto cae en cascada
+ * (categorías, cuentas y sesiones).
+ */
+async function removeWithData(id, db = pool) {
+  await db.query('DELETE FROM transactions WHERE user_id = ?', [id]);
+  await db.query('DELETE FROM budgets WHERE user_id = ?', [id]);
+  await db.query('DELETE FROM users WHERE id = ?', [id]);
 }
 
 async function updateProfile(id, { name, currency }, db = pool) {
@@ -58,4 +74,6 @@ module.exports = {
   create,
   updateProfile,
   updatePassword,
+  findConsent,
+  removeWithData,
 };
