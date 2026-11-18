@@ -1,4 +1,5 @@
 // Cliente HTTP de la API. La cookie de sesión (httpOnly) la maneja el navegador.
+import { getCurrency } from './format.js';
 
 const BASE = '/api';
 const LOGIN_PAGE = 'login.html';
@@ -20,7 +21,10 @@ async function request(path, { method = 'GET', body } = {}) {
   try {
     res = await fetch(BASE + path, {
       method,
-      headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
+      headers: {
+        'X-FlowMoney-Currency': getCurrency(),
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      },
       body: body === undefined ? undefined : JSON.stringify(body),
       credentials: 'same-origin',
     });

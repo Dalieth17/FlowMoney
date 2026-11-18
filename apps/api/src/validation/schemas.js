@@ -52,6 +52,19 @@ const loginSchema = z.object({
 const profileSchema = z.object({
   name: personName,
   currency,
+  exchange: z
+    .object({
+      fromCurrency: currency,
+      copPerUsd: z
+        .number()
+        .finite()
+        .min(0.000001)
+        .max(1000000)
+        .refine((n) => Math.abs(n * 1e6 - Math.round(n * 1e6)) < 0.001, 'La tasa admite hasta 6 decimales'),
+      source: z.enum(['automatic', 'manual']),
+      quotedAt: z.string().datetime().optional(),
+    })
+    .optional(),
 });
 
 const changePasswordSchema = z
@@ -119,6 +132,7 @@ const idParamSchema = z.object({ id: positiveId('Identificador no válido') });
 
 const transactionQuerySchema = z
   .object({
+    currency: currency.optional(),
     limit: z.coerce.number().int().min(1).max(200).default(100),
     beforeId: positiveId('Cursor no válido').optional(),
     from: z.coerce

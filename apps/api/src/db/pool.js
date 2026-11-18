@@ -1,6 +1,7 @@
 // Pool de conexiones MySQL + helper de transacciones.
 const mysql = require('mysql2/promise');
 const config = require('../config');
+const currencyContext = require('../utils/currencyContext');
 
 const connectionOptions = Object.freeze({
   host: config.db.host,
@@ -41,8 +42,13 @@ const closePool = () => pool.end();
 
 const withUserTransaction = (userId, work) =>
   withTransaction(async (conn) => {
-    const [rows] = await conn.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [userId]);
+    const [rows] = await conn.query('SELECT id, currency FROM users WHERE id = ? FOR UPDATE', [userId]);
     if (!rows.length) throw require('../utils/httpError').unauthorized('Sesión inválida');
+    const expected = currencyContext.getStore();
+    if (expected && expected !== rows[0].currency)
+      throw require('../utils/httpError').conflict(
+        'La moneda cambió en otra pestaña. Recarga antes de guardar importes.',
+      );
     return work(conn);
   });
 

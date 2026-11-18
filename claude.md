@@ -106,6 +106,17 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 
 ## Estado
 
+- Conversión web COP/USD: Perfil consulta `/profile/exchange-rate` (ExchangeRate-API, caché 1 h,
+  máximo 72 h de antigüedad; manual si falla). PUT `/profile` exige `exchange` al cambiar moneda:
+  `{fromCurrency,copPerUsd,source,quotedAt?}`; automático verifica la cotización en servidor.
+  `currencyConversion` usa enteros para redondear, valida un snapshot completo y actualiza importes
+  e historial dentro de `withUserTransaction` sin cambiar IDs. `currency_changes` (migración 009)
+  registra tasas/fechas; `lastCurrencyChange` aparece en Perfil. Respuesta de cambio incluye
+  `convertedData` para actualizar moneda y caché web juntas. No convertir dos veces una solicitud obsoleta.
+  El cliente manda `X-FlowMoney-Currency`; `currencyContext` conserva ese valor por petición y
+  `withUserTransaction` lo compara bajo bloqueo para rechazar formularios de otra moneda.
+  Bootstrap es coherente y la paginación verifica la moneda obtenida al iniciar la carga.
+
 - Metas de ahorro web: `views/metas.js`, `domain/goals.js`, `goalService`, `goalRepository`,
   `routes/goals.routes.js`; migración `008_savings_goals.sql`. Registro independiente de cuentas,
   aportes/retiros idempotentes por UUID, archivado y progreso. Respaldos v3 incluyen metas y entradas;

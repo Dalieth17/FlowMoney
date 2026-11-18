@@ -10,14 +10,14 @@ const budgetRepository = require('../repositories/budgetRepository');
 
 /** Todo lo que el panel necesita, en una sola respuesta. */
 async function bootstrap(userId, { includeTransactions = true } = {}) {
-  const [user, categories, accounts, transactions, budgets] = await Promise.all([
-    profileService.getProfile(userId),
-    categoryRepository.listByUser(userId),
-    accountRepository.listByUser(userId),
-    includeTransactions ? transactionRepository.listByUser(userId) : [],
-    budgetRepository.listByUser(userId),
-  ]);
-  return { user, categories, accounts, transactions, budgets };
+  return withUserTransaction(userId, async (db) => {
+    const user = await profileService.getProfile(userId, db);
+    const categories = await categoryRepository.listByUser(userId, db);
+    const accounts = await accountRepository.listByUser(userId, db);
+    const transactions = includeTransactions ? await transactionRepository.listByUser(userId, db) : [];
+    const budgets = await budgetRepository.listByUser(userId, db);
+    return { user, categories, accounts, transactions, budgets };
+  });
 }
 
 /** Borra los datos del usuario y vuelve a sembrar el mes de ejemplo (atómico). */

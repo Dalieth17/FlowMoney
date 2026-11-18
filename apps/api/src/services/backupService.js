@@ -164,8 +164,8 @@ function preview(input) {
     goalEntries: data.goalEntries.length,
   };
 }
-async function exportData(userId) {
-  const data = await withUserTransaction(userId, async (db) => ({
+async function snapshot(userId, db) {
+  return {
     version: 3,
     currency: (await users.findById(userId, db)).currency,
     accounts: await accounts.listByUser(userId, db),
@@ -176,7 +176,10 @@ async function exportData(userId) {
     schedules: await finance.schedules(userId, db),
     occurrences: await finance.occurrences(userId, db),
     ...(await goalRepo.list(userId, db)),
-  }));
+  };
+}
+async function exportData(userId) {
+  const data = await withUserTransaction(userId, (db) => snapshot(userId, db));
   normalize(data);
   if (Buffer.byteLength(JSON.stringify(data), 'utf8') > 20 * 1024 * 1024)
     throw HttpError.badRequest('El respaldo supera 20 MB; utiliza una copia de MySQL');
@@ -254,4 +257,4 @@ async function restore(userId, input, confirmation, password) {
     return { restored: true, transactions: data.transactions.length };
   });
 }
-module.exports = { exportData, preview, restore, clear, normalize };
+module.exports = { exportData, preview, restore, clear, normalize, snapshot };

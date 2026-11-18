@@ -10,6 +10,14 @@ const { authLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 router.get(
+  '/exchange-rate',
+  asyncHandler(async (_req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json(await require('../services/exchangeRateService').quote());
+  }),
+);
+
+router.get(
   '/',
   asyncHandler(async (req, res) => {
     res.json(await profileService.getProfile(req.userId));

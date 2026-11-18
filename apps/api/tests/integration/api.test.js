@@ -238,7 +238,14 @@ describe('presupuestos', () => {
 describe('perfil', () => {
   test('actualiza nombre y moneda', async () => {
     const { agent } = await signUp();
-    const res = await agent.put('/api/profile').send({ name: 'Ana Pérez', currency: 'USD' }).expect(200);
+    const res = await agent
+      .put('/api/profile')
+      .send({
+        name: 'Ana Pérez',
+        currency: 'USD',
+        exchange: { fromCurrency: 'COP', copPerUsd: 4000, source: 'manual' },
+      })
+      .expect(200);
     assert.equal(res.body.name, 'Ana Pérez');
     assert.equal(res.body.currency, 'USD');
     await agent.put('/api/profile').send({ name: 'Ana', currency: 'XYZ' }).expect(400);

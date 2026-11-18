@@ -59,7 +59,9 @@ class Store {
       if (revision !== this.#revision) return;
       let cursor = null;
       do {
-        const page = await api.get(`/transactions/page?limit=200${cursor ? `&beforeId=${cursor}` : ''}`);
+        const page = await api.get(
+          `/transactions/page?limit=200&currency=${data.user.currency}${cursor ? `&beforeId=${cursor}` : ''}`,
+        );
         if (revision !== this.#revision) return;
         data.transactions.push(...page.items);
         cursor = page.nextCursor;
@@ -126,9 +128,9 @@ class Store {
 
   // ---- Perfil ----
   async updateProfile(payload) {
-    const user = await api.put('/profile', payload);
+    const { convertedData, ...user } = await api.put('/profile', payload);
     setCurrency(user.currency);
-    this.#commit({ user });
+    this.#commit({ ...convertedData, user });
   }
   changePassword(payload) {
     return api.put('/profile/password', payload);

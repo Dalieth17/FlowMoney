@@ -15,6 +15,9 @@ const historyRepository = require('../repositories/historyRepository');
 const validate = require('../middleware/validate');
 const { transactionQuerySchema, idParamSchema } = require('../validation/schemas');
 const { categorySchema, accountSchema, transactionSchema } = require('../validation/schemas');
+const { withUserTransaction } = require('../db/pool');
+const users = require('../repositories/userRepository');
+const HttpError = require('../utils/httpError');
 
 function buildApiRouter() {
   const router = express.Router();
@@ -48,7 +51,13 @@ function buildApiRouter() {
     '/transactions/page',
     validate(transactionQuerySchema, 'query'),
     asyncHandler(async (req, res) => {
-      res.json(await transactionRepository.listPage(req.userId, req.valid.query));
+      const page = await withUserTransaction(req.userId, async (db) => {
+        const user = await users.findById(req.userId, db);
+        if (req.valid.query.currency && req.valid.query.currency !== user.currency)
+          throw HttpError.conflict('La moneda cambió mientras cargaban los datos. Vuelve a cargar la página.');
+        return transactionRepository.listPage(req.userId, req.valid.query, db);
+      });
+      res.json(page);
     }),
   );
   router.use('/transactions', crudRouter(transactionService, transactionSchema));

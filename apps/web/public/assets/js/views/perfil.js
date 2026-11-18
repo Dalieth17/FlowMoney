@@ -7,6 +7,7 @@ import { store } from '../core/store.js';
 import { api } from '../core/api.js';
 import { CURRENCIES, MONTHS, isoDate } from '../core/format.js';
 import { THEMES, getTheme, setTheme } from '../core/theme.js';
+import { currencyExchange, currencyChangeNote } from '../ui/currencyExchange.js';
 
 const MIN_PASSWORD = 6;
 
@@ -30,28 +31,45 @@ function personalPanel() {
     CURRENCIES.map((c) => h('option', { value: c.code, selected: c.code === user.currency }, c.label)),
   );
   const submit = h('button', { type: 'submit', class: 'btn btn-primary' }, 'Guardar cambios');
+  const exchange = currencyExchange(currency, user);
 
   const form = h('form', { class: 'form', novalidate: true }, [
     field('Nombre', name),
     field('Correo', email, 'El correo es tu usuario para ingresar; no se puede cambiar.'),
-    field('Moneda', currency, 'Cambiarla no convierte tus montos: solo cambia cómo se muestran.'),
+    field('Moneda', currency, 'Al cambiarla se convierten tus importes con la tasa que confirmes.'),
+    exchange.element,
+    user.lastCurrencyChange ? h('p', { class: 'field-hint' }, currencyChangeNote(user.lastCurrencyChange)) : null,
     h('div', { class: 'modal-actions' }, [h('div', { class: 'spacer' }), submit]),
   ]);
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (submit.disabled) return;
     if (name.value.trim().length < 2) return toast('Escribe tu nombre', 'warn');
-    if (
-      currency.value !== user.currency &&
-      !(await confirmDialog(
-        `Cambiar de ${user.currency} a ${currency.value} mantiene todos los valores numéricos. No se aplica ninguna tasa de cambio. ¿Continuar?`,
-        { confirmText: 'Cambiar moneda', danger: false },
-      ))
-    )
-      return;
-    const ok = await runAction(submit, () =>
-      store.updateProfile({ name: name.value.trim(), currency: currency.value }),
-    );
-    if (ok) toast('Perfil actualizado');
+    // Capturar antes del diálogo: la cotización confirmada debe ser la aplicada.
+    const payload = { name: name.value.trim(), currency: currency.value };
+    const changing = payload.currency !== user.currency;
+    if (changing) {
+      try {
+        payload.exchange = exchange.change();
+      } catch (err) {
+        return toast(err.message, 'warn');
+      }
+    }
+    submit.disabled = true;
+    try {
+      if (
+        changing &&
+        !(await confirmDialog(
+          `Se convertirán tus cuentas, movimientos, presupuestos, operaciones, recurrencias y metas de ${user.currency} a ${payload.currency}, con 1 USD = ${payload.exchange.copPerUsd} COP. Se redondeará cada importe a 2 decimales; al volver a cambiar de moneda pueden existir diferencias de centavos. ¿Aplicar esta conversión?`,
+          { confirmText: 'Convertir importes', danger: false },
+        ))
+      )
+        return;
+      const ok = await runAction(submit, () => store.updateProfile(payload));
+      if (ok) toast(changing ? 'Importes convertidos y perfil actualizado' : 'Perfil actualizado');
+    } finally {
+      if (submit.isConnected) submit.disabled = false;
+    }
   });
 
   return panel('Tus datos', 'nombre y preferencias', form);

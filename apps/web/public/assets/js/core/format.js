@@ -30,7 +30,7 @@ export const setCurrency = (code) => {
 };
 export const getCurrency = () => currency.code;
 
-function formatNumber(value) {
+function formatNumber(value, currency) {
   // El peso muestra centavos solo cuando los hay (p. ej. 1.234,50).
   const hasCents = Math.round(value * 100) % 100 !== 0;
   const digits = hasCents ? 2 : currency.fractionDigits;
@@ -49,9 +49,10 @@ function formatNumber(value) {
 }
 
 /** COP: 1639.5 -> "$ 1.639,50", 4500000 -> "$ 4.500.000"; USD: 1639.5 -> "US$ 1,639.50" */
-export function money(n) {
+export function money(n, code = currency.code) {
   const value = Number(n) || 0;
-  return (value < 0 ? '-' : '') + currency.prefix + formatNumber(Math.abs(value));
+  const selected = byCode(code) ?? currency;
+  return (value < 0 ? '-' : '') + selected.prefix + formatNumber(Math.abs(value), selected);
 }
 
 /** Monto de un movimiento con signo según su tipo: +$ 10.000 / −$ 10.000 */

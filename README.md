@@ -29,6 +29,24 @@ docker compose up --build
 
 Abre http://localhost:8080 → **Crear cuenta** → el panel arranca con un mes de ejemplo.
 
+### Conversión entre pesos y dólares (web)
+
+En **Perfil → Moneda**, al elegir COP o USD se consulta automáticamente la tasa de
+[ExchangeRate-API](https://www.exchangerate-api.com). Se muestra cuántos COP equivalen a 1 USD,
+la fecha de cotización y una equivalencia de ejemplo. La consulta no envía datos del usuario;
+no requiere clave y se comparte en caché durante una hora. Se rechazan cotizaciones de más de 72 horas.
+Si falla, puedes introducir una tasa manual (hasta seis decimales).
+
+Al confirmar se convierten en una sola transacción cuentas, movimientos, presupuestos,
+transferencias y comisiones, conciliaciones, recurrencias y metas/aportes de ahorro.
+Se conservan IDs e historial de ejecuciones para evitar duplicados. La tasa y su origen quedan
+registrados; Perfil muestra la última conversión. Se redondea a dos decimales: volver a convertir
+puede producir diferencias de centavos. Si un monto positivo quedaría por debajo de 0.01,
+excede el límite o pierde coherencia, se rechaza toda la conversión sin guardar cambios.
+Los formularios abiertos en otra pestaña con la moneda anterior se rechazan al guardar para
+evitar mezclar pesos con dólares; recarga esa pestaña antes de continuar.
+La tasa es orientativa y puede diferir de la de un banco. Android mantiene su funcionamiento offline.
+
 | Puerto en tu equipo | Servicio | Variable (`.env`) | Notas                                                    |
 | ------------------- | -------- | ----------------- | -------------------------------------------------------- |
 | 8080                | Web      | `WEB_PORT`        | El sitio y la API (`/api`).                              |

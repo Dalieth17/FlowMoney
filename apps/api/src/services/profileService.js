@@ -3,18 +3,39 @@ const HttpError = require('../utils/httpError');
 const { hashPassword, verifyPassword } = require('../utils/password');
 const userRepository = require('../repositories/userRepository');
 const sessionRepository = require('../repositories/sessionRepository');
-const { withUserTransaction } = require('../db/pool');
+const { withUserTransaction, pool } = require('../db/pool');
+const currencyRepository = require('../repositories/currencyRepository');
+const exchangeRate = require('./exchangeRateService');
+const { snapshot } = require('./backupService');
+const { convertData } = require('./currencyConversion');
 
-async function getProfile(userId) {
-  const user = await userRepository.findById(userId);
+async function getProfile(userId, db = pool) {
+  const user = await userRepository.findById(userId, db);
   // Una sesión puede sobrevivir a un usuario borrado: tratarla como inválida.
   if (!user) throw HttpError.unauthorized('Sesión inválida');
-  return user;
+  return { ...user, lastCurrencyChange: await currencyRepository.latest(userId, db) };
 }
 
-async function updateProfile(userId, { name, currency }) {
-  await userRepository.updateProfile(userId, { name, currency });
-  return getProfile(userId);
+async function updateProfile(userId, { name, currency, exchange }) {
+  const quote = exchange ? await exchangeRate.validateExchange(exchange) : null;
+  return withUserTransaction(userId, async (db) => {
+    const user = await userRepository.findById(userId, db);
+    let convertedData;
+    if (exchange && exchange.fromCurrency !== user.currency)
+      throw HttpError.conflict('La moneda cambió en otra solicitud. Recarga antes de convertir.');
+    if (currency !== user.currency) {
+      if (!quote) throw HttpError.badRequest('Para cambiar de moneda debes confirmar una tasa de cambio.');
+      const before = await snapshot(userId, db);
+      const after = convertData(before, currency, quote.copPerUsd);
+      await currencyRepository.apply(userId, before, after, db);
+      await currencyRepository.record(userId, user.currency, currency, quote, db);
+      const { accounts, categories, transactions, budgets } = after;
+      convertedData = { accounts, categories, transactions, budgets };
+    }
+    await userRepository.updateProfile(userId, { name, currency }, db);
+    const updated = await getProfile(userId, db);
+    return convertedData ? { ...updated, convertedData } : updated;
+  });
 }
 
 /**
