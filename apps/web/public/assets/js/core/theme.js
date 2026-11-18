@@ -1,12 +1,12 @@
 // Tema elegido por la persona: "Verde y negro" (por defecto) o "Blanco y negro".
 // Se guarda en este navegador y se aplica con <html data-theme="…">.
 
-// Íconos del selector (SVG propio, sin datos del usuario): luna verde = tema oscuro con acento verde;
-// círculo mitad blanco y mitad negro = tema de alto contraste en blanco y negro.
+// Íconos del selector (SVG propio, sin datos del usuario): hoja para Verde y negro;
+// círculo dividido para Blanco y negro. Ambos heredan el color del botón.
 const ICONS = {
   green:
-    '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20.4 14.6A8.5 8.5 0 0 1 9.4 3.6 8.5 8.5 0 1 0 20.4 14.6Z" fill="#2fdc8a"/></svg>',
-  mono: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="#ffffff" stroke="currentColor" stroke-width="1.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="#0a0a0a"/></svg>',
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 4c-7-1-13 2-13 8a5 5 0 0 0 5 5c6 0 9-6 8-13Z"/><path d="m4 20 11-11"/></svg>',
+  mono: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg>',
 };
 
 export const THEMES = Object.freeze([
