@@ -30,7 +30,20 @@ function normalize(input) {
     !unique(data.occurrences, (o) => `${o.scheduleId}:${o.period}`)
   )
     throw HttpError.badRequest('Presupuestos o recurrencias duplicados');
-  const has = (field, id) => data[field].some((x) => x.id === id);
+  const byId = Object.fromEntries(
+    ['accounts', 'categories', 'transactions', 'operations', 'schedules'].map((field) => [
+      field,
+      new Map(data[field].map((item) => [item.id, item])),
+    ]),
+  );
+  const has = (field, id) => byId[field].has(id);
+  const legsByOperation = new Map();
+  const creationKeys = new Set();
+  for (const s of data.schedules) {
+    if (s.data.creationKey && creationKeys.has(s.data.creationKey))
+      throw HttpError.badRequest('Claves de recurrencias duplicadas');
+    if (s.data.creationKey) creationKeys.add(s.data.creationKey);
+  }
   const refs = (tx) => {
     if (!has('categories', tx.categoryId) || (tx.accountId != null && !has('accounts', tx.accountId)))
       throw HttpError.badRequest('Referencias inválidas en el respaldo');
@@ -39,19 +52,32 @@ function normalize(input) {
     refs(tx);
     if (tx.operationId && !has('operations', tx.operationId)) throw HttpError.badRequest('Movimiento sin operación');
     if (tx.kind !== 'NORMAL' && !tx.operationId) throw HttpError.badRequest('Movimiento especial sin operación');
+    if (tx.operationId) {
+      if (!legsByOperation.has(tx.operationId)) legsByOperation.set(tx.operationId, []);
+      legsByOperation.get(tx.operationId).push(tx);
+    }
   }
-  for (const b of data.budgets)
+  for (const b of data.budgets) {
     if (!has('categories', b.categoryId)) throw HttpError.badRequest('Categoría de presupuesto ausente');
+    if (b.amount <= 0) throw HttpError.badRequest('Monto de presupuesto no válido');
+  }
   for (const s of data.schedules) refs(s.data.transaction);
+  const assignedTransactions = new Set();
   for (const o of data.occurrences) {
     if (!has('schedules', o.scheduleId) || (o.transactionId != null && !has('transactions', o.transactionId)))
       throw HttpError.badRequest('Ocurrencia inválida');
+    if (o.transactionId != null) {
+      const tx = byId.transactions.get(o.transactionId);
+      if (assignedTransactions.has(tx.id) || tx.kind !== 'NORMAL' || tx.operationId)
+        throw HttpError.badRequest('Ocurrencia repetida o asociada a una operación especial');
+      assignedTransactions.add(tx.id);
+    }
   }
   const equalMoney = (a, b) => Math.round(a * 100) === Math.round(b * 100);
   for (const op of data.operations) {
     const d = op.data;
     refs({ categoryId: d.categoryId, accountId: op.kind === 'TRANSFER' ? d.fromAccountId : d.accountId });
-    const legs = data.transactions.filter((t) => t.operationId === op.id);
+    const legs = legsByOperation.get(op.id) || [];
     if (op.kind === 'TRANSFER') {
       if (!has('accounts', d.toAccountId) || legs.length !== (d.fee ? 3 : 2))
         throw HttpError.badRequest('Transferencia incompleta');

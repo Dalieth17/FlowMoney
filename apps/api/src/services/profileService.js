@@ -30,6 +30,9 @@ async function changePassword(userId, { currentPassword, newPassword }) {
   }
   const newHash = await hashPassword(newPassword);
   await withUserTransaction(userId, async (conn) => {
+    if ((await userRepository.findPasswordHash(userId, conn)) !== hash) {
+      throw HttpError.badRequest('La contraseña cambió. Vuelve a intentarlo con la actual');
+    }
     await userRepository.updatePassword(userId, newHash, conn);
     await sessionRepository.removeAllByUser(userId, conn);
   });
@@ -45,7 +48,12 @@ async function deleteAccount(userId, { password }) {
   if (!(await verifyPassword(password, hash)).valid) {
     throw HttpError.badRequest('La contraseña no es correcta');
   }
-  await withUserTransaction(userId, (conn) => userRepository.removeWithData(userId, conn));
+  await withUserTransaction(userId, async (conn) => {
+    if ((await userRepository.findPasswordHash(userId, conn)) !== hash) {
+      throw HttpError.badRequest('La contraseña cambió. Vuelve a intentarlo con la actual');
+    }
+    await userRepository.removeWithData(userId, conn);
+  });
 }
 
 module.exports = { getProfile, updateProfile, changePassword, deleteAccount };

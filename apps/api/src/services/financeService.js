@@ -132,13 +132,20 @@ async function reconcile(userId, id, data) {
 async function saveSchedule(userId, id, data) {
   return withUserTransaction(userId, async (db) => {
     await refs(userId, data.transaction.categoryId, [data.transaction.accountId], db);
+    const schedules = await repo.schedules(userId, db);
     if (id) {
-      const old = (await repo.schedules(userId, db)).find((s) => s.id === id);
+      const old = schedules.find((s) => s.id === id);
       if (!old) throw HttpError.notFound('Recurrencia no encontrada');
+      if (old.data.creationKey) {
+        if (data.creationKey && data.creationKey !== old.data.creationKey)
+          throw HttpError.conflict('No se puede cambiar la clave de creación de una recurrencia');
+        data = { ...data, creationKey: old.data.creationKey };
+      }
+      if (data.creationKey && schedules.some((s) => s.id !== id && s.data.creationKey === data.creationKey))
+        throw HttpError.conflict('La clave de creación ya pertenece a otra recurrencia');
       await repo.updateSchedule(userId, id, data, db);
     } else {
-      const previous =
-        data.creationKey && (await repo.schedules(userId, db)).find((s) => s.data.creationKey === data.creationKey);
+      const previous = data.creationKey && schedules.find((s) => s.data.creationKey === data.creationKey);
       if (previous) {
         if (!isDeepStrictEqual(previous.data, data)) throw HttpError.conflict('La solicitud de recurrencia ya existe');
         return previous;

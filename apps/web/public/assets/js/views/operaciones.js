@@ -252,12 +252,16 @@ function backupPanel() {
     ]),
   );
 }
+const renders = new WeakMap();
 export function render(root) {
+  const token = Symbol();
+  renders.set(root, token);
+  const active = () => root.isConnected && location.hash === '#/operaciones' && renders.get(root) === token;
   mount(root, h('p', {}, 'Cargando operaciones…'));
   api
     .get('/finance')
     .then((data) => {
-      if (!root.isConnected || location.hash !== '#/operaciones') return;
+      if (!active()) return;
       const editor = h('div');
       const edit = (content) => {
         mount(editor, content);
@@ -337,6 +341,6 @@ export function render(root) {
       );
     })
     .catch((e) => {
-      mount(root, h('p', {}, e.message));
+      if (active()) mount(root, h('p', {}, e.message));
     });
 }

@@ -11,6 +11,7 @@ const withoutId = (list, id) => list.filter((x) => x.id !== id);
 class Store {
   #state = { user: null, categories: [], accounts: [], transactions: [], budgets: [] };
   #listeners = new Set();
+  #revision = 0;
 
   subscribe(fn) {
     this.#listeners.add(fn);
@@ -18,6 +19,7 @@ class Store {
   }
 
   #commit(patch) {
+    this.#revision++;
     this.#state = { ...this.#state, ...patch };
     this.#listeners.forEach((fn) => fn(this.#state));
   }
@@ -51,15 +53,22 @@ class Store {
 
   // ---- Carga ----
   async load() {
-    const data = await api.get('/bootstrap?transactions=none');
-    let cursor = null;
-    do {
-      const page = await api.get(`/transactions/page?limit=200${cursor ? `&beforeId=${cursor}` : ''}`);
-      data.transactions.push(...page.items);
-      cursor = page.nextCursor;
-    } while (cursor !== null);
-    setCurrency(data.user.currency);
-    this.#commit(data);
+    const revision = ++this.#revision;
+    try {
+      const data = await api.get('/bootstrap?transactions=none');
+      if (revision !== this.#revision) return;
+      let cursor = null;
+      do {
+        const page = await api.get(`/transactions/page?limit=200${cursor ? `&beforeId=${cursor}` : ''}`);
+        if (revision !== this.#revision) return;
+        data.transactions.push(...page.items);
+        cursor = page.nextCursor;
+      } while (cursor !== null);
+      setCurrency(data.user.currency);
+      this.#commit(data);
+    } catch (err) {
+      if (revision === this.#revision) throw err;
+    }
   }
 
   // ---- Movimientos ----

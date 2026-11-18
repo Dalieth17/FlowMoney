@@ -127,6 +127,10 @@ test('recurrencias: fin de mes, concurrencia, pausa y borrados no regeneran el m
   const { body: s } = await u.agent.post('/api/finance/schedules').send(schedule).expect(201);
   const { body: retry } = await u.agent.post('/api/finance/schedules').send(schedule).expect(201);
   assert.equal(retry.id, s.id);
+  await u.agent
+    .put(`/api/finance/schedules/${s.id}`)
+    .send({ ...schedule, creationKey: randomUUID() })
+    .expect(409);
   const results = await Promise.all([1, 2, 3].map(() => finance.runSchedules(u.id, new Date('2024-03-31T22:00:00Z'))));
   assert.equal(
     results.reduce((n, r) => n + r.generated, 0),

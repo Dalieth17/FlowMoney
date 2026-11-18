@@ -110,3 +110,28 @@ test('respaldo muestra vista previa, confirma y restaura el archivo revisado', a
   assert.equal(calls[1].body.digest, 'a'.repeat(64));
   assert.equal(control(form, 'Tu contraseña para confirmar').value, '');
 });
+
+for (const failure of [false, true]) {
+  test(`una respuesta anterior ${failure ? 'fallida' : 'correcta'} no sustituye la vista más reciente`, async () => {
+    const originalGet = api.get;
+    const pending = [];
+    api.get = () => new Promise((resolve, reject) => pending.push({ resolve, reject }));
+    try {
+      render(root);
+      render(root);
+      pending[1].resolve({
+        accounts: accounts.map((a) => ({ ...a, currentBalance: 777 })),
+        operations: [],
+        schedules: [],
+      });
+      await nextTurn();
+      const latest = root.textContent;
+      if (failure) pending[0].reject(Error('Respuesta anterior'));
+      else pending[0].resolve({ accounts, operations: [], schedules: [] });
+      await nextTurn();
+      assert.equal(root.textContent, latest);
+    } finally {
+      api.get = originalGet;
+    }
+  });
+}
