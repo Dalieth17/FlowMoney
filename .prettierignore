@@ -4,8 +4,8 @@ package-lock.json
 *.html
 
 # Proyecto Android: Prettier no formatea Kotlin/XML; ignorar salidas de build y esquemas generados.
-android/**/build
-android/app/schemas
+apps/android/**/build
+apps/android/app/schemas
 
 # Librerías de terceros tal como se publican (Three.js).
-frontend/public/assets/vendor
+apps/web/public/assets/vendor

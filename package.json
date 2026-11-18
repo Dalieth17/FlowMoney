@@ -12,8 +12,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:web": "node --test \"frontend/tests/*.test.js\"",
-    "test:api": "npm --prefix backend test",
+    "test:web": "node --test \"apps/web/tests/*.test.js\"",
+    "test:api": "npm --prefix apps/api test",
+    "test:integration": "npm --prefix apps/api run test:integration",
     "test": "npm run test:web && npm run test:api",
     "check": "npm run lint && npm run format:check && npm test"
   },

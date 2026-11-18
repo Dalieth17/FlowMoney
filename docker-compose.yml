@@ -33,7 +33,7 @@ services:
     restart: unless-stopped
 
   api:
-    build: ./backend
+    build: ./apps/api
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       TRUST_PROXY: '1' # exactamente un Nginx delante; la API no publica puertos
@@ -49,7 +49,7 @@ services:
     restart: unless-stopped
 
   web:
-    build: ./frontend
+    build: ./apps/web
     ports:
       - '${WEB_PORT:-8080}:8080'
     depends_on:

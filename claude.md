@@ -16,17 +16,19 @@ Hilt, Clean Architecture, MVVM) en desarrollo por módulos.
 ## Estructura
 
 ```
-backend/src/   config · db (pool, migrate, seed, migrations/*.sql) · repositories · services
+apps/api/src/ config · db (pool, migrate, seed, migrations/*.sql) · repositories · services
                · routes (crudRouter + *.routes) · validation (zod) · middleware · utils
-backend/tests/ unit (sin BD) · integration (MySQL real, supertest)
-frontend/public/ index.html (landing) · login.html · app.html
+apps/api/tests/ unit (sin BD) · integration (MySQL real, supertest)
+apps/web/public/ index.html (landing) · login.html · app.html
   assets/js/   core (api, store, router, format) · domain (selectors, classifier, rules, csv,
                accountTypes) · ui (dom, feedback, widgets, charts, pickers, exportCsv)
                · forms · views (resumen, movimientos, cuentas, categorias, presupuestos,
                reportes, perfil) · pages (app, login)
   assets/css/  tokens.css (diseño) · app.css · auth.css · landing.css
-frontend/nginx/ default.conf + security-headers.conf (incluir en CADA location)
-frontend/tests/ tests de domain/ y format (node:test)
+apps/web/nginx/ default.conf + security-headers.conf (incluir en CADA location)
+apps/web/tests/ tests de domain/, format y DOM (node:test)
+apps/android/ Gradle independiente: módulos app y domain
+docs/ README.md (índice), architecture.md y development.md
 ```
 
 ## Convenciones (respetar)
@@ -44,7 +46,7 @@ frontend/tests/ tests de domain/ y format (node:test)
   aplica el tema guardado (`localStorage['flowmoney.theme']`); `core/theme.js` = selector y evento.
   3D: Three.js r160 en `assets/vendor/three` (sin lint), `ui/three/*` con fallback 2D sin WebGL y quieto
   con reduced-motion; se libera solo al salir el canvas del DOM.
-- Legal (Colombia, Ley 1581/2012): `terminos.html` y `privacidad.html` (versión = `backend/src/config/legal.js`
+- Legal (Colombia, Ley 1581/2012): `terminos.html` y `privacidad.html` (versión = `apps/api/src/config/legal.js`
   `TERMS_VERSION`; si cambian los textos, subir ambas fechas). Registro exige `acceptTerms: true` y guarda
   `users.terms_version/terms_accepted_at` (migración 005). `DELETE /api/profile {password}` borra la cuenta
   (movimientos y presupuestos primero por el RESTRICT de categorías). Los `<span class="fill">[…]</span>`
@@ -61,7 +63,7 @@ frontend/tests/ tests de domain/ y format (node:test)
 Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` (gastos/alertas)
 · Brass `#c08a3e` (saldo/acento) · Sage `#6b8f7d`. Fraunces (display) + Hanken Grotesk (UI).
 
-## Android (`android/`)
+## Android (`apps/android/`)
 
 - Módulos: `:domain` (Kotlin puro, testFixtures con `FakeCategoryRepository` y
   `FakeTransactionRepository`) y `:app`
@@ -90,7 +92,7 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 - Tests de Compose: Robolectric usa una pantalla baja; con listas largas usar
   `@Config(qualifiers = "w411dp-h891dp")` y `performScrollTo()` antes de tocar botones.
 - IA (`domain/advisor`): `CategoryClassifier` (historial > nombre de categoría > `KeywordRules.kt`,
-  generado desde `frontend/.../rules.js`), `FinancialAdvisor` (análisis → `AdvisorReport` con
+  generado desde `apps/web/public/assets/js/domain/rules.js`), `FinancialAdvisor` (análisis → `AdvisorReport` con
   `Insight`s tipados), `AdvisorQuestions` (intención por palabras clave → `AdvisorAnswer`). Los
   textos los redacta `presentation/ui/advisor/AdvisorWriter.kt` (Kotlin puro, testeable sin Android).
   En Movimientos la sugerencia se _deriva_ en el ViewModel; se guarda `effectiveCategoryId`.

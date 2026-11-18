@@ -2,7 +2,7 @@ package com.flowmoney.domain.advisor
 
 /**
  * Palabras clave por categoría predeterminada (mismas reglas que la web:
- * frontend/public/assets/js/domain/rules.js). Añadir un comercio = añadir una palabra aquí.
+ * apps/web/public/assets/js/domain/rules.js). Añadir un comercio = añadir una palabra aquí.
  */
 internal val KEYWORD_RULES: Map<String, List<String>> = mapOf(
     "Alimentación" to listOf(

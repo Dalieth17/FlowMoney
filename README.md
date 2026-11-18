@@ -7,6 +7,20 @@ cuentas de usuario) y servirá de referencia para la app Android (Kotlin · Comp
 **Stack:** Nginx (estáticos) · API Node.js 24 + Express · MySQL 8 · Docker Compose.
 Frontend en JavaScript nativo con módulos ES (sin paso de build).
 
+## Organización del repositorio
+
+```text
+apps/api/       API, migraciones MySQL y pruebas del servidor
+apps/web/       Sitio, panel web, configuración Nginx y pruebas web
+apps/android/   Aplicación Android y módulos Gradle
+docs/           Arquitectura y guía de desarrollo
+.github/        Automatización de calidad
+```
+
+Consulta el [índice de documentación](docs/README.md), la
+[arquitectura](docs/architecture.md) y la [guía de desarrollo](docs/development.md).
+Compose y las herramientas de calidad se ejecutan desde esta raíz.
+
 ## Ejecutar
 
 ```bash
@@ -84,7 +98,7 @@ Navegador ──► web (Nginx :8080) ──/api──► api (Express :3000) �
 La API no publica ningún puerto (vive en la red interna de Docker) y MySQL solo se publica en
 `127.0.0.1`, así que la base no queda expuesta a otros equipos de la red.
 
-### Backend (`backend/src`) — capas al estilo Clean Architecture
+### Backend (`apps/api/src`) — capas al estilo Clean Architecture
 
 | Capa            | Responsabilidad                                                           |
 | --------------- | ------------------------------------------------------------------------- |
@@ -101,7 +115,7 @@ cambiar la contraseña las revoca al instante), contraseñas con scrypt sin lím
 cookies httpOnly + SameSite, consultas parametrizadas, operaciones de comprobar-y-borrar en
 transacciones con bloqueo de filas, datos acotados por usuario e imágenes Docker sin root.
 
-### Frontend (`frontend/public/assets/js`)
+### Frontend (`apps/web/public/assets/js`)
 
 | Carpeta   | Contenido                                                                       |
 | --------- | ------------------------------------------------------------------------------- |
@@ -117,7 +131,7 @@ transacciones con bloqueo de filas, datos acotados por usuario e imágenes Docke
 Requiere Node.js 22 o superior.
 
 ```bash
-npm install && npm --prefix backend install
+npm ci && npm --prefix apps/api ci
 ```
 
 ```bash
@@ -137,7 +151,7 @@ docker run -d --name flowmoney-test-db -p 127.0.0.1:3308:3306 -e MYSQL_ROOT_PASS
 ```
 
 ```bash
-DB_HOST=127.0.0.1 DB_PORT=3308 npm --prefix backend run test:integration
+DB_HOST=127.0.0.1 DB_PORT=3308 npm run test:integration
 ```
 
 GitHub Actions (`.github/workflows/ci.yml`) corre lint, formato, todos los tests (con MySQL) y
@@ -162,7 +176,7 @@ Todas las rutas (salvo `health` y `auth`) requieren sesión y operan solo sobre 
 
 Errores: `{ "error": "mensaje en español" }` con 400 (validación), 401, 404, 409 (regla de negocio) o 429.
 
-## App Android (`android/`)
+## App Android (`apps/android/`)
 
 App offline (Room) con la misma identidad visual. Kotlin · Jetpack Compose · Material 3 · Hilt ·
 Room · Navigation (rutas tipadas) · Coroutines/Flow. MVVM + Clean Architecture en dos módulos:
@@ -215,11 +229,11 @@ La base de datos se actualiza con migraciones de Room (probadas en `MigrationTes
 datos. Los porcentajes se reparten de modo que siempre sumen 100.
 
 ```bash
-cd android && ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+cd apps/android && ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 ```
 
 Requiere JDK 17+ y el Android SDK (Android Studio lo instala). Las versiones están fijadas en
-`android/gradle/libs.versions.toml`. CI publica el APK de depuración como artefacto
+`apps/android/gradle/libs.versions.toml`. CI publica el APK de depuración como artefacto
 (**Actions → CI → flowmoney-debug-apk**) para instalarlo sin compilar.
 
 ## Operaciones financieras (web y API)

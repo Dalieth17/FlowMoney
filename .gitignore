@@ -15,3 +15,6 @@ npm-debug.log*
 
 # Sistema
 .DS_Store
+
+# Evitar añadir por accidente una segunda copia del repositorio en su propia raíz.
+/FlowMoney/

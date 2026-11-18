@@ -2,7 +2,7 @@ package com.flowmoney.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Mismos tokens que la web (frontend/public/assets/css/tokens.css), en sus dos temas.
+// Mismos tokens que la web (apps/web/public/assets/css/tokens.css), en sus dos temas.
 
 /** "Verde y negro": lienzo casi negro, superficies apenas más claras y un solo acento verde. */
 internal object GreenTokens {
