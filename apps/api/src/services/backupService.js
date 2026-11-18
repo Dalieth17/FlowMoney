@@ -1,6 +1,16 @@
 const crypto = require('node:crypto');
 const { withUserTransaction } = require('../db/pool');
-const schema = require('../validation/financeSchemas').backup;
+const { z } = require('zod');
+const goalSchemas = require('../validation/goalSchemas');
+const goalRepo = require('../repositories/goalRepository');
+const { today } = require('./financeService');
+const schema = require('../validation/financeSchemas').backup.extend({
+  version: z.literal(3),
+  goals: z.array(z.object({ id: goalSchemas.uuid, data: goalSchemas.goal })).max(1000),
+  goalEntries: z
+    .array(z.object({ id: goalSchemas.uuid, goalId: goalSchemas.uuid, data: goalSchemas.entry }))
+    .max(20000),
+});
 const accounts = require('../repositories/accountRepository');
 const categories = require('../repositories/categoryRepository');
 const transactions = require('../repositories/transactionRepository');
@@ -18,13 +28,34 @@ function normalize(input) {
   ) {
     input = { ...input, version: 2, currency: input.user?.currency, operations: [], schedules: [], occurrences: [] };
   }
+  if (input?.version === 2) input = { ...input, version: 3, goals: [], goalEntries: [] };
   const parsed = schema.safeParse(input);
   if (!parsed.success) throw HttpError.badRequest(`Respaldo no válido: ${parsed.error.issues[0].path.join('.')}`);
   const data = parsed.data;
   const unique = (items, key = (x) => x.id) => new Set(items.map(key)).size === items.length;
-  for (const field of ['accounts', 'categories', 'transactions', 'budgets', 'operations', 'schedules']) {
+  for (const field of [
+    'accounts',
+    'categories',
+    'transactions',
+    'budgets',
+    'operations',
+    'schedules',
+    'goals',
+    'goalEntries',
+  ]) {
     if (!unique(data[field])) throw HttpError.badRequest(`Identificadores repetidos en ${field}`);
   }
+  const goalTotals = new Map(data.goals.map((g) => [g.id, 0n]));
+  for (const e of data.goalEntries) {
+    if (!goalTotals.has(e.goalId) || e.data.date > today())
+      throw HttpError.badRequest('Aporte de ahorro no válido en el respaldo');
+    goalTotals.set(
+      e.goalId,
+      goalTotals.get(e.goalId) + (e.data.type === 'ADD' ? 1n : -1n) * BigInt(Math.round(e.data.amount * 100)),
+    );
+  }
+  if ([...goalTotals.values()].some((n) => n < 0n || n > 999999999999n))
+    throw HttpError.badRequest('Saldo de ahorro no válido en el respaldo');
   if (
     !unique(data.budgets, (b) => `${b.categoryId}:${b.year}:${b.month}`) ||
     !unique(data.occurrences, (o) => `${o.scheduleId}:${o.period}`)
@@ -129,11 +160,13 @@ function preview(input) {
     budgets: data.budgets.length,
     operations: data.operations.length,
     schedules: data.schedules.length,
+    goals: data.goals.length,
+    goalEntries: data.goalEntries.length,
   };
 }
 async function exportData(userId) {
   const data = await withUserTransaction(userId, async (db) => ({
-    version: 2,
+    version: 3,
     currency: (await users.findById(userId, db)).currency,
     accounts: await accounts.listByUser(userId, db),
     categories: await categories.listByUser(userId, db),
@@ -142,6 +175,7 @@ async function exportData(userId) {
     operations: await finance.operations(userId, db),
     schedules: await finance.schedules(userId, db),
     occurrences: await finance.occurrences(userId, db),
+    ...(await goalRepo.list(userId, db)),
   }));
   normalize(data);
   if (Buffer.byteLength(JSON.stringify(data), 'utf8') > 20 * 1024 * 1024)
@@ -149,6 +183,7 @@ async function exportData(userId) {
   return data;
 }
 async function clear(userId, db) {
+  await goalRepo.clear(userId, db);
   await finance.clearSchedules(userId, db);
   await transactions.removeAllByUser(userId, db);
   await finance.clearOperations(userId, db);
@@ -213,6 +248,8 @@ async function restore(userId, input, confirmation, password) {
         db,
       );
     const user = await users.findById(userId, db);
+    for (const g of data.goals) await goalRepo.save(userId, g.id, g.data, db);
+    for (const e of data.goalEntries) await goalRepo.add(userId, e.id, e.goalId, e.data, db);
     await users.updateProfile(userId, { name: user.name, currency: data.currency }, db);
     return { restored: true, transactions: data.transactions.length };
   });

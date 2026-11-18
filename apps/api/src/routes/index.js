@@ -25,6 +25,7 @@ function buildApiRouter() {
 
   // ---- Privadas ----
   router.use(requireAuth);
+  router.use('/goals', require('./goals.routes'));
   router.use('/finance', require('./finance.routes'));
   router.get(
     '/bootstrap',

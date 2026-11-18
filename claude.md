@@ -106,6 +106,11 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 
 ## Estado
 
+- Metas de ahorro web: `views/metas.js`, `domain/goals.js`, `goalService`, `goalRepository`,
+  `routes/goals.routes.js`; migración `008_savings_goals.sql`. Registro independiente de cuentas,
+  aportes/retiros idempotentes por UUID, archivado y progreso. Respaldos v3 incluyen metas y entradas;
+  se mantiene importación v1/v2 y la vista previa avisa si no contienen metas.
+
 - Operaciones web/API: `views/operaciones.js`, `routes/finance.routes.js`, `financeService`,
   `backupService` y `financeRepository`; migración `007_financial_operations.sql`.
   Transferencias con dos apuntes atómicos y comisión opcional; `kind=TRANSFER|ADJUSTMENT`

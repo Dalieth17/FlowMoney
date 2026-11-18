@@ -256,14 +256,15 @@ inicio si prefieres omitirlos. La clave única por recurrencia y mes, junto al b
 evita duplicados incluso con peticiones simultáneas. Borrar un movimiento generado no habilita
 volver a generarlo. No existe un servicio programado que ejecute recurrencias con la app cerrada.
 
-**Respaldos** exporta JSON versión 2 directamente del servidor, con una lectura consistente de
+**Respaldos** exporta JSON versión 3 directamente del servidor, con una lectura consistente de
 cuentas, categorías, movimientos, presupuestos, operaciones, recurrencias y períodos procesados.
 Para restaurar, selecciona el archivo, revisa las cantidades y moneda, escribe tu contraseña y
 confirma el reemplazo. Se validan referencias, pares de transferencias y ajustes antes de borrar;
 todo el reemplazo es atómico y hace rollback ante errores. Se reasignan IDs al usuario actual y
 se preserva el registro de recurrencias para evitar regenerarlas. El perfil y contraseña no se
 importan; sí la moneda. No incluye sesiones, contraseñas ni el historial técnico de auditoría.
-Se aceptan también los JSON versión 1 de Perfil que solo contienen movimientos normales.
+Se aceptan también los JSON versión 2 y los de versión 1 de Perfil que solo contienen movimientos normales.
+La vista previa informa cuántas metas y aportes hay; restaurar una copia antigua sin metas reemplaza también las metas actuales por una lista vacía.
 Límites de importación: 20 MB, 20.000 movimientos, 1.000 cuentas y 1.000 recurrencias.
 Descarga una copia actual antes de restaurar. Esto no sustituye los respaldos de MySQL.
 
@@ -274,6 +275,23 @@ API autenticada: `GET /api/finance`, `POST/PUT/DELETE /api/finance/transfers/:uu
 `POST /api/finance/backup/restore`. Reutiliza el UUID en reintentos de una operación y
 `creationKey` en reintentos de creación de una recurrencia. El esquema nuevo se aplica con
 `007_financial_operations.sql`. Android mantiene sus funciones offline actuales.
+
+## Metas de ahorro (web)
+
+En **Metas de ahorro** puedes crear objetivos con fecha límite opcional, consultar el progreso,
+registrar aportes y retiros, corregir registros y archivar/reactivar objetivos. El aporte diario
+sugerido reparte lo que falta entre los días restantes contando hoy; es orientativo y no calcula intereses.
+Las metas vencidas y las completadas se identifican automáticamente.
+
+Son registros independientes: no reservan fondos, no afectan cuentas, ingresos, gastos ni presupuestos.
+No asignes el mismo dinero a varias metas. Para mover fondos reales entre cuentas utiliza Operaciones.
+No se admiten retiros que dejen un ahorro negativo ni aportes con fecha futura.
+
+Las metas y su historial se incluyen en respaldos v3, con validación de referencias e importes y
+restauración atómica. La migración `008_savings_goals.sql` crea sus tablas. API autenticada:
+`GET /api/goals`, `POST/PUT /api/goals/:uuid`, `POST /api/goals/:uuid/entries/:entryUuid` y
+`DELETE /api/goals/:uuid/entries/:entryUuid`. Reutiliza UUIDs en reintentos para evitar duplicados.
+Android continúa con su alcance offline actual.
 
 ## Ramas
 

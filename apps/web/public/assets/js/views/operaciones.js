@@ -4,15 +4,7 @@ import { toast, toastError, runAction, confirmDialog } from '../ui/feedback.js';
 import { api } from '../core/api.js';
 import { store } from '../core/store.js';
 import { money, isoDate, isoDateToMs } from '../core/format.js';
-
-// getRandomValues también está disponible al acceder por HTTP en una red local.
-const uuid = () => {
-  const bytes = crypto.getRandomValues(new Uint8Array(16));
-  bytes[6] = (bytes[6] & 15) | 64;
-  bytes[8] = (bytes[8] & 63) | 128;
-  const s = [...bytes].map((x) => x.toString(16).padStart(2, '0')).join('');
-  return `${s.slice(0, 8)}-${s.slice(8, 12)}-${s.slice(12, 16)}-${s.slice(16, 20)}-${s.slice(20)}`;
-};
+import { uuid } from '../core/id.js';
 
 const input = (type, value = '', attrs = {}) => h('input', { class: 'input', type, value, ...attrs });
 const select = (items, value) =>
@@ -209,14 +201,18 @@ function backupPanel() {
       if (current !== selection) return;
       pending = data;
       digest = result.digest;
-      preview.textContent = `Moneda ${result.currency}: ${result.accounts} cuentas, ${result.transactions} movimientos, ${result.budgets} presupuestos, ${result.operations} operaciones y ${result.schedules} recurrencias. Se reemplazarán tus datos activos. El perfil y la contraseña se conservan; la moneda será la del respaldo.`;
+      preview.textContent = `Moneda ${result.currency}: ${result.accounts} cuentas, ${result.transactions} movimientos, ${result.budgets} presupuestos, ${result.operations} operaciones, ${result.schedules} recurrencias, ${result.goals ?? 0} metas y ${result.goalEntries ?? 0} aportes/retiros de ahorro. Se reemplazarán tus datos activos. El perfil y la contraseña se conservan; la moneda será la del respaldo.`;
     } catch (e) {
       toastError(e);
     }
   });
   const password = input('password', '', { autocomplete: 'current-password', required: true, maxlength: 128 });
   const restore = form(
-    [field('Seleccionar respaldo FlowMoney versión 2', file), preview, field('Tu contraseña para confirmar', password)],
+    [
+      field('Seleccionar respaldo FlowMoney (versiones 1, 2 o 3)', file),
+      preview,
+      field('Tu contraseña para confirmar', password),
+    ],
     'Restaurar datos',
     async () => {
       if (!pending || !digest) throw Error('Selecciona y revisa un respaldo válido');
