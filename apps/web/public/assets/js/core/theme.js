@@ -2,11 +2,11 @@
 // Se guarda en este navegador y se aplica con <html data-theme="…">.
 
 // Íconos del selector (SVG propio, sin datos del usuario): hoja para Verde y negro;
-// círculo dividido para Blanco y negro. Ambos heredan el color del botón.
+// cuadrados contrastados para Blanco y negro. Ambos heredan el color del botón.
 const ICONS = {
   green:
     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 4c-7-1-13 2-13 8a5 5 0 0 0 5 5c6 0 9-6 8-13Z"/><path d="m4 20 11-11"/></svg>',
-  mono: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg>',
+  mono: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="3" y="3" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="9" y="9" width="12" height="12" rx="2" fill="currentColor"/></svg>',
 };
 
 export const THEMES = Object.freeze([
