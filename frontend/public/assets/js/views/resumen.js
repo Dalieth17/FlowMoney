@@ -4,7 +4,7 @@ import { groupedBars } from '../ui/charts.js';
 import { panel, emptyState, budgetMeter, movementRow } from '../ui/widgets.js';
 import { store } from '../core/store.js';
 import { go } from '../core/router.js';
-import { money, signedBalance, monthLabel, MONTHS } from '../core/format.js';
+import { money, signedBalance, monthLabel, MONTHS, transactionDate } from '../core/format.js';
 import {
   inMonth,
   totals,
@@ -25,7 +25,7 @@ const BUDGET_PREVIEW_COUNT = 4;
 export function render(root, { month, year }) {
   const list = inMonth(store.transactions, month, year);
   const t = totals(list);
-  const today = new Date();
+  const today = transactionDate();
   const available = availableToSpend(list, store.budgets, month, year, today);
 
   mount(

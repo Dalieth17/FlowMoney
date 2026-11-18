@@ -69,7 +69,9 @@ export function mountFlow(canvas, streams, labels) {
       ? streams.map((s) => {
           const el = document.createElement('span');
           el.className = 'label3d';
-          el.innerHTML = `${s.name} <b>${s.share} %</b>`;
+          const share = document.createElement('b');
+          share.textContent = `${s.share} %`;
+          el.append(document.createTextNode(`${s.name} `), share);
           labels.append(el);
           return el;
         })

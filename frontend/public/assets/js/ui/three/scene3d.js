@@ -67,12 +67,18 @@ export async function mountScene(canvas, build) {
     disposed = true;
     cancelAnimationFrame(frame);
     observer.disconnect();
+    removalObserver.disconnect();
     scene.traverse((o) => {
       o.geometry?.dispose();
       [].concat(o.material ?? []).forEach((m) => m.dispose());
     });
     renderer.dispose();
   };
+  // En reduced-motion no hay otro cuadro que detecte la salida del DOM.
+  const removalObserver = new MutationObserver(() => {
+    if (!canvas.isConnected) dispose();
+  });
+  removalObserver.observe(document.body, { childList: true, subtree: true });
   const tick = () => {
     if (!canvas.isConnected) return dispose();
     // Con "reducir movimiento" se dibuja un cuadro fijo y la escena no se anima.

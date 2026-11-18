@@ -42,11 +42,11 @@ const acceptTerms = z.literal(true, {
 const registerSchema = z.object({ name: personName, email, password, currency: currency.default('COP'), acceptTerms });
 
 /** Eliminar la cuenta pide la contraseña: es irreversible. */
-const deleteAccountSchema = z.object({ password: z.string().min(1, 'Escribe tu contraseña para confirmar') });
+const deleteAccountSchema = z.object({ password: z.string().min(1, 'Escribe tu contraseña para confirmar').max(128) });
 
 const loginSchema = z.object({
   email,
-  password: z.string().min(1, 'Escribe tu contraseña'),
+  password: z.string().min(1, 'Escribe tu contraseña').max(128),
 });
 
 const profileSchema = z.object({
@@ -56,7 +56,7 @@ const profileSchema = z.object({
 
 const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, 'Escribe tu contraseña actual'),
+    currentPassword: z.string().min(1, 'Escribe tu contraseña actual').max(128),
     newPassword: password,
   })
   .refine((d) => d.currentPassword !== d.newPassword, {
@@ -97,7 +97,8 @@ const transactionSchema = z.object({
   date: z.coerce
     .number({ invalid_type_error: 'Fecha no válida' })
     .int('Fecha no válida')
-    .nonnegative('Fecha no válida'),
+    .min(Date.UTC(2000, 0, 1), 'La fecha debe estar entre 2000 y 2100')
+    .max(Date.UTC(2101, 0, 1) - 1, 'La fecha debe estar entre 2000 y 2100'),
   note: z.string().trim().max(200, 'Nota demasiado larga').optional().default(''),
 });
 
@@ -116,6 +117,25 @@ const budgetSchema = z.object({
 
 const idParamSchema = z.object({ id: positiveId('Identificador no válido') });
 
+const transactionQuerySchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(200).default(100),
+    beforeId: positiveId('Cursor no válido').optional(),
+    from: z.coerce
+      .number()
+      .int()
+      .min(Date.UTC(2000, 0, 1))
+      .max(Date.UTC(2101, 0, 1) - 1)
+      .optional(),
+    to: z.coerce
+      .number()
+      .int()
+      .min(Date.UTC(2000, 0, 1))
+      .max(Date.UTC(2101, 0, 1) - 1)
+      .optional(),
+  })
+  .refine((q) => q.from == null || q.to == null || q.from <= q.to, 'Rango de fechas no válido');
+
 module.exports = {
   CURRENCIES,
   TRANSACTION_TYPES,
@@ -130,4 +150,5 @@ module.exports = {
   transactionSchema,
   budgetSchema,
   idParamSchema,
+  transactionQuerySchema,
 };

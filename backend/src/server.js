@@ -4,12 +4,18 @@ const logger = require('./utils/logger');
 const createApp = require('./app');
 const { waitForDatabase, runMigrations } = require('./db/migrate');
 const { closePool } = require('./db/pool');
+const sessionRepository = require('./repositories/sessionRepository');
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 async function start() {
   await waitForDatabase();
   await runMigrations();
+  const cleanSessions = () =>
+    sessionRepository.removeExpired().catch((err) => logger.error('Limpieza de sesiones:', err));
+  await cleanSessions();
+  const cleanupTimer = setInterval(cleanSessions, 60_000);
+  cleanupTimer.unref();
 
   const server = createApp().listen(config.port, () => {
     logger.info(`FlowMoney API escuchando en :${config.port} (${config.env})`);
@@ -17,6 +23,7 @@ async function start() {
 
   // Apagado ordenado: dejamos terminar las peticiones en curso y cerramos el pool.
   const shutdown = (signal) => {
+    clearInterval(cleanupTimer);
     logger.info(`${signal} recibido, cerrando…`);
     server.close(async () => {
       await closePool();

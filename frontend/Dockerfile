@@ -1,9 +1,13 @@
 # Web de FlowMoney: estáticos + proxy de /api, con Nginx sin privilegios de root.
 FROM nginxinc/nginx-unprivileged:1.28-alpine
 
-COPY nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
-COPY public/ /usr/share/nginx/html/
+USER root
+RUN mkdir -p /etc/nginx/snippets && chmod 755 /etc/nginx/snippets
+USER 101
+
+COPY --chmod=644 nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY --chmod=644 nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
+COPY --chown=101:101 public/ /usr/share/nginx/html/
 
 EXPOSE 8080
 

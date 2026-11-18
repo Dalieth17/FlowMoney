@@ -28,6 +28,8 @@ async function waitForDatabase({ retries = 30, delayMs = 2000 } = {}) {
 async function runMigrations() {
   const conn = await mysql.createConnection({ ...connectionOptions, multipleStatements: true });
   try {
+    const [[lock]] = await conn.query("SELECT GET_LOCK('flowmoney_migrations', 60) AS acquired");
+    if (Number(lock.acquired) !== 1) throw new Error('No se pudo obtener el bloqueo de migraciones');
     await conn.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         version    VARCHAR(100) PRIMARY KEY,
@@ -47,7 +49,11 @@ async function runMigrations() {
     }
     logger.info('Esquema de base de datos al día');
   } finally {
-    await conn.end();
+    try {
+      await conn.query("SELECT RELEASE_LOCK('flowmoney_migrations')");
+    } finally {
+      await conn.end();
+    }
   }
 }
 

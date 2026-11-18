@@ -20,6 +20,33 @@ export function render(root, { month, year }) {
 
   const monthList = inMonth(store.transactions, month, year);
   let visible = [];
+  let page = 0;
+  const pageSize = 50;
+  const previous = h(
+    'button',
+    {
+      class: 'btn btn-ghost sm',
+      type: 'button',
+      onclick: () => {
+        page--;
+        draw();
+      },
+    },
+    'Anterior',
+  );
+  const next = h(
+    'button',
+    {
+      class: 'btn btn-ghost sm',
+      type: 'button',
+      onclick: () => {
+        page++;
+        draw();
+      },
+    },
+    'Siguiente',
+  );
+  const pageLabel = h('span', { 'aria-live': 'polite' });
 
   const summary = h('div', { class: 'toolbar-sum tnum', 'aria-live': 'polite' });
   const listHost = h('div');
@@ -49,6 +76,11 @@ export function render(root, { month, year }) {
   function draw() {
     visible = filterTransactions(monthList, filters);
     const t = totals(visible);
+    const pages = Math.max(1, Math.ceil(visible.length / pageSize));
+    page = Math.max(0, Math.min(page, pages - 1));
+    previous.disabled = page === 0;
+    next.disabled = page === pages - 1;
+    pageLabel.textContent = `Página ${page + 1} de ${pages}`;
     summary.replaceChildren(
       h('span', { class: 'count' }, `${visible.length} de ${monthList.length}`),
       h('span', { class: 'in' }, `+${money(t.income)}`),
@@ -56,7 +88,7 @@ export function render(root, { month, year }) {
     );
     listHost.replaceChildren(
       visible.length
-        ? h('ul', { class: 'mv-list big' }, visible.map(movementRow))
+        ? h('ul', { class: 'mv-list big' }, visible.slice(page * pageSize, (page + 1) * pageSize).map(movementRow))
         : monthList.length
           ? emptyState('Sin resultados', 'Ningún movimiento coincide con la búsqueda o los filtros.', makeResetButton())
           : emptyState(
@@ -67,6 +99,9 @@ export function render(root, { month, year }) {
     );
     exportButton.disabled = visible.length === 0;
     resetButton.hidden = !isFiltered();
+    listHost.append(
+      h('nav', { class: 'toolbar', 'aria-label': 'Páginas de movimientos' }, [previous, pageLabel, next]),
+    );
   }
 
   const search = h('input', {

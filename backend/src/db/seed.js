@@ -102,9 +102,14 @@ async function seedUserData(userId, conn, now = new Date(), currency = 'COP') {
   );
   const accountIds = { Efectivo: cash.id, Banco: bank.id };
 
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const dayToMs = (day) => new Date(year, month, day, 12, 0, 0).getTime();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: 'numeric',
+  }).formatToParts(now);
+  const year = Number(parts.find((p) => p.type === 'year').value);
+  const month = Number(parts.find((p) => p.type === 'month').value) - 1;
+  const dayToMs = (day) => Date.UTC(year, month, day, 17);
 
   for (const [description, amount, type, category, day, account, note] of sample.transactions) {
     await transactionRepository.create(

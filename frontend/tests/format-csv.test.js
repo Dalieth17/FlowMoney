@@ -51,6 +51,13 @@ describe('money', () => {
 });
 
 describe('fechas', () => {
+  test('el día de Colombia no depende de la zona horaria del navegador', () => {
+    assert.equal(isoDate(Date.UTC(2026, 10, 1, 2)), '2026-10-31');
+    assert.equal(isoDateToMs('2026-11-08'), Date.UTC(2026, 10, 8, 17));
+    assert.ok(Number.isNaN(isoDateToMs('2026-02-30')));
+    assert.ok(Number.isNaN(isoDateToMs('2026-13-01')));
+    assert.ok(Number.isNaN(isoDateToMs('invalid')));
+  });
   test('isoDate e isoDateToMs son inversas (fecha local)', () => {
     assert.equal(isoDate(isoDateToMs('2026-11-08')), '2026-11-08');
     assert.equal(isoDate(isoDateToMs('2026-01-01')), '2026-01-01');

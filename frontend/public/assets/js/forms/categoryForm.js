@@ -16,11 +16,12 @@ export function openCategoryForm(existing) {
     required: true,
     placeholder: 'Ej. Mascotas',
     value: existing?.name ?? '',
+    readonly: existing?.isDefault,
   });
   const submit = h('button', { type: 'submit', class: 'btn btn-primary' }, editing ? 'Guardar' : 'Crear categoría');
 
   const form = h('form', { class: 'form', novalidate: true }, [
-    field('Nombre', name),
+    field('Nombre', name, existing?.isDefault ? 'El nombre predeterminado se conserva para las sugerencias.' : null),
     field(
       'Ícono',
       swatchPicker({

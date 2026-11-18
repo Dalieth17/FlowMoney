@@ -8,6 +8,7 @@ const connectionOptions = Object.freeze({
   user: config.db.user,
   password: config.db.password,
   database: config.db.database,
+  timezone: 'Z',
 });
 
 const pool = mysql.createPool({

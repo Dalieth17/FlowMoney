@@ -9,12 +9,12 @@ const transactionRepository = require('../repositories/transactionRepository');
 const budgetRepository = require('../repositories/budgetRepository');
 
 /** Todo lo que el panel necesita, en una sola respuesta. */
-async function bootstrap(userId) {
+async function bootstrap(userId, { includeTransactions = true } = {}) {
   const [user, categories, accounts, transactions, budgets] = await Promise.all([
     profileService.getProfile(userId),
     categoryRepository.listByUser(userId),
     accountRepository.listByUser(userId),
-    transactionRepository.listByUser(userId),
+    includeTransactions ? transactionRepository.listByUser(userId) : [],
     budgetRepository.listByUser(userId),
   ]);
   return { user, categories, accounts, transactions, budgets };

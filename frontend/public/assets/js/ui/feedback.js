@@ -6,7 +6,7 @@ import { h } from './dom.js';
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 let active = null;
 
-export function openModal(title, content) {
+export function openModal(title, content, { onClose } = {}) {
   closeModal();
   const previousFocus = document.activeElement;
   const titleId = `modal-title-${Date.now()}`;
@@ -41,19 +41,20 @@ export function openModal(title, content) {
   document.body.append(overlay);
   document.body.style.overflow = 'hidden';
   document.addEventListener('keydown', onKey);
-  active = { overlay, onKey, previousFocus };
+  active = { overlay, onKey, previousFocus, onClose };
 
   requestAnimationFrame(() => card.querySelector('.modal-body ' + FOCUSABLE)?.focus());
 }
 
 export function closeModal() {
   if (!active) return;
-  const { overlay, onKey, previousFocus } = active;
+  const { overlay, onKey, previousFocus, onClose } = active;
   active = null;
   document.removeEventListener('keydown', onKey);
   overlay.remove();
   document.body.style.overflow = '';
   previousFocus?.focus?.();
+  onClose?.();
 }
 
 export function toast(message, type = 'ok') {
@@ -76,22 +77,29 @@ export const toastError = (err) => toast(err?.message || 'Algo salió mal', 'war
 
 export function confirmDialog(message, { confirmText = 'Eliminar', danger = true } = {}) {
   return new Promise((resolve) => {
+    let settled = false;
     const done = (value) => {
+      if (settled) return;
+      settled = true;
       closeModal();
       resolve(value);
     };
-    openModal('¿Confirmas?', [
-      h('p', { class: 'confirm-msg' }, message),
-      h('div', { class: 'modal-actions' }, [
-        h('div', { class: 'spacer' }),
-        h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => done(false) }, 'Cancelar'),
-        h(
-          'button',
-          { type: 'button', class: `btn ${danger ? 'btn-danger' : 'btn-primary'}`, onclick: () => done(true) },
-          confirmText,
-        ),
-      ]),
-    ]);
+    openModal(
+      '¿Confirmas?',
+      [
+        h('p', { class: 'confirm-msg' }, message),
+        h('div', { class: 'modal-actions' }, [
+          h('div', { class: 'spacer' }),
+          h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => done(false) }, 'Cancelar'),
+          h(
+            'button',
+            { type: 'button', class: `btn ${danger ? 'btn-danger' : 'btn-primary'}`, onclick: () => done(true) },
+            confirmText,
+          ),
+        ]),
+      ],
+      { onClose: () => done(false) },
+    );
   });
 }
 

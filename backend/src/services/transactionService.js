@@ -4,6 +4,7 @@ const transactionRepository = require('../repositories/transactionRepository');
 const categoryRepository = require('../repositories/categoryRepository');
 const accountRepository = require('../repositories/accountRepository');
 const { withTransaction } = require('../db/pool');
+const historyRepository = require('../repositories/historyRepository');
 
 /**
  * Verifica que la categoría y la cuenta sean del usuario y las bloquea en modo compartido
@@ -23,22 +24,32 @@ const list = (userId) => transactionRepository.listByUser(userId);
 function create(userId, data) {
   return withTransaction(async (conn) => {
     await assertReferencesOwned(userId, data, conn);
-    return transactionRepository.create(userId, data, conn);
+    const tx = await transactionRepository.create(userId, data, conn);
+    await historyRepository.record(userId, tx.id, 'CREATE', null, tx, conn);
+    return tx;
   });
 }
 
 function update(userId, id, data) {
   return withTransaction(async (conn) => {
-    if (!(await transactionRepository.findOwned(id, userId, conn))) {
+    const before = await transactionRepository.findOwned(id, userId, conn, { lock: true });
+    if (!before) {
       throw HttpError.notFound('Movimiento no encontrado');
     }
     await assertReferencesOwned(userId, data, conn);
-    return transactionRepository.update(id, userId, data, conn);
+    const tx = await transactionRepository.update(id, userId, data, conn);
+    await historyRepository.record(userId, id, 'UPDATE', before, tx, conn);
+    return tx;
   });
 }
 
 async function remove(userId, id) {
-  if (!(await transactionRepository.remove(id, userId))) throw HttpError.notFound('Movimiento no encontrado');
+  await withTransaction(async (conn) => {
+    const before = await transactionRepository.findOwned(id, userId, conn, { lock: true });
+    if (!before) throw HttpError.notFound('Movimiento no encontrado');
+    await transactionRepository.remove(id, userId, conn);
+    await historyRepository.record(userId, id, 'DELETE', before, null, conn);
+  });
 }
 
 module.exports = { list, create, update, remove };

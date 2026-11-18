@@ -21,8 +21,11 @@ async function listByUser(userId, db = pool) {
   return rows.map(toTransaction);
 }
 
-async function findOwned(id, userId, db = pool) {
-  const [rows] = await db.query(`SELECT ${COLUMNS} FROM transactions WHERE id = ? AND user_id = ?`, [id, userId]);
+async function findOwned(id, userId, db = pool, { lock = false } = {}) {
+  const [rows] = await db.query(
+    `SELECT ${COLUMNS} FROM transactions WHERE id = ? AND user_id = ?${lock ? ' FOR UPDATE' : ''}`,
+    [id, userId],
+  );
   return rows[0] ? toTransaction(rows[0]) : null;
 }
 
@@ -54,4 +57,25 @@ async function removeAllByUser(userId, db = pool) {
   await db.query('DELETE FROM transactions WHERE user_id = ?', [userId]);
 }
 
-module.exports = { listByUser, findOwned, create, update, remove, removeAllByUser };
+async function listPage(userId, { limit, beforeId, from, to }, db = pool) {
+  const where = ['user_id = ?'];
+  const args = [userId];
+  for (const [clause, value] of [
+    ['id < ?', beforeId],
+    ['date >= ?', from],
+    ['date <= ?', to],
+  ]) {
+    if (value != null) {
+      where.push(clause);
+      args.push(value);
+    }
+  }
+  const [rows] = await db.query(
+    `SELECT ${COLUMNS} FROM transactions WHERE ${where.join(' AND ')} ORDER BY id DESC LIMIT ?`,
+    [...args, limit + 1],
+  );
+  const items = rows.slice(0, limit).map(toTransaction);
+  return { items, nextCursor: rows.length > limit ? items.at(-1).id : null };
+}
+
+module.exports = { listByUser, listPage, findOwned, create, update, remove, removeAllByUser };

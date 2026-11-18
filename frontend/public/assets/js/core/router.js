@@ -1,8 +1,10 @@
 // Router por hash (#/movimientos): refrescar mantiene la vista y el botón
 // "atrás" del navegador funciona. También guarda el mes que se está viendo.
 
+import { transactionDate } from './format.js';
+
 const routes = new Map();
-const now = new Date();
+const now = transactionDate();
 const nav = { route: null, month: now.getMonth(), year: now.getFullYear() };
 let els = null;
 let defaultRoute = null;

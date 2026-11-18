@@ -9,6 +9,18 @@ export const CURRENCIES = Object.freeze([
 ]);
 export const DEFAULT_CURRENCY = 'COP';
 
+// Los movimientos representan días civiles de Colombia, independientemente del dispositivo.
+const dateFormat = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Bogota',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+export function transactionDate(ms = Date.now()) {
+  const parts = Object.fromEntries(dateFormat.formatToParts(new Date(ms)).map((p) => [p.type, p.value]));
+  return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day), 12);
+}
+
 const byCode = (code) => CURRENCIES.find((c) => c.code === code);
 let currency = byCode(DEFAULT_CURRENCY);
 const formats = new Map();
@@ -77,25 +89,27 @@ export const monthLabel = (month, year) => `${MONTHS[month]} ${year}`;
 
 /** "8 nov" */
 export function shortDate(ms) {
-  const d = new Date(ms);
+  const d = transactionDate(ms);
   return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()].toLowerCase()}`;
 }
 
 /** Fecha local "2026-11-08" (para <input type="date"> y CSV). */
 export function isoDate(ms) {
-  const d = new Date(ms);
+  const d = transactionDate(ms);
   const pad = (x) => String(x).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/** "2026-11-08" -> timestamp local al mediodía (evita saltos de día por zona horaria). */
+/** Día civil -> mediodía de Colombia (UTC-5); rechaza días inexistentes. */
 export function isoDateToMs(str) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return NaN;
   const [y, m, d] = str.split('-').map(Number);
-  return new Date(y, m - 1, d, 12, 0, 0).getTime();
+  const ms = Date.UTC(y, m - 1, d, 17);
+  return isoDate(ms) === str && y >= 2000 && y <= 2100 ? ms : NaN;
 }
 
 /** Semana del mes (1..5) para agrupar el flujo semanal. */
-export const weekOfMonth = (ms) => Math.min(5, Math.floor((new Date(ms).getDate() - 1) / 7) + 1);
+export const weekOfMonth = (ms) => Math.min(5, Math.floor((transactionDate(ms).getDate() - 1) / 7) + 1);
 
 /** Cantidad de bloques de 7 días del mes. */
 export const weeksInMonth = (month, year) => Math.ceil(new Date(year, month + 1, 0).getDate() / 7);

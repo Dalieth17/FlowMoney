@@ -72,6 +72,13 @@ describe('transactionSchema', () => {
   test('rechaza tipos desconocidos', () => {
     assert.equal(transactionSchema.safeParse({ ...base, type: 'GIFT' }).success, false);
   });
+
+  test('rechaza segundos, fechas inexistentes en JS y años fuera de rango', () => {
+    for (const date of [1, 1731340800, Number.MAX_SAFE_INTEGER, Date.UTC(2101, 0, 1), -1]) {
+      assert.equal(transactionSchema.safeParse({ ...base, date }).success, false);
+    }
+    assert.equal(transactionSchema.safeParse({ ...base, date: Date.UTC(2000, 0, 1) }).success, true);
+  });
 });
 
 describe('budgetSchema', () => {

@@ -14,6 +14,7 @@ describe('API sin base de datos', () => {
     const res = await request(app).get('/api/health');
     assert.equal(res.status, 200);
     assert.deepEqual(res.body, { ok: true });
+    assert.equal(res.headers['cache-control'], 'no-store');
   });
 
   test('las rutas privadas exigen sesión', async () => {

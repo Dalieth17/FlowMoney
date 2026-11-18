@@ -2,6 +2,19 @@
 
 const env = process.env.NODE_ENV || 'development';
 
+if (env === 'production') {
+  const password = process.env.DB_PASSWORD || '';
+  if (password.length < 16 || /^(flowmoney|rootpass|cambia-esta-clave)$/i.test(password)) {
+    throw new Error('En producción DB_PASSWORD debe ser una contraseña propia de al menos 16 caracteres');
+  }
+  if (process.env.COOKIE_SECURE !== 'true') {
+    throw new Error('En producción se requiere HTTPS y COOKIE_SECURE=true');
+  }
+}
+
+const trustProxy = process.env.TRUST_PROXY || '0';
+if (!/^[0-9]+$/.test(trustProxy)) throw new Error('TRUST_PROXY debe ser un número de proxies de confianza');
+
 const toInt = (value, fallback) => {
   const n = Number.parseInt(value, 10);
   return Number.isFinite(n) ? n : fallback;
@@ -12,6 +25,7 @@ const config = Object.freeze({
   isProduction: env === 'production',
   isTest: env === 'test',
   port: toInt(process.env.PORT, 3000),
+  trustProxy: Number(trustProxy),
 
   db: Object.freeze({
     host: process.env.DB_HOST || 'localhost',

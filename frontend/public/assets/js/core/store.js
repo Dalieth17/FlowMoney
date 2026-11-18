@@ -51,7 +51,13 @@ class Store {
 
   // ---- Carga ----
   async load() {
-    const data = await api.get('/bootstrap');
+    const data = await api.get('/bootstrap?transactions=none');
+    let cursor = null;
+    do {
+      const page = await api.get(`/transactions/page?limit=200${cursor ? `&beforeId=${cursor}` : ''}`);
+      data.transactions.push(...page.items);
+      cursor = page.nextCursor;
+    } while (cursor !== null);
     setCurrency(data.user.currency);
     this.#commit(data);
   }

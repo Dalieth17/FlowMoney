@@ -34,6 +34,8 @@ export function openMovementForm(existing) {
   const date = h('input', {
     class: 'input',
     type: 'date',
+    min: '2000-01-01',
+    max: '2100-12-31',
     required: true,
     value: isoDate(existing?.date ?? Date.now()),
   });
@@ -157,6 +159,8 @@ export function openMovementForm(existing) {
     if (!description.value.trim()) return toast('Escribe una descripción', 'warn');
     if (!(value >= 0.01)) return toast('El monto mínimo es 0.01', 'warn');
     if (!date.value) return toast('Elige una fecha', 'warn');
+    const timestamp = isoDateToMs(date.value);
+    if (!Number.isFinite(timestamp)) return toast('Elige una fecha válida entre 2000 y 2100', 'warn');
 
     const payload = {
       description: description.value.trim(),
@@ -164,7 +168,7 @@ export function openMovementForm(existing) {
       type,
       categoryId: Number(category.value),
       accountId: account.value ? Number(account.value) : null,
-      date: isoDateToMs(date.value),
+      date: timestamp,
       note: note.value.trim(),
     };
     const ok = await runAction(submit, () =>

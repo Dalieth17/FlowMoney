@@ -1,16 +1,16 @@
 // Cálculos financieros puros: reciben arreglos, devuelven datos derivados.
 // No tocan el DOM ni el store, así se prueban fácilmente.
 
-import { weekOfMonth, weeksInMonth } from '../core/format.js';
+import { weekOfMonth, weeksInMonth, transactionDate } from '../core/format.js';
 
 export const BUDGET_WARNING_PCT = 80;
 
-const sum = (list) => list.reduce((acc, t) => acc + t.amount, 0);
+const sum = (list) => list.reduce((acc, t) => acc + Math.round(t.amount * 100), 0) / 100;
 
 export function inMonth(transactions, month, year) {
   return transactions
     .filter((t) => {
-      const d = new Date(t.date);
+      const d = transactionDate(t.date);
       return d.getMonth() === month && d.getFullYear() === year;
     })
     .sort((a, b) => b.date - a.date || b.id - a.id);
@@ -19,7 +19,7 @@ export function inMonth(transactions, month, year) {
 export function totals(list) {
   const income = sum(list.filter((t) => t.type === 'INCOME'));
   const expense = sum(list.filter((t) => t.type === 'EXPENSE'));
-  return { income, expense, balance: income - expense };
+  return { income, expense, balance: Math.round((income - expense) * 100) / 100 };
 }
 
 export const savingRate = ({ income, balance }) => (income > 0 ? Math.round((balance / income) * 100) : 0);
@@ -32,9 +32,9 @@ export function expenseByCategory(list, categories) {
   const byId = new Map();
   list
     .filter((t) => t.type === 'EXPENSE')
-    .forEach((t) => byId.set(t.categoryId, (byId.get(t.categoryId) || 0) + t.amount));
+    .forEach((t) => byId.set(t.categoryId, (byId.get(t.categoryId) || 0) + Math.round(t.amount * 100)));
   return [...byId.entries()]
-    .map(([id, value]) => ({ category: categories.find((c) => c.id === id), value }))
+    .map(([id, cents]) => ({ category: categories.find((c) => c.id === id), value: cents / 100 }))
     .filter((x) => x.category)
     .sort((a, b) => b.value - a.value);
 }
@@ -48,9 +48,9 @@ export function weeklyFlow(list, month, year) {
   }));
   list.forEach((t) => {
     const week = weeks[weekOfMonth(t.date) - 1];
-    if (week) week[t.type === 'INCOME' ? 'income' : 'expense'] += t.amount;
+    if (week) week[t.type === 'INCOME' ? 'income' : 'expense'] += Math.round(t.amount * 100);
   });
-  return weeks;
+  return weeks.map((w) => ({ ...w, income: w.income / 100, expense: w.expense / 100 }));
 }
 
 /** Ingresos y gastos de los últimos `count` meses hasta (month, year). */
@@ -78,7 +78,11 @@ export function accountBalances(accounts, transactions) {
   return accounts.map((account) => {
     const own = transactions.filter((t) => t.accountId === account.id);
     const { income, expense } = totals(own);
-    return { account, balance: account.initialBalance + income - expense, count: own.length };
+    return {
+      account,
+      balance: (Math.round(account.initialBalance * 100) + Math.round(income * 100) - Math.round(expense * 100)) / 100,
+      count: own.length,
+    };
   });
 }
 
@@ -102,11 +106,11 @@ export function filterTransactions(list, { type = 'ALL', categoryId = 'ALL', acc
  * - aheadOfPace: cuánto se gastó por encima (+) o por debajo (−) del ritmo parejo a la fecha.
  * Devuelve null si el mes no tiene presupuestos.
  */
-export function availableToSpend(list, budgets, month, year, today = new Date()) {
+export function availableToSpend(list, budgets, month, year, today = transactionDate()) {
   const own = budgets.filter((b) => b.month === month && b.year === year);
   if (!own.length) return null;
-  const limit = own.reduce((acc, b) => acc + b.amount, 0);
-  const spent = own.reduce((acc, b) => acc + spentInCategory(list, b.categoryId), 0);
+  const limit = sum(own);
+  const spent = own.reduce((acc, b) => acc + Math.round(spentInCategory(list, b.categoryId) * 100), 0) / 100;
   const days = new Date(year, month + 1, 0).getDate();
   const monthKey = year * 12 + month;
   const todayKey = today.getFullYear() * 12 + today.getMonth();
@@ -116,7 +120,7 @@ export function availableToSpend(list, budgets, month, year, today = new Date())
   else if (monthKey > todayKey) throughToday = 0;
   else throughToday = today.getDate();
   const daysLeft = monthKey < todayKey ? 0 : days - Math.max(0, throughToday - 1);
-  const remaining = limit - spent;
+  const remaining = Math.round((limit - spent) * 100) / 100;
   const perDay = daysLeft > 0 ? Math.max(0, remaining) / daysLeft : 0;
   const expectedByNow = (limit * throughToday) / days;
   return { limit, spent, remaining, daysLeft, perDay, aheadOfPace: spent - expectedByNow };
@@ -127,14 +131,15 @@ export function dailyExpense(list, month, year) {
   const days = new Date(year, month + 1, 0).getDate();
   const out = Array.from({ length: days }, (_, i) => ({ day: i + 1, expense: 0, cumulative: 0 }));
   list.forEach((t) => {
-    const d = new Date(t.date);
+    const d = transactionDate(t.date);
     if (t.type === 'EXPENSE' && d.getMonth() === month && d.getFullYear() === year)
-      out[d.getDate() - 1].expense += t.amount;
+      out[d.getDate() - 1].expense += Math.round(t.amount * 100);
   });
   let acc = 0;
   out.forEach((d) => {
     acc += d.expense;
-    d.cumulative = acc;
+    d.expense /= 100;
+    d.cumulative = acc / 100;
   });
   return out;
 }

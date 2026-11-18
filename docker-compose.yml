@@ -35,6 +35,8 @@ services:
   api:
     build: ./backend
     environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      TRUST_PROXY: '1' # exactamente un Nginx delante; la API no publica puertos
       DB_HOST: db
       DB_PORT: '3306' # puerto interno del contenedor (no es MYSQL_PORT)
       DB_NAME: ${DB_NAME:-flowmoney}

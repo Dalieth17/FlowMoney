@@ -25,8 +25,38 @@ puerto está ocupado, crea un archivo `.env` junto a `docker-compose.yml` con ot
 (p. ej. `MYSQL_PORT=3310`) y vuelve a ejecutar el comando. Para entrar a la base con un cliente:
 host `127.0.0.1`, puerto `3309`, usuario y contraseña `flowmoney` (base `flowmoney`).
 
-Para producción copia `.env.example` a `.env`, define contraseñas propias y `COOKIE_SECURE=true`
-si sirves por HTTPS.
+Para producción copia `.env.example` a `.env`, configura `NODE_ENV=production`, contraseñas
+propias y `COOKIE_SECURE=true`, y termina HTTPS en un proxy exterior. La API rechaza el arranque
+en producción si la contraseña de base de datos es de ejemplo o tiene menos de 16 caracteres,
+o si las cookies no son seguras. Cambia también la contraseña root de MySQL.
+Compose usa modo desarrollo por defecto para que la demostración local siga funcionando por HTTP.
+La API confía en un único Nginx (`TRUST_PROXY=1`), que sustituye `X-Forwarded-For` con la IP
+de su conexión. Si añades proxies exteriores, configura explícitamente las redes de confianza
+en Nginx; no aceptes cabeceras de IP directamente de internet.
+
+Los movimientos web usan días de **America/Bogota** en todos los dispositivos, fechas entre
+2000 y 2100 y timestamps al mediodía colombiano para entradas nuevas. Los timestamps existentes
+se conservan. Usuarios que antes registraban desde otras zonas deben revisar movimientos
+cercanos al cambio de día. Android continúa usando `LocalDate` offline.
+
+La lista web muestra 50 movimientos por página y carga el histórico en peticiones de hasta 200.
+`GET /api/transactions/page?limit=100&beforeId=123&from=...&to=...` devuelve `{items,nextCursor}`,
+ordenado por ID descendente, con rangos en epoch ms e inclusivos. `nextCursor=null` indica el final.
+La carga inicial usa `/api/bootstrap?transactions=none`. Se mantiene el bootstrap completo para
+compatibilidad. Los reportes y saldos todavía calculan sobre todo el histórico en memoria;
+queda pendiente trasladar sus agregaciones al servidor para grandes volúmenes.
+
+Desde esta versión, las altas, ediciones y borrados individuales de movimientos dejan un
+historial atómico en `transaction_history` (migración 006). Se consulta con
+`GET /api/transactions/:id/history` (últimos 100 cambios, solo del usuario autenticado).
+No reconstruye cambios antiguos ni registra la siembra o el reinicio masivo. Al eliminar
+la cuenta también desaparece su historial. Perfil permite exportar todos los datos activos a
+JSON además del CSV de movimientos. El JSON no incluye contraseñas ni sesiones; tampoco es
+una copia de seguridad del servidor ni existe aún una importación automática.
+
+Las sesiones vencidas se limpian al arrancar y cada minuto en lotes de 1000. Las migraciones
+se serializan con un bloqueo MySQL para impedir que dos instancias las apliquen simultáneamente.
+Los DDL de MySQL no ofrecen rollback conjunto: respalda la base antes de actualizar.
 
 ## Funciones
 

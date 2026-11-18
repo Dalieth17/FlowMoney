@@ -1,5 +1,5 @@
 // Vista Perfil: datos personales, moneda, contraseña y gestión de datos.
-import { h, field, mount } from '../ui/dom.js';
+import { h, field, mount, downloadText } from '../ui/dom.js';
 import { toast, confirmDialog, runAction, openModal, closeModal } from '../ui/feedback.js';
 import { panel } from '../ui/widgets.js';
 import { exportTransactionsCsv } from '../ui/exportCsv.js';
@@ -39,6 +39,14 @@ function personalPanel() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (name.value.trim().length < 2) return toast('Escribe tu nombre', 'warn');
+    if (
+      currency.value !== user.currency &&
+      !(await confirmDialog(
+        `Cambiar de ${user.currency} a ${currency.value} mantiene todos los valores numéricos. No se aplica ninguna tasa de cambio. ¿Continuar?`,
+        { confirmText: 'Cambiar moneda', danger: false },
+      ))
+    )
+      return;
     const ok = await runAction(submit, () =>
       store.updateProfile({ name: name.value.trim(), currency: currency.value }),
     );
@@ -134,6 +142,41 @@ function dataPanel() {
         stat('movimientos', String(transactions.length)),
         stat('categorías', String(categories.length)),
         stat('cuentas', String(accounts.length)),
+      ]),
+      h('div', { class: 'data-action' }, [
+        h('div', {}, [
+          h('p', { class: 'da-t' }, 'Exportar todos los datos'),
+          h(
+            'p',
+            { class: 'da-s' },
+            'Copia JSON con perfil, cuentas, categorías, movimientos y presupuestos. Contiene información privada.',
+          ),
+        ]),
+        h(
+          'button',
+          {
+            class: 'btn btn-ghost sm',
+            onclick: () =>
+              downloadText(
+                `flowmoney-${isoDate(Date.now())}.json`,
+                JSON.stringify(
+                  {
+                    version: 1,
+                    exportedAt: new Date().toISOString(),
+                    user: store.user,
+                    accounts: store.accounts,
+                    categories: store.categories,
+                    transactions: store.transactions,
+                    budgets: store.budgets,
+                  },
+                  null,
+                  2,
+                ),
+                'application/json;charset=utf-8',
+              ),
+          },
+          'Exportar JSON',
+        ),
       ]),
       h('div', { class: 'data-action' }, [
         h('div', {}, [

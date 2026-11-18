@@ -8,6 +8,7 @@ const { uniqueEmail } = require('../helpers');
 const createApp = require('../../src/app');
 const { waitForDatabase, runMigrations } = require('../../src/db/migrate');
 const { pool, closePool } = require('../../src/db/pool');
+const sessionRepository = require('../../src/repositories/sessionRepository');
 
 const app = createApp();
 const PASSWORD = 'secret123';
@@ -34,6 +35,91 @@ async function login(email, password = PASSWORD) {
 }
 
 const bootstrapWith = (cookie) => request(app).get('/api/bootstrap').set('Cookie', cookie);
+
+describe('Correcciones de revisión', () => {
+  test('categorías predeterminadas conservan el nombre y permiten cambiar apariencia', async () => {
+    const { cookie } = await register();
+    const { body } = await bootstrapWith(cookie).expect(200);
+    const cat = body.categories.find((c) => c.isDefault);
+    await request(app)
+      .put(`/api/categories/${cat.id}`)
+      .set('Cookie', cookie)
+      .send({ ...cat, name: 'Renombrada' })
+      .expect(409);
+    await request(app)
+      .put(`/api/categories/${cat.id}`)
+      .set('Cookie', cookie)
+      .send({ ...cat, color: '#112233' })
+      .expect(200);
+  });
+
+  test('paginación completa sin duplicados y filtros validados', async () => {
+    const { cookie } = await register();
+    const { body: all } = await bootstrapWith(cookie).expect(200);
+    const { body: small } = await request(app)
+      .get('/api/bootstrap?transactions=none')
+      .set('Cookie', cookie)
+      .expect(200);
+    assert.equal(small.transactions.length, 0);
+    const ids = [];
+    let cursor = null;
+    do {
+      const { body } = await request(app)
+        .get(`/api/transactions/page?limit=3${cursor ? `&beforeId=${cursor}` : ''}`)
+        .set('Cookie', cookie)
+        .expect(200);
+      ids.push(...body.items.map((t) => t.id));
+      cursor = body.nextCursor;
+    } while (cursor !== null);
+    assert.equal(new Set(ids).size, all.transactions.length);
+    assert.equal(ids.length, all.transactions.length);
+    await request(app).get('/api/transactions/page?limit=10000').set('Cookie', cookie).expect(400);
+    await request(app)
+      .get('/api/transactions/page?from=1800000000000&to=1700000000000')
+      .set('Cookie', cookie)
+      .expect(400);
+  });
+
+  test('historial registra edición y borrado y aísla usuarios', async () => {
+    const { cookie } = await register();
+    const { cookie: other } = await register();
+    const { body } = await bootstrapWith(cookie).expect(200);
+    const tx = body.transactions[0];
+    await request(app)
+      .put(`/api/transactions/${tx.id}`)
+      .set('Cookie', cookie)
+      .send({ ...tx, amount: 123 })
+      .expect(200);
+    await request(app).delete(`/api/transactions/${tx.id}`).set('Cookie', cookie).expect(204);
+    const { body: history } = await request(app)
+      .get(`/api/transactions/${tx.id}/history`)
+      .set('Cookie', cookie)
+      .expect(200);
+    assert.deepEqual(
+      history.map((h) => h.action),
+      ['DELETE', 'UPDATE'],
+    );
+    assert.equal(history[0].beforeData.amount, 123);
+    const { body: hidden } = await request(app)
+      .get(`/api/transactions/${tx.id}/history`)
+      .set('Cookie', other)
+      .expect(200);
+    assert.deepEqual(hidden, []);
+  });
+
+  test('limpia sesiones vencidas de cualquier usuario sin borrar las activas', async () => {
+    const { cookie, userId } = await register();
+    const token = 'e'.repeat(64);
+    await pool.query(
+      'INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 DAY))',
+      [token, userId],
+    );
+    await sessionRepository.removeExpired();
+    const [rows] = await pool.query('SELECT token_hash FROM sessions WHERE token_hash = ?', [token]);
+    assert.equal(rows.length, 0);
+    await bootstrapWith(cookie).expect(200);
+  });
+});
 
 describe('QA #1 — revocación de sesiones en el servidor', () => {
   test('tras cerrar sesión, una copia de la cookie ya no sirve', async () => {

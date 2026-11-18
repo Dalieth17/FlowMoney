@@ -8,8 +8,14 @@ const list = (userId) => categoryRepository.listByUser(userId);
 const create = (userId, data) => categoryRepository.create(userId, { ...data, isDefault: false });
 
 async function update(userId, id, data) {
-  if (!(await categoryRepository.findOwned(id, userId))) throw HttpError.notFound('Categoría no encontrada');
-  return categoryRepository.update(id, userId, data);
+  return withTransaction(async (conn) => {
+    const category = await categoryRepository.findOwned(id, userId, conn, { lock: 'update' });
+    if (!category) throw HttpError.notFound('Categoría no encontrada');
+    if (category.isDefault && category.name !== data.name) {
+      throw HttpError.conflict('No se puede cambiar el nombre de una categoría predeterminada');
+    }
+    return categoryRepository.update(id, userId, data, conn);
+  });
 }
 
 /** Comprobar y borrar con la categoría bloqueada (ver accountService.remove). */

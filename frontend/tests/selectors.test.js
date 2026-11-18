@@ -14,7 +14,7 @@ import {
   dailyExpense,
 } from '../public/assets/js/domain/selectors.js';
 
-const at = (y, m, d) => new Date(y, m, d, 12).getTime();
+const at = (y, m, d) => Date.UTC(y, m, d, 17);
 const tx = (id, type, amount, extra = {}) => ({
   id,
   type,
@@ -28,6 +28,13 @@ const tx = (id, type, amount, extra = {}) => ({
 });
 
 describe('totales', () => {
+  test('suma dinero en centavos sin residuo binario', () => {
+    assert.deepEqual(totals([tx(1, 'INCOME', 0.1), tx(2, 'INCOME', 0.2), tx(3, 'EXPENSE', 0.3)]), {
+      income: 0.3,
+      expense: 0.3,
+      balance: 0,
+    });
+  });
   test('suma ingresos, gastos y balance', () => {
     const t = totals([tx(1, 'INCOME', 1000), tx(2, 'EXPENSE', 250.5), tx(3, 'EXPENSE', 49.5)]);
     assert.deepEqual(t, { income: 1000, expense: 300, balance: 700 });

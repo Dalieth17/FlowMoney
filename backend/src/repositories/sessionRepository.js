@@ -29,4 +29,9 @@ async function removeExpiredByUser(userId, db = pool) {
   await db.query('DELETE FROM sessions WHERE user_id = ? AND expires_at <= UTC_TIMESTAMP()', [userId]);
 }
 
-module.exports = { create, findActiveUserId, remove, removeAllByUser, removeExpiredByUser };
+async function removeExpired(db = pool) {
+  const [result] = await db.query('DELETE FROM sessions WHERE expires_at <= UTC_TIMESTAMP() LIMIT 1000');
+  return result.affectedRows;
+}
+
+module.exports = { create, findActiveUserId, remove, removeAllByUser, removeExpiredByUser, removeExpired };
