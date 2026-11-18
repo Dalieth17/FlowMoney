@@ -17,7 +17,12 @@ export function render(root) {
   mount(
     root,
     h('div', { class: 'toolbar' }, [
-      h('p', { class: 'muted' }, 'El saldo de cada cuenta es su saldo inicial más ingresos menos gastos registrados.'),
+      h(
+        'p',
+        { class: 'muted' },
+        'Saldo actual: movimientos hasta hoy, transferencias y ajustes. Los futuros aparecen en el saldo proyectado.',
+      ),
+      h('a', { class: 'btn btn-ghost sm', href: '#/operaciones' }, 'Transferir o conciliar'),
       h('button', { class: 'btn btn-primary sm', onclick: () => openAccountForm() }, '+ Nueva cuenta'),
     ]),
     h('div', { class: 'stat-grid' }, [
@@ -36,7 +41,7 @@ export function render(root) {
   );
 }
 
-function accountCard({ account, balance, count }) {
+function accountCard({ account, balance, projectedBalance, count }) {
   const type = ACCOUNT_TYPES[account.type] ?? ACCOUNT_TYPES.CASH;
   const remove = async () => {
     if (!(await confirmDialog(`¿Eliminar la cuenta "${account.name}"?`))) return;
@@ -66,6 +71,7 @@ function accountCard({ account, balance, count }) {
       ]),
     ]),
     h('div', { class: `acc-balance tnum${balance < 0 ? ' neg' : ''}` }, money(balance)),
+    h('div', { class: 'acc-meta' }, `Saldo proyectado ${money(projectedBalance)}`),
     h(
       'div',
       { class: 'acc-meta' },

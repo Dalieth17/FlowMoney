@@ -8,6 +8,10 @@ import { classify, confidenceLabel } from '../domain/classifier.js';
 const AI_DEBOUNCE_MS = 180;
 
 export function openMovementForm(existing) {
+  if (existing?.operationId) {
+    location.hash = '#/operaciones';
+    return toast('Gestiona la transferencia o consulta el ajuste en Operaciones', 'warn');
+  }
   const editing = Boolean(existing);
   let type = existing?.type ?? 'EXPENSE';
   let categoryTouched = editing; // al editar no pisamos la categoría elegida

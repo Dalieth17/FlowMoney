@@ -12,9 +12,11 @@ import * as categorias from '../views/categorias.js';
 import * as presupuestos from '../views/presupuestos.js';
 import * as reportes from '../views/reportes.js';
 import * as perfil from '../views/perfil.js';
+import * as operaciones from '../views/operaciones.js';
 
 // monthScoped: la vista depende del mes elegido (muestra el selector de mes).
 const ROUTES = [
+  { id: 'operaciones', title: 'Operaciones', monthScoped: false, render: operaciones.render },
   { id: 'resumen', title: 'Resumen', monthScoped: true, render: resumen.render },
   { id: 'movimientos', title: 'Movimientos', monthScoped: true, render: movimientos.render },
   { id: 'cuentas', title: 'Cuentas', monthScoped: false, render: cuentas.render },

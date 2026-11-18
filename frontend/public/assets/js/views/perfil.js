@@ -4,6 +4,7 @@ import { toast, confirmDialog, runAction, openModal, closeModal } from '../ui/fe
 import { panel } from '../ui/widgets.js';
 import { exportTransactionsCsv } from '../ui/exportCsv.js';
 import { store } from '../core/store.js';
+import { api } from '../core/api.js';
 import { CURRENCIES, MONTHS, isoDate } from '../core/format.js';
 import { THEMES, getTheme, setTheme } from '../core/theme.js';
 
@@ -157,22 +158,12 @@ function dataPanel() {
           {
             class: 'btn btn-ghost sm',
             onclick: () =>
-              downloadText(
-                `flowmoney-${isoDate(Date.now())}.json`,
-                JSON.stringify(
-                  {
-                    version: 1,
-                    exportedAt: new Date().toISOString(),
-                    user: store.user,
-                    accounts: store.accounts,
-                    categories: store.categories,
-                    transactions: store.transactions,
-                    budgets: store.budgets,
-                  },
-                  null,
-                  2,
+              runAction(null, async () =>
+                downloadText(
+                  `flowmoney-${isoDate(Date.now())}.json`,
+                  JSON.stringify(await api.get('/finance/backup'), null, 2),
+                  'application/json;charset=utf-8',
                 ),
-                'application/json;charset=utf-8',
               ),
           },
           'Exportar JSON',

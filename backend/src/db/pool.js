@@ -39,4 +39,11 @@ async function withTransaction(work) {
 
 const closePool = () => pool.end();
 
-module.exports = { pool, withTransaction, closePool, connectionOptions };
+const withUserTransaction = (userId, work) =>
+  withTransaction(async (conn) => {
+    const [rows] = await conn.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [userId]);
+    if (!rows.length) throw require('../utils/httpError').unauthorized('Sesión inválida');
+    return work(conn);
+  });
+
+module.exports = { pool, withTransaction, withUserTransaction, closePool, connectionOptions };

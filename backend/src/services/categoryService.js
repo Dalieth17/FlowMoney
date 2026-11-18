@@ -1,14 +1,16 @@
 // Reglas de categorías: las predeterminadas y las que tienen movimientos no se borran.
 const HttpError = require('../utils/httpError');
 const categoryRepository = require('../repositories/categoryRepository');
-const { withTransaction } = require('../db/pool');
+const { withUserTransaction } = require('../db/pool');
+const finance = require('../repositories/financeRepository');
 
 const list = (userId) => categoryRepository.listByUser(userId);
 
-const create = (userId, data) => categoryRepository.create(userId, { ...data, isDefault: false });
+const create = (userId, data) =>
+  withUserTransaction(userId, (db) => categoryRepository.create(userId, { ...data, isDefault: false }, db));
 
 async function update(userId, id, data) {
-  return withTransaction(async (conn) => {
+  return withUserTransaction(userId, async (conn) => {
     const category = await categoryRepository.findOwned(id, userId, conn, { lock: 'update' });
     if (!category) throw HttpError.notFound('Categoría no encontrada');
     if (category.isDefault && category.name !== data.name) {
@@ -20,7 +22,13 @@ async function update(userId, id, data) {
 
 /** Comprobar y borrar con la categoría bloqueada (ver accountService.remove). */
 async function remove(userId, id) {
-  await withTransaction(async (conn) => {
+  await withUserTransaction(userId, async (conn) => {
+    const schedules = await finance.schedules(userId, conn);
+    const operations = await finance.operations(userId, conn);
+    if (operations.some((o) => o.data.categoryId === id))
+      throw HttpError.conflict('La categoría figura en el historial de operaciones');
+    if (schedules.some((s) => s.data.transaction.categoryId === id))
+      throw HttpError.conflict('La categoría está asociada a una recurrencia');
     const category = await categoryRepository.findOwned(id, userId, conn, { lock: 'update' });
     if (!category) throw HttpError.notFound('Categoría no encontrada');
     if (category.isDefault) throw HttpError.conflict('No se pueden eliminar las categorías predeterminadas');

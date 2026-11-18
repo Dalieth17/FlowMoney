@@ -3,7 +3,7 @@ const HttpError = require('../utils/httpError');
 const { hashPassword, verifyPassword } = require('../utils/password');
 const userRepository = require('../repositories/userRepository');
 const sessionRepository = require('../repositories/sessionRepository');
-const { withTransaction } = require('../db/pool');
+const { withUserTransaction } = require('../db/pool');
 
 async function getProfile(userId) {
   const user = await userRepository.findById(userId);
@@ -29,7 +29,7 @@ async function changePassword(userId, { currentPassword, newPassword }) {
     throw HttpError.badRequest('La contraseña actual no es correcta');
   }
   const newHash = await hashPassword(newPassword);
-  await withTransaction(async (conn) => {
+  await withUserTransaction(userId, async (conn) => {
     await userRepository.updatePassword(userId, newHash, conn);
     await sessionRepository.removeAllByUser(userId, conn);
   });
@@ -45,7 +45,7 @@ async function deleteAccount(userId, { password }) {
   if (!(await verifyPassword(password, hash)).valid) {
     throw HttpError.badRequest('La contraseña no es correcta');
   }
-  await withTransaction((conn) => userRepository.removeWithData(userId, conn));
+  await withUserTransaction(userId, (conn) => userRepository.removeWithData(userId, conn));
 }
 
 module.exports = { getProfile, updateProfile, changePassword, deleteAccount };

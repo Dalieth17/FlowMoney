@@ -110,6 +110,9 @@ export function movementRow(tx) {
       ),
       h('div', { class: 'd' }, [
         h('div', { class: 't' }, tx.description),
+        tx.kind && tx.kind !== 'NORMAL'
+          ? h('span', { class: 'muted' }, tx.kind === 'TRANSFER' ? 'Transferencia interna' : 'Ajuste de saldo')
+          : null,
         h('div', { class: 's' }, [
           shortDate(tx.date),
           categoryTag(category),

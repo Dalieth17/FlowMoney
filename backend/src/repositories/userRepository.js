@@ -53,6 +53,7 @@ async function findConsent(id, db = pool) {
  * (categorías, cuentas y sesiones).
  */
 async function removeWithData(id, db = pool) {
+  await db.query('DELETE FROM recurring_schedules WHERE user_id = ?', [id]);
   await db.query('DELETE FROM transactions WHERE user_id = ?', [id]);
   await db.query('DELETE FROM budgets WHERE user_id = ?', [id]);
   await db.query('DELETE FROM users WHERE id = ?', [id]);

@@ -3,7 +3,7 @@ const HttpError = require('../utils/httpError');
 const transactionRepository = require('../repositories/transactionRepository');
 const categoryRepository = require('../repositories/categoryRepository');
 const accountRepository = require('../repositories/accountRepository');
-const { withTransaction } = require('../db/pool');
+const { withUserTransaction } = require('../db/pool');
 const historyRepository = require('../repositories/historyRepository');
 
 /**
@@ -22,7 +22,7 @@ async function assertReferencesOwned(userId, { categoryId, accountId }, conn) {
 const list = (userId) => transactionRepository.listByUser(userId);
 
 function create(userId, data) {
-  return withTransaction(async (conn) => {
+  return withUserTransaction(userId, async (conn) => {
     await assertReferencesOwned(userId, data, conn);
     const tx = await transactionRepository.create(userId, data, conn);
     await historyRepository.record(userId, tx.id, 'CREATE', null, tx, conn);
@@ -31,11 +31,12 @@ function create(userId, data) {
 }
 
 function update(userId, id, data) {
-  return withTransaction(async (conn) => {
+  return withUserTransaction(userId, async (conn) => {
     const before = await transactionRepository.findOwned(id, userId, conn, { lock: true });
     if (!before) {
       throw HttpError.notFound('Movimiento no encontrado');
     }
+    if (before.operationId) throw HttpError.conflict('Gestiona este movimiento desde Operaciones');
     await assertReferencesOwned(userId, data, conn);
     const tx = await transactionRepository.update(id, userId, data, conn);
     await historyRepository.record(userId, id, 'UPDATE', before, tx, conn);
@@ -44,9 +45,10 @@ function update(userId, id, data) {
 }
 
 async function remove(userId, id) {
-  await withTransaction(async (conn) => {
+  await withUserTransaction(userId, async (conn) => {
     const before = await transactionRepository.findOwned(id, userId, conn, { lock: true });
     if (!before) throw HttpError.notFound('Movimiento no encontrado');
+    if (before.operationId) throw HttpError.conflict('Gestiona este movimiento desde Operaciones');
     await transactionRepository.remove(id, userId, conn);
     await historyRepository.record(userId, id, 'DELETE', before, null, conn);
   });

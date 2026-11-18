@@ -1,5 +1,5 @@
 // Operaciones sobre el conjunto de datos del usuario: carga inicial y reinicio.
-const { withTransaction } = require('../db/pool');
+const { withUserTransaction } = require('../db/pool');
 const { seedUserData } = require('../db/seed');
 const userRepository = require('../repositories/userRepository');
 const profileService = require('./profileService');
@@ -22,12 +22,9 @@ async function bootstrap(userId, { includeTransactions = true } = {}) {
 
 /** Borra los datos del usuario y vuelve a sembrar el mes de ejemplo (atómico). */
 async function resetToSample(userId) {
-  await withTransaction(async (conn) => {
+  await withUserTransaction(userId, async (conn) => {
     // Orden: primero lo que referencia a categorías/cuentas.
-    await transactionRepository.removeAllByUser(userId, conn);
-    await budgetRepository.removeAllByUser(userId, conn);
-    await categoryRepository.removeAllByUser(userId, conn);
-    await accountRepository.removeAllByUser(userId, conn);
+    await require('./backupService').clear(userId, conn);
     const user = await userRepository.findById(userId, conn);
     await seedUserData(userId, conn, new Date(), user?.currency);
   });

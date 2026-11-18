@@ -222,6 +222,45 @@ Requiere JDK 17+ y el Android SDK (Android Studio lo instala). Las versiones est
 `android/gradle/libs.versions.toml`. CI publica el APK de depuración como artefacto
 (**Actions → CI → flowmoney-debug-apk**) para instalarlo sin compilar.
 
+## Operaciones financieras (web y API)
+
+En **Operaciones** se crean y editan transferencias entre dos cuentas propias. Cada transferencia
+guarda la salida, entrada y comisión opcional en una misma transacción MySQL. Los movimientos
+internos y ajustes de conciliación no cuentan en ingresos, gastos ni presupuestos; las comisiones
+sí cuentan como gasto. No se permite editar o borrar una sola parte desde Movimientos.
+
+**Conciliar saldos** compara el saldo calculado hasta hoy (America/Bogota) con el saldo real
+observado. Muestra el ajuste antes de confirmarlo y guarda el motivo. El servidor rechaza una
+conciliación si el saldo cambió mientras se revisaba. Los movimientos futuros se muestran en el
+saldo proyectado. Para corregir una conciliación se registra otra, conservando el historial.
+
+Las **recurrencias son mensuales y de confirmación manual**: pulsa Procesar pendientes para
+registrar los períodos vencidos, hasta 120 por solicitud. Un día 31 se ajusta al último día del mes.
+Se pueden editar, pausar, reanudar y limitar con una fecha final; las ediciones afectan únicamente
+períodos aún no procesados. Reanudar incluye períodos pendientes de la pausa: ajusta la fecha de
+inicio si prefieres omitirlos. La clave única por recurrencia y mes, junto al bloqueo por usuario,
+evita duplicados incluso con peticiones simultáneas. Borrar un movimiento generado no habilita
+volver a generarlo. No existe un servicio programado que ejecute recurrencias con la app cerrada.
+
+**Respaldos** exporta JSON versión 2 directamente del servidor, con una lectura consistente de
+cuentas, categorías, movimientos, presupuestos, operaciones, recurrencias y períodos procesados.
+Para restaurar, selecciona el archivo, revisa las cantidades y moneda, escribe tu contraseña y
+confirma el reemplazo. Se validan referencias, pares de transferencias y ajustes antes de borrar;
+todo el reemplazo es atómico y hace rollback ante errores. Se reasignan IDs al usuario actual y
+se preserva el registro de recurrencias para evitar regenerarlas. El perfil y contraseña no se
+importan; sí la moneda. No incluye sesiones, contraseñas ni el historial técnico de auditoría.
+Se aceptan también los JSON versión 1 de Perfil que solo contienen movimientos normales.
+Límites de importación: 20 MB, 20.000 movimientos, 1.000 cuentas y 1.000 recurrencias.
+Descarga una copia actual antes de restaurar. Esto no sustituye los respaldos de MySQL.
+
+API autenticada: `GET /api/finance`, `POST/PUT/DELETE /api/finance/transfers/:uuid`,
+`POST /api/finance/reconciliations/:uuid`, `POST /api/finance/schedules`,
+`PUT /api/finance/schedules/:id`, `POST /api/finance/schedules/run`,
+`GET /api/finance/backup`, `POST /api/finance/backup/preview` y
+`POST /api/finance/backup/restore`. Reutiliza el UUID en reintentos de una operación y
+`creationKey` en reintentos de creación de una recurrencia. El esquema nuevo se aplica con
+`007_financial_operations.sql`. Android mantiene sus funciones offline actuales.
+
 ## Ramas
 
 - `DEV` — desarrollo.

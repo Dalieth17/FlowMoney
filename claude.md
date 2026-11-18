@@ -104,6 +104,17 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 
 ## Estado
 
+- Operaciones web/API: `views/operaciones.js`, `routes/finance.routes.js`, `financeService`,
+  `backupService` y `financeRepository`; migración `007_financial_operations.sql`.
+  Transferencias con dos apuntes atómicos y comisión opcional; `kind=TRANSFER|ADJUSTMENT`
+  afecta saldos pero no ingresos/gastos/presupuestos. `operationId` protege las partes contra CRUD individual.
+  Conciliación compara saldo actual esperado y observado, conserva ajuste y motivo; futuros solo proyectan.
+  Recurrencias mensuales de ejecución manual, día 31 ajustable al fin de mes; clave única por período
+  conservada tras borrar el movimiento y tras restaurar. Cambios afectan solo períodos pendientes.
+  Respaldos JSON v2 coherentes y restauración con vista previa, contraseña, remapeo de IDs y rollback.
+  Se admite v1 sin operaciones especiales. Nuevas mutaciones usan `withUserTransaction` para serializar
+  acciones y restauraciones del mismo usuario. Android continúa offline sin estas cuatro funciones nuevas.
+
 - [x] Web: landing + login + panel (7 vistas) + MySQL + API en capas + 63 tests + CI
 - [x] Android: setup (Gradle, Hilt, Room, Compose) + módulo **Categorías**
 - [x] Android: módulo **Movimientos** (BD v3, pantalla inicial con barra inferior)

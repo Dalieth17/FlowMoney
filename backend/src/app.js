@@ -13,6 +13,7 @@ function createApp() {
   app.set('trust proxy', config.trustProxy);
 
   app.use(helmet());
+  app.use('/api/finance/backup', express.json({ limit: '20mb' }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 

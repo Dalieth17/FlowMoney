@@ -1,7 +1,7 @@
 // Acceso a datos de movimientos (ingresos y gastos).
 const { pool } = require('../db/pool');
 
-const COLUMNS = 'id, amount, description, date, type, category_id, account_id, note';
+const COLUMNS = 'id, amount, description, date, type, category_id, account_id, note, kind, operation_id';
 
 const toTransaction = (row) => ({
   id: row.id,
@@ -12,6 +12,8 @@ const toTransaction = (row) => ({
   categoryId: row.category_id,
   accountId: row.account_id,
   note: row.note || '',
+  kind: row.kind,
+  operationId: row.operation_id,
 });
 
 async function listByUser(userId, db = pool) {
@@ -31,11 +33,29 @@ async function findOwned(id, userId, db = pool, { lock = false } = {}) {
 
 async function create(userId, tx, db = pool) {
   const [result] = await db.query(
-    `INSERT INTO transactions (user_id, amount, description, date, type, category_id, account_id, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [userId, tx.amount, tx.description, tx.date, tx.type, tx.categoryId, tx.accountId ?? null, tx.note ?? ''],
+    `INSERT INTO transactions (user_id, amount, description, date, type, category_id, account_id, note, kind, operation_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      userId,
+      tx.amount,
+      tx.description,
+      tx.date,
+      tx.type,
+      tx.categoryId,
+      tx.accountId ?? null,
+      tx.note ?? '',
+      tx.kind || 'NORMAL',
+      tx.operationId || null,
+    ],
   );
-  return { id: result.insertId, ...tx, accountId: tx.accountId ?? null, note: tx.note ?? '' };
+  return {
+    ...tx,
+    id: result.insertId,
+    accountId: tx.accountId ?? null,
+    note: tx.note ?? '',
+    kind: tx.kind || 'NORMAL',
+    operationId: tx.operationId || null,
+  };
 }
 
 async function update(id, userId, tx, db = pool) {

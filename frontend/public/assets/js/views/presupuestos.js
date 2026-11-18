@@ -4,7 +4,7 @@ import { toast, runAction } from '../ui/feedback.js';
 import { budgetMeter, sumPill } from '../ui/widgets.js';
 import { store } from '../core/store.js';
 import { money, monthLabel } from '../core/format.js';
-import { inMonth, spentInCategory, budgetStatus, BUDGET_WARNING_PCT } from '../domain/selectors.js';
+import { inMonth, spentInCategory, budgetStatus, BUDGET_WARNING_PCT, totals } from '../domain/selectors.js';
 
 // Las categorías de ingreso no llevan presupuesto de gasto.
 const INCOME_CATEGORIES = new Set(['Salario']);
@@ -13,7 +13,7 @@ export function render(root, { month, year }) {
   const list = inMonth(store.transactions, month, year);
   const categories = store.categories.filter((c) => !INCOME_CATEGORIES.has(c.name));
   const budgeted = store.budgets.filter((b) => b.month === month && b.year === year).reduce((a, b) => a + b.amount, 0);
-  const spent = list.filter((t) => t.type === 'EXPENSE').reduce((a, t) => a + t.amount, 0);
+  const spent = totals(list).expense;
 
   mount(
     root,

@@ -12,6 +12,7 @@ import {
   monthlySeries,
   availableToSpend,
   dailyExpense,
+  spentInCategory,
 } from '../public/assets/js/domain/selectors.js';
 
 const at = (y, m, d) => Date.UTC(y, m, d, 17);
@@ -70,6 +71,35 @@ describe('budgetStatus', () => {
 });
 
 describe('accountBalances', () => {
+  test('transferencias y ajustes afectan saldos pero no reportes; futuros solo proyectan', () => {
+    const now = Date.UTC(2026, 10, 18, 17);
+    const list = [
+      tx(1, 'EXPENSE', 100, { kind: 'TRANSFER' }),
+      tx(2, 'INCOME', 100, { kind: 'TRANSFER', accountId: 2 }),
+      tx(3, 'EXPENSE', 2, { kind: 'NORMAL' }),
+      tx(4, 'INCOME', 7, { kind: 'ADJUSTMENT' }),
+      tx(5, 'INCOME', 999, { date: Date.UTC(2099, 0, 1, 17) }),
+    ];
+    assert.deepEqual(totals(inMonth(list, 10, 2026)), { income: 0, expense: 2, balance: -2 });
+    assert.equal(spentInCategory(inMonth(list, 10, 2026), 1), 2);
+    assert.equal(expenseByCategory(inMonth(list, 10, 2026), [{ id: 1 }])[0].value, 2);
+    assert.equal(
+      weeklyFlow(inMonth(list, 10, 2026), 10, 2026).reduce((n, w) => n + w.expense, 0),
+      2,
+    );
+    assert.equal(dailyExpense(list, 10, 2026).at(-1).cumulative, 2);
+    const [a, b] = accountBalances(
+      [
+        { id: 1, initialBalance: 500 },
+        { id: 2, initialBalance: 0 },
+      ],
+      list,
+      now,
+    );
+    assert.equal(a.balance, 405);
+    assert.equal(a.projectedBalance, 1404);
+    assert.equal(b.balance, 100);
+  });
   test('saldo = saldo inicial + ingresos − gastos de esa cuenta', () => {
     const accounts = [
       { id: 1, name: 'Banco', type: 'BANK', initialBalance: 500 },
