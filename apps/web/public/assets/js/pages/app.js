@@ -1,7 +1,7 @@
 // Punto de entrada del panel (app.html): carga los datos, registra las vistas y arranca el router.
 import { h, clear } from '../ui/dom.js';
 import { store } from '../core/store.js';
-import { defineRoutes, mountRouter, render, shiftMonth } from '../core/router.js';
+import { defineRoutes, mountRouter, render, shiftMonth, goToCurrentMonth } from '../core/router.js';
 import { monthLabel } from '../core/format.js';
 import { openMovementForm } from '../forms/movementForm.js';
 import { mountThemeSwitches, THEME_EVENT } from '../core/theme.js';
@@ -54,6 +54,7 @@ async function init() {
   $('new-mv').addEventListener('click', () => openMovementForm());
   $('prev-month').addEventListener('click', () => shiftMonth(-1));
   $('next-month').addEventListener('click', () => shiftMonth(1));
+  $('current-month').addEventListener('click', goToCurrentMonth);
   $('logout').addEventListener('click', () => store.logout());
 
   try {
@@ -71,6 +72,7 @@ async function init() {
     title: $('view-title'),
     monthNav: $('month-nav'),
     monthLabel: $('month-label'),
+    currentMonth: $('current-month'),
     formatPeriod: ({ month, year }) => monthLabel(month, year),
   });
   store.subscribe(() => {

@@ -36,6 +36,13 @@ export function shiftMonth(delta) {
   render();
 }
 
+export function goToCurrentMonth() {
+  const current = transactionDate();
+  nav.month = current.getMonth();
+  nav.year = current.getFullYear();
+  render();
+}
+
 export function render() {
   const route = routes.get(nav.route);
   if (!route || !els) return;
@@ -43,6 +50,14 @@ export function render() {
   document.title = `${route.title} · FlowMoney`;
   els.monthNav.hidden = !route.monthScoped;
   els.monthLabel.textContent = els.formatPeriod(getPeriod());
+  const current = transactionDate();
+  const isCurrent = nav.month === current.getMonth() && nav.year === current.getFullYear();
+  if (els.currentMonth) {
+    els.currentMonth.disabled = isCurrent;
+    els.currentMonth.title = isCurrent ? 'Ya estás viendo el mes actual' : 'Volver al mes actual';
+  }
+  if (isCurrent) els.monthLabel.setAttribute('aria-current', 'date');
+  else els.monthLabel.removeAttribute('aria-current');
   route.render(els.root, getPeriod());
 }
 

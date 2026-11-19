@@ -49,6 +49,13 @@ export function render(root, { month, year }) {
   const pageLabel = h('span', { 'aria-live': 'polite' });
 
   const summary = h('div', { class: 'toolbar-sum tnum', 'aria-live': 'polite' });
+  const activeFilters = h('div', {
+    class: 'active-filters',
+    role: 'group',
+    'aria-label': 'Filtros activos',
+    hidden: true,
+  });
+  const filterControls = {};
   const listHost = h('div');
   const exportButton = h(
     'button',
@@ -67,11 +74,46 @@ export function render(root, { month, year }) {
         onclick: () => {
           filters = { ...DEFAULT_FILTERS };
           render(root, { month, year });
+          root.querySelector('[aria-label="Buscar movimientos"]')?.focus();
         },
       },
       'Limpiar filtros',
     );
   const resetButton = makeResetButton();
+
+  function drawFilters() {
+    const labels = {
+      type: `Tipo: ${filters.type === 'INCOME' ? 'Ingresos' : 'Gastos'}`,
+      categoryId: `Categoría: ${store.category(Number(filters.categoryId))?.name ?? ''}`,
+      accountId: `Cuenta: ${store.account(Number(filters.accountId))?.name ?? ''}`,
+      query: `Búsqueda: “${filters.query}”`,
+    };
+    activeFilters.hidden = !isFiltered();
+    activeFilters.replaceChildren(
+      ...Object.keys(DEFAULT_FILTERS)
+        .filter((key) => filters[key] !== DEFAULT_FILTERS[key])
+        .map((key) =>
+          h(
+            'button',
+            {
+              type: 'button',
+              class: 'filter-chip',
+              title: `Quitar ${labels[key]}`,
+              'aria-label': `Quitar filtro ${labels[key]}`,
+              onclick: () => {
+                filters[key] = DEFAULT_FILTERS[key];
+                const control = filterControls[key];
+                control.value = filters[key];
+                page = 0;
+                draw();
+                control.focus();
+              },
+            },
+            [h('span', { class: 'filter-chip-text' }, labels[key]), h('span', { 'aria-hidden': 'true' }, '×')],
+          ),
+        ),
+    );
+  }
 
   function draw() {
     visible = filterTransactions(monthList, filters);
@@ -99,6 +141,8 @@ export function render(root, { month, year }) {
     );
     exportButton.disabled = visible.length === 0;
     resetButton.hidden = !isFiltered();
+    drawFilters();
+    exportButton.title = `Exportar ${visible.length} movimientos${isFiltered() ? ' filtrados' : ' del mes'}`;
     listHost.append(
       h('nav', { class: 'toolbar', 'aria-label': 'Páginas de movimientos' }, [previous, pageLabel, next]),
     );
@@ -111,8 +155,10 @@ export function render(root, { month, year }) {
     value: filters.query,
     'aria-label': 'Buscar movimientos',
   });
+  filterControls.query = search;
   search.addEventListener('input', () => {
     filters.query = search.value;
+    page = 0;
     draw();
   });
 
@@ -126,8 +172,10 @@ export function render(root, { month, year }) {
     );
     el.addEventListener('change', () => {
       filters[key] = el.value;
+      page = 0;
       draw();
     });
+    filterControls[key] = el;
     return el;
   };
 
@@ -150,6 +198,7 @@ export function render(root, { month, year }) {
       ]),
       h('div', { class: 'toolbar-end' }, [summary, exportButton]),
     ]),
+    activeFilters,
     listHost,
   );
   draw();

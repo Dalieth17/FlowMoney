@@ -108,7 +108,12 @@ export function confirmDialog(message, { confirmText = 'Eliminar', danger = true
  * muestra el error si falla y devuelve true si salió bien.
  */
 export async function runAction(button, action) {
-  if (button) button.disabled = true;
+  if (button?.getAttribute('aria-busy') === 'true') return false;
+  const previousBusy = button?.getAttribute('aria-busy');
+  if (button) {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+  }
   try {
     await action();
     return true;
@@ -116,6 +121,10 @@ export async function runAction(button, action) {
     toastError(err);
     return false;
   } finally {
+    if (button) {
+      if (previousBusy == null) button.removeAttribute('aria-busy');
+      else button.setAttribute('aria-busy', previousBusy);
+    }
     if (button?.isConnected) button.disabled = false;
   }
 }

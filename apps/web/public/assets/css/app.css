@@ -161,6 +161,7 @@ body {
   top: 0;
   z-index: 20;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 20px;
   padding: 16px 32px;
@@ -197,6 +198,21 @@ body {
 .month-nav button:hover {
   background: var(--card-2);
   color: var(--pine);
+}
+.month-nav .current-month {
+  width: auto;
+  padding: 0 10px;
+  border-left: 1px solid var(--line);
+  border-radius: 0 8px 8px 0;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.month-nav button:disabled {
+  color: var(--muted);
+  background: none;
+  cursor: default;
+  opacity: 0.6;
 }
 #month-label {
   min-width: 140px;
@@ -272,6 +288,25 @@ body {
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
+}
+.btn[aria-busy='true'] {
+  cursor: progress;
+  opacity: 0.8;
+}
+.btn[aria-busy='true']::before {
+  content: '';
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: action-spin 0.8s linear infinite;
+}
+@keyframes action-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .icon-btn {
   border: 0;
@@ -931,6 +966,37 @@ body {
 }
 
 /* toolbar / filters */
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: -10px;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 11px;
+  color: var(--ink-soft);
+  background: var(--card-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+.filter-chip:hover {
+  border-color: var(--pine);
+  color: var(--ink);
+}
+.filter-chip-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .toolbar {
   display: flex;
   align-items: center;
@@ -957,15 +1023,21 @@ body {
 }
 .toolbar-end {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 16px;
   margin-left: auto;
 }
 .toolbar-sum {
   display: flex;
+  flex-wrap: wrap;
   gap: 14px;
   font-weight: 600;
   font-size: 14px;
+}
+.toolbar-sum > span,
+.toolbar-end .btn {
+  white-space: nowrap;
 }
 .toolbar-sum .count {
   color: var(--muted);
@@ -1571,6 +1643,17 @@ textarea.input {
   .topbar {
     padding: 14px 16px;
     flex-wrap: wrap;
+  }
+  .month-nav {
+    gap: 3px;
+    max-width: 100%;
+  }
+  #month-label {
+    min-width: 0;
+    font-size: 13px;
+  }
+  .month-nav .current-month {
+    padding-inline: 8px;
   }
   .input.search {
     width: 100%;

@@ -106,6 +106,11 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 
 ## Estado
 
+- Ayudas web: `goToCurrentMonth()` y botón Mes actual (deshabilitado en el período actual).
+  Movimientos muestra chips de filtros individuales, devuelve foco al control al quitarlos y
+  reinicia la paginación al filtrar. `runAction` marca `aria-busy`, muestra spinner por CSS y
+  evita ejecutar dos veces la acción del mismo botón mientras está pendiente.
+
 - Resumen web: `domain/spendingChart.js` agrega gastos diarios reales/programados del mes
   (sin proyección por presupuesto); modelo común para `ui/spendingChart.js`, SVG y tabla.
   `columnsScene.js` crea geometría proporcional al gasto diario, omite ceros y usa cámara

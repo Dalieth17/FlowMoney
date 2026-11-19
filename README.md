@@ -108,6 +108,11 @@ Los DDL de MySQL no ofrecen rollback conjunto: respalda la base antes de actuali
 
 ## Arquitectura
 
+Pequeñas ayudas de uso: el selector de fechas incluye **Mes actual** para regresar de un salto;
+en Movimientos, los filtros activos aparecen como etiquetas que puedes quitar individualmente.
+Los botones muestran un indicador mientras procesan una acción e impiden repetir esa misma
+acción antes de que termine. Las animaciones respetan la preferencia de movimiento reducido.
+
 El gráfico 3D de **Resumen → Gastos por día** usa únicamente los movimientos del mes
 seleccionado: la altura de cada columna representa el gasto de ese día, con escala monetaria
 visible. Los días sin gastos no generan columnas y los gastos registrados para fechas futuras
