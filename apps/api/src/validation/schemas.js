@@ -48,6 +48,11 @@ const loginSchema = z.object({
   email,
   password: z.string().min(1, 'Escribe tu contraseña').max(128),
 });
+const forgotPasswordSchema = z.object({ email });
+const resetPasswordSchema = z.object({
+  token: z.string().regex(/^[A-Za-z0-9_-]{43}$/, 'Enlace de recuperación no válido'),
+  password,
+});
 
 const profileSchema = z.object({
   name: personName,
@@ -150,12 +155,20 @@ const transactionQuerySchema = z
   })
   .refine((q) => q.from == null || q.to == null || q.from <= q.to, 'Rango de fechas no válido');
 
+const monthlyReportQuery = z.object({
+  month: z.coerce.number().int().min(0).max(11),
+  year: z.coerce.number().int().min(2000).max(2100),
+  accountId: z.union([z.literal('none'), positiveId('Cuenta no válida')]).optional(),
+});
+
 module.exports = {
   CURRENCIES,
   TRANSACTION_TYPES,
   ACCOUNT_TYPES,
   registerSchema,
   loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
   profileSchema,
   changePasswordSchema,
   deleteAccountSchema,
@@ -165,4 +178,5 @@ module.exports = {
   budgetSchema,
   idParamSchema,
   transactionQuerySchema,
+  monthlyReportQuery,
 };

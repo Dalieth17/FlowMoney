@@ -10,4 +10,11 @@ const authLimiter = rateLimit({
   message: { error: 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.' },
 });
 
-module.exports = { authLimiter };
+const recoveryLimiter = rateLimit({
+  windowMs: config.rateLimit.authWindowMs,
+  limit: config.rateLimit.recoveryMax,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes de recuperación. Espera unos minutos e inténtalo de nuevo.' },
+});
+module.exports = { authLimiter, recoveryLimiter };

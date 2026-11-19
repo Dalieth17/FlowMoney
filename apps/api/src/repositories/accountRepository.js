@@ -20,6 +20,25 @@ async function listByUser(userId, db = pool) {
   return rows.map(toAccount);
 }
 
+async function balancesByUser(userId, through, db = pool) {
+  const [rows] = await db.query(
+    `SELECT a.id,a.name,a.type,a.initial_balance,
+    a.initial_balance + COALESCE(SUM(CASE WHEN t.date <= ? THEN
+      CASE WHEN t.type='INCOME' THEN t.amount ELSE -t.amount END ELSE 0 END),0) AS current_balance,
+    a.initial_balance + COALESCE(SUM(CASE WHEN t.type='INCOME' THEN t.amount ELSE -t.amount END),0) AS projected_balance,
+    COUNT(t.id) AS tx_count
+    FROM accounts a LEFT JOIN transactions t ON t.account_id=a.id AND t.user_id=a.user_id
+    WHERE a.user_id=? GROUP BY a.id,a.name,a.type,a.initial_balance ORDER BY a.id`,
+    [through, userId],
+  );
+  return rows.map((row) => ({
+    ...toAccount(row),
+    currentBalance: Number(row.current_balance),
+    projectedBalance: Number(row.projected_balance),
+    count: Number(row.tx_count),
+  }));
+}
+
 async function findOwned(id, userId, db = pool, { lock } = {}) {
   const [rows] = await db.query(`SELECT ${COLUMNS} FROM accounts WHERE id = ? AND user_id = ?${lockClause(lock)}`, [
     id,
@@ -78,6 +97,7 @@ async function removeAllByUser(userId, db = pool) {
 }
 
 module.exports = {
+  balancesByUser,
   listByUser,
   findOwned,
   countByUser,

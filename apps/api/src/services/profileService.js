@@ -4,6 +4,7 @@ const { hashPassword, verifyPassword } = require('../utils/password');
 const userRepository = require('../repositories/userRepository');
 const sessionRepository = require('../repositories/sessionRepository');
 const { createSession } = require('./sessionService');
+const passwordResets = require('../repositories/passwordResetRepository');
 const { withUserTransaction, pool } = require('../db/pool');
 const currencyRepository = require('../repositories/currencyRepository');
 const exchangeRate = require('./exchangeRateService');
@@ -57,6 +58,7 @@ async function changePassword(userId, { currentPassword, newPassword }) {
     }
     await userRepository.updatePassword(userId, newHash, conn);
     await sessionRepository.removeAllByUser(userId, conn);
+    await passwordResets.removeByUser(userId, conn);
     return createSession(userId, conn);
   });
 }

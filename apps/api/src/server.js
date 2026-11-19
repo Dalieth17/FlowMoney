@@ -5,6 +5,8 @@ const createApp = require('./app');
 const { waitForDatabase, runMigrations } = require('./db/migrate');
 const { closePool } = require('./db/pool');
 const sessionRepository = require('./repositories/sessionRepository');
+const passwordResets = require('./repositories/passwordResetRepository');
+const mail = require('./services/mailService');
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -12,7 +14,9 @@ async function start() {
   await waitForDatabase();
   await runMigrations();
   const cleanSessions = () =>
-    sessionRepository.removeExpired().catch((err) => logger.error('Limpieza de sesiones:', err));
+    Promise.all([sessionRepository.removeExpired(), passwordResets.removeExpired()]).catch((err) =>
+      logger.error('Limpieza de autenticación:', err),
+    );
   await cleanSessions();
   const cleanupTimer = setInterval(cleanSessions, 60_000);
   cleanupTimer.unref();
@@ -24,6 +28,7 @@ async function start() {
   // Apagado ordenado: dejamos terminar las peticiones en curso y cerramos el pool.
   const shutdown = (signal) => {
     clearInterval(cleanupTimer);
+    mail.close();
     logger.info(`${signal} recibido, cerrando…`);
     server.close(async () => {
       await closePool();

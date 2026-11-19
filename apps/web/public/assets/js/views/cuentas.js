@@ -4,14 +4,43 @@ import { toast, confirmDialog, runAction } from '../ui/feedback.js';
 import { statCard } from '../ui/widgets.js';
 import { store } from '../core/store.js';
 import { money, signedBalance } from '../core/format.js';
-import { accountBalances } from '../domain/selectors.js';
+import { api } from '../core/api.js';
 import { ACCOUNT_TYPES } from '../domain/accountTypes.js';
 import { openAccountForm } from '../forms/accountForm.js';
 
-export function render(root) {
-  const rows = accountBalances(store.accounts, store.transactions);
-  const total = rows.reduce((acc, r) => acc + r.balance, 0);
-  const savings = rows.filter((r) => r.account.type === 'SAVINGS').reduce((acc, r) => acc + r.balance, 0);
+const renders = new WeakMap();
+export async function render(root) {
+  const token = Symbol();
+  renders.set(root, token);
+  const currency = store.user.currency;
+  const active = () =>
+    root.isConnected &&
+    location.hash === '#/cuentas' &&
+    renders.get(root) === token &&
+    store.user.currency === currency;
+  mount(root, h('p', { role: 'status' }, 'Cargando saldos…'));
+  let rows;
+  try {
+    const accounts = await api.get('/accounts/balances');
+    if (!active()) return;
+    rows = accounts.map((account) => ({
+      account,
+      balance: account.currentBalance,
+      projectedBalance: account.projectedBalance,
+      count: account.count,
+    }));
+  } catch (err) {
+    if (active())
+      mount(
+        root,
+        h('p', { role: 'alert' }, err.message),
+        h('button', { class: 'btn btn-ghost sm', onclick: () => render(root) }, 'Reintentar'),
+      );
+    return;
+  }
+  const sum = (list) => list.reduce((acc, r) => acc + Math.round(r.balance * 100), 0) / 100;
+  const total = sum(rows);
+  const savings = sum(rows.filter((r) => r.account.type === 'SAVINGS'));
   const unassigned = store.transactions.filter((t) => t.accountId == null).length;
 
   mount(

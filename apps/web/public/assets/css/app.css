@@ -686,6 +686,36 @@ body {
 .chart-pad {
   margin: 2px -4px -4px;
 }
+.account-chart-scroll,
+.report-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.report-content {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.report-table caption {
+  text-align: left;
+  margin: 14px 0 8px;
+}
+.report-table th,
+.report-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: right;
+}
+.report-table th:first-child {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
 
 /* charts */
 .bars-svg {
@@ -1665,6 +1695,13 @@ textarea.input {
 
 /* ---------- Print (Exportar PDF) ---------- */
 @media print {
+  .no-print,
+  .account-chart-scroll {
+    display: none !important;
+  }
+  .report-table-wrap {
+    overflow: visible;
+  }
   .sidebar,
   .topbar .month-nav,
   #new-mv,

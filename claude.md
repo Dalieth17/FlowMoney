@@ -155,7 +155,7 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
   Se admite v1 sin operaciones especiales. Nuevas mutaciones usan `withUserTransaction` para serializar
   acciones y restauraciones del mismo usuario. Android continúa offline sin estas cuatro funciones nuevas.
 
-- [x] Web: landing + login + panel (7 vistas) + MySQL + API en capas + 63 tests + CI
+- [x] Web: landing + login/recuperación + panel (9 vistas) + MySQL + API en capas + tests + CI
 - [x] Android: setup (Gradle, Hilt, Room, Compose) + módulo **Categorías**
 - [x] Android: módulo **Movimientos** (BD v3, pantalla inicial con barra inferior)
 - [x] Android: módulo **Presupuestos** (BD v4: `budgets` por categoría y mes `aaaamm`; avisos 80/100 %)
@@ -163,4 +163,16 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 - [x] Android: módulo **IA** (sugerencia de categoría + asesor con nota, recomendaciones y preguntas, todo local)
 - [x] Moneda elegible: pesos colombianos (COP) o dólares (USD) en web y Android
 - [x] Rediseño: temas Verde y negro / Blanco y negro elegibles, 3D (Three.js en web, Canvas en Android)
-- Ideas web: recuperar contraseña por correo, movimientos recurrentes, gráfico por cuenta.
+- Recuperación web: `recover.html`, `pages/recover.js`, `passwordResetService`, `mailService`
+  (Nodemailer) y migración 010. Enlace aleatorio de 32 bytes, solo hash en MySQL, 30 minutos,
+  consumo único bajo bloqueo del usuario; revoca sesiones y enlaces al cambiar contraseña.
+  Respuesta pública genérica, límite por IP y enfriamiento de un minuto por cuenta.
+  SMTP de pruebas Mailpit en Compose (UI solo localhost:8025); producción requiere SMTP y
+  `PUBLIC_APP_URL` HTTPS. Nunca construir enlaces desde Host ni registrar tokens.
+- Reportes web: `/reports/monthly?month=0&year=2026&accountId=ID|none` devuelve agregados SQL,
+  categorías, seis meses y actividad por cuenta; sin filtro incluye todas. Fechas de Colombia,
+  rangos [inicio, siguiente mes); NORMAL incluye comisiones y excluye transferencias/ajustes.
+  `/accounts/balances` y `financeService.balances` usan SUM DECIMAL en MySQL, sin cargar movimientos.
+  Vistas asíncronas descartan respuestas de otra ruta, período, render o moneda; PDF respeta filtro.
+  Resumen y otras vistas siguen utilizando el histórico local cargado por páginas.
+- Estado detallado y alcance Android offline: `docs/features.md`.

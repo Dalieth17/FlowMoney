@@ -20,12 +20,36 @@ const toInt = (value, fallback) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
+const mailHost = process.env.SMTP_HOST || (env === 'development' ? 'mailpit' : '');
+const publicUrl = new URL(process.env.PUBLIC_APP_URL || `http://localhost:${process.env.WEB_PORT || 8080}`);
+if (
+  !['http:', 'https:'].includes(publicUrl.protocol) ||
+  publicUrl.username ||
+  publicUrl.password ||
+  publicUrl.search ||
+  publicUrl.hash ||
+  publicUrl.pathname !== '/'
+)
+  throw new Error('PUBLIC_APP_URL debe ser el origen HTTP/HTTPS del sitio, sin ruta ni credenciales');
+if (env === 'production' && mailHost && (!process.env.PUBLIC_APP_URL || publicUrl.protocol !== 'https:'))
+  throw new Error('Configura PUBLIC_APP_URL con HTTPS para los enlaces de recuperación en producción');
+
 const config = Object.freeze({
   env,
   isProduction: env === 'production',
   isTest: env === 'test',
   port: toInt(process.env.PORT, 3000),
   trustProxy: Number(trustProxy),
+  publicUrl: publicUrl.origin,
+  mail: Object.freeze({
+    enabled: Boolean(mailHost),
+    host: mailHost,
+    port: toInt(process.env.SMTP_PORT, 1025),
+    secure: process.env.SMTP_SECURE === 'true',
+    user: process.env.SMTP_USER || '',
+    password: process.env.SMTP_PASSWORD || '',
+    from: process.env.SMTP_FROM || 'FlowMoney <no-reply@flowmoney.local>',
+  }),
 
   db: Object.freeze({
     host: process.env.DB_HOST || 'localhost',
@@ -53,6 +77,7 @@ const config = Object.freeze({
     authWindowMs: 15 * 60 * 1000,
     // Intentos de login/registro por IP en la ventana.
     authMax: toInt(process.env.AUTH_RATE_LIMIT, env === 'test' ? 1000 : 20),
+    recoveryMax: toInt(process.env.RECOVERY_RATE_LIMIT, env === 'test' ? 1000 : 5),
   }),
 });
 

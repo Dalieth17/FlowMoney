@@ -29,6 +29,24 @@ docker compose up --build
 
 Abre http://localhost:8080 → **Crear cuenta** → el panel arranca con un mes de ejemplo.
 
+### Recuperar acceso a la cuenta
+
+En **Ingresar → ¿Olvidaste tu contraseña?**, solicita un enlace con tu correo. Dura 30 minutos,
+solo funciona una vez y al cambiar la contraseña cierra las sesiones de todos los dispositivos.
+Cambiar la contraseña desde Perfil también invalida los enlaces pendientes. Se limita la solicitud
+por IP y se espera un minuto entre correos para la misma cuenta; la respuesta no revela si existe.
+
+En localhost, Compose inicia **Mailpit**: abre http://localhost:8025 para leer el correo de prueba.
+Los mensajes se capturan ahí y no se envían a tu bandeja real. Puedes usar cualquier correo de
+pruebas al registrarte. `MAIL_UI_PORT` cambia el puerto del buzón local.
+
+En producción configura `PUBLIC_APP_URL=https://tu-dominio`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`,
+`SMTP_PASSWORD` y `SMTP_FROM` de tu proveedor de correo. Para 587 usa `SMTP_SECURE=false`
+(STARTTLS obligatorio en producción); para 465 usa `SMTP_SECURE=true`. El origen público se valida
+al arrancar y nunca se toma de cabeceras enviadas por el cliente. Sin SMTP configurado en producción
+se indica que la recuperación no está disponible. Si ejecutas Node sin Compose en desarrollo,
+apunta `SMTP_HOST`/`SMTP_PORT` a un servidor SMTP accesible desde ese proceso.
+
 ### Conversión entre pesos y dólares (web)
 
 En **Perfil → Moneda**, al elegir COP o USD se consulta automáticamente la tasa de
@@ -75,8 +93,12 @@ La lista web muestra 50 movimientos por página y carga el histórico en peticio
 `GET /api/transactions/page?limit=100&beforeId=123&from=...&to=...` devuelve `{items,nextCursor}`,
 ordenado por ID descendente, con rangos en epoch ms e inclusivos. `nextCursor=null` indica el final.
 La carga inicial usa `/api/bootstrap?transactions=none`. Se mantiene el bootstrap completo para
-compatibilidad. Los reportes y saldos todavía calculan sobre todo el histórico en memoria;
-queda pendiente trasladar sus agregaciones al servidor para grandes volúmenes.
+compatibilidad. **Reportes** consulta agregados de MySQL para el mes y los últimos seis meses,
+con filtro por cuenta o por movimientos sin cuenta, distribución por categoría y actividad por
+cuenta con tabla de importes. Se puede imprimir el período filtrado como PDF.
+**Cuentas** y las conciliaciones también consultan saldos agregados en MySQL, incluidos saldos
+actuales, proyectados y número de movimientos. Resumen y los filtros locales de Movimientos
+todavía utilizan el histórico cargado en el navegador.
 
 Desde esta versión, las altas, ediciones y borrados individuales de movimientos dejan un
 historial atómico en `transaction_history` (migración 006). Se consulta con
@@ -199,18 +221,21 @@ el build de las imágenes en cada push a `DEV`, `QA` y `main`, y en cada pull re
 
 Todas las rutas (salvo `health` y `auth`) requieren sesión y operan solo sobre los datos del usuario.
 
-| Método              | Ruta                                     | Descripción                               |
-| ------------------- | ---------------------------------------- | ----------------------------------------- |
-| GET                 | `/api/health`                            | Estado de la API                          |
-| POST                | `/api/auth/register`, `/api/auth/login`  | Crea cuenta / inicia sesión               |
-| POST · GET          | `/api/auth/logout` · `/api/auth/me`      | Cierra sesión · usuario actual            |
-| GET                 | `/api/bootstrap`                         | Todos los datos del usuario               |
-| GET · PUT           | `/api/profile` · `/api/profile/password` | Perfil y moneda · cambio de contraseña    |
-| GET POST PUT DELETE | `/api/transactions[/:id]`                | Movimientos                               |
-| GET POST PUT DELETE | `/api/accounts[/:id]`                    | Cuentas                                   |
-| GET POST PUT DELETE | `/api/categories[/:id]`                  | Categorías                                |
-| GET · PUT           | `/api/budgets`                           | Presupuestos (PUT con monto 0 lo elimina) |
-| POST                | `/api/data/reset`                        | Restaura el mes de ejemplo                |
+| Método              | Ruta                                                    | Descripción                               |
+| ------------------- | ------------------------------------------------------- | ----------------------------------------- |
+| GET                 | `/api/health`                                           | Estado de la API                          |
+| POST                | `/api/auth/register`, `/api/auth/login`                 | Crea cuenta / inicia sesión               |
+| POST                | `/api/auth/forgot-password`, `/api/auth/reset-password` | Solicita enlace / cambia contraseña       |
+| POST · GET          | `/api/auth/logout` · `/api/auth/me`                     | Cierra sesión · usuario actual            |
+| GET                 | `/api/bootstrap`                                        | Todos los datos del usuario               |
+| GET · PUT           | `/api/profile` · `/api/profile/password`                | Perfil y moneda · cambio de contraseña    |
+| GET POST PUT DELETE | `/api/transactions[/:id]`                               | Movimientos                               |
+| GET POST PUT DELETE | `/api/accounts[/:id]`                                   | Cuentas                                   |
+| GET                 | `/api/accounts/balances`                                | Saldos SQL actuales/proyectados y conteos |
+| GET                 | `/api/reports/monthly?month=0&year=2026&accountId=none` | Reporte SQL; cuenta opcional, mes 0–11    |
+| GET POST PUT DELETE | `/api/categories[/:id]`                                 | Categorías                                |
+| GET · PUT           | `/api/budgets`                                          | Presupuestos (PUT con monto 0 lo elimina) |
+| POST                | `/api/data/reset`                                       | Restaura el mes de ejemplo                |
 
 Errores: `{ "error": "mensaje en español" }` con 400 (validación), 401, 404, 409 (regla de negocio) o 429.
 

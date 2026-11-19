@@ -33,6 +33,11 @@ Para arrancar el conjunto completo y cargar `.env` mediante Compose:
 docker compose up --build
 ```
 
+El buzón de desarrollo está en `http://localhost:8025`. Las pruebas de recuperación levantan
+un servidor SMTP aislado en un puerto aleatorio y comprueban el mensaje entregado; nunca envían
+correos a internet. Si ejecutas la API fuera de Compose, configura SMTP explícitamente: el nombre
+`mailpit` solo se resuelve dentro de la red de Compose.
+
 ## Android
 
 Requiere JDK 17 o superior y Android SDK.

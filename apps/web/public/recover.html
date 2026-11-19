@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>FlowMoney · Recuperar contraseña</title>
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <script src="assets/js/theme-init.js"></script>
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/auth.css">
+  <script type="module" src="assets/js/pages/recover.js"></script>
+</head>
+<body>
+  <aside class="brand-panel">
+    <a class="bp-brand" href="index.html">FlowMoney</a>
+    <div class="bp-center"><h1>Vuelve a tu cuenta.</h1><p>Recupera el acceso y conserva tu historial, cuentas y presupuestos.</p></div>
+  </aside>
+  <main class="form-panel">
+    <div class="theme-corner" data-theme-switch></div>
+    <div class="auth-card">
+      <h2 id="recovery-title">Recuperar contraseña</h2>
+      <p class="auth-sub" id="recovery-subtitle">Te enviaremos un enlace para elegir una nueva contraseña.</p>
+      <div id="recovery-error" class="auth-err" role="alert" hidden></div>
+      <p id="recovery-message" class="note-banner" role="status" hidden></p>
+      <form id="request-form" class="auth-form" novalidate>
+        <div class="field"><label class="field-label" for="recovery-email">Correo de tu cuenta</label><input id="recovery-email" class="input" type="email" maxlength="160" autocomplete="email" required></div>
+        <button class="btn btn-primary" type="submit">Enviar enlace</button>
+        <p class="field-hint">Si ya lo pediste, espera un minuto antes de solicitar otro enlace.</p>
+      </form>
+      <form id="reset-form" class="auth-form" novalidate hidden>
+        <div class="field"><label class="field-label" for="new-password">Nueva contraseña</label><input id="new-password" class="input" type="password" minlength="6" maxlength="128" autocomplete="new-password" required></div>
+        <div class="field"><label class="field-label" for="confirm-password">Repite la nueva contraseña</label><input id="confirm-password" class="input" type="password" minlength="6" maxlength="128" autocomplete="new-password" required></div>
+        <button class="btn btn-primary" type="submit">Guardar contraseña</button>
+        <a class="link-btn" href="recover.html">Solicitar otro enlace</a>
+      </form>
+      <p class="auth-foot"><a href="login.html">Volver a ingresar</a></p>
+    </div>
+  </main>
+</body>
+</html>

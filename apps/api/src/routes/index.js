@@ -18,6 +18,9 @@ const { categorySchema, accountSchema, transactionSchema } = require('../validat
 const { withUserTransaction } = require('../db/pool');
 const users = require('../repositories/userRepository');
 const HttpError = require('../utils/httpError');
+const reportService = require('../services/reportService');
+const financeService = require('../services/financeService');
+const { monthlyReportQuery } = require('../validation/schemas');
 
 function buildApiRouter() {
   const router = express.Router();
@@ -28,6 +31,19 @@ function buildApiRouter() {
 
   // ---- Privadas ----
   router.use(requireAuth);
+  router.get(
+    '/reports/monthly',
+    validate(monthlyReportQuery, 'query'),
+    asyncHandler(async (req, res) => {
+      res.json(await reportService.monthly(req.userId, req.valid.query));
+    }),
+  );
+  router.get(
+    '/accounts/balances',
+    asyncHandler(async (req, res) => {
+      res.json(await withUserTransaction(req.userId, (db) => financeService.balances(req.userId, db)));
+    }),
+  );
   router.use('/goals', require('./goals.routes'));
   router.use('/finance', require('./finance.routes'));
   router.get(

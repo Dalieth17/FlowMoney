@@ -32,6 +32,7 @@ terminó pero falla la recarga, se ofrece volver a cargar los datos sin repetir 
 - Las regresiones de MySQL existentes cubren también aislamiento entre usuarios, cambio de moneda,
   transferencias, recurrencias sin duplicados y exportación/restauración de respaldos.
 
-Para volúmenes grandes sigue siendo conveniente trasladar las agregaciones de reportes al SQL.
-La app Android continúa offline: conversión de divisas, operaciones y respaldos web no son
-funcionalidades equivalentes de Android. Tampoco se añade recuperación de contraseña por correo.
+Este informe corresponde a la revisión anterior al cierre de funcionalidades. La entrega posterior
+traslada reportes/saldos a SQL y añade recuperación por correo; consulta el [estado actual](features.md).
+Android continúa offline: conversión de divisas, operaciones y respaldos web no son funciones
+equivalentes de Android.
