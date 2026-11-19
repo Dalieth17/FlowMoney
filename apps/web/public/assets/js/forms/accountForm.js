@@ -55,10 +55,10 @@ export function openAccountForm(existing) {
       editing ? store.updateAccount(existing.id, payload) : store.addAccount(payload),
     );
     if (ok) {
-      closeModal();
+      modal.close();
       toast(editing ? 'Cuenta actualizada' : 'Cuenta creada');
     }
   });
 
-  openModal(editing ? 'Editar cuenta' : 'Nueva cuenta', form);
+  const modal = openModal(editing ? 'Editar cuenta' : 'Nueva cuenta', form);
 }

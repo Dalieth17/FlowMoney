@@ -79,18 +79,24 @@ async function removeTransfer(userId, id) {
   });
 }
 async function balances(userId, db) {
-  const dayEnd = at(today()) + 7 * 60 * 60 * 1000 - 1;
+  const dayEnd = Date.parse(`${today()}T23:59:59.999-05:00`);
   const accs = await accounts.listByUser(userId, db);
   const txs = await txRepo.listByUser(userId, db);
-  return accs.map((a) => {
-    const sum = (limit) =>
-      (cents(a.initialBalance) +
-        txs
-          .filter((t) => t.accountId === a.id && t.date <= limit)
-          .reduce((v, t) => v + (t.type === 'INCOME' ? cents(t.amount) : -cents(t.amount)), 0)) /
-      100;
-    return { ...a, currentBalance: sum(dayEnd), projectedBalance: sum(Infinity) };
-  });
+  const sums = new Map(
+    accs.map((a) => [a.id, { current: cents(a.initialBalance), projected: cents(a.initialBalance) }]),
+  );
+  for (const tx of txs) {
+    const sum = sums.get(tx.accountId);
+    if (!sum) continue;
+    const delta = (tx.type === 'INCOME' ? 1 : -1) * cents(tx.amount);
+    sum.projected += delta;
+    if (tx.date <= dayEnd) sum.current += delta;
+  }
+  return accs.map((a) => ({
+    ...a,
+    currentBalance: sums.get(a.id).current / 100,
+    projectedBalance: sums.get(a.id).projected / 100,
+  }));
 }
 async function reconcile(userId, id, data) {
   return withUserTransaction(userId, async (db) => {

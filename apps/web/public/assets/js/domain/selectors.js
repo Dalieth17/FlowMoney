@@ -79,19 +79,27 @@ export function budgetStatus(spent, budget) {
 export function accountBalances(accounts, transactions, now = Date.now()) {
   const d = transactionDate(now);
   const end = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate() + 1, 5) - 1;
+  const sums = new Map(
+    accounts.map((a) => [
+      a.id,
+      { current: Math.round(a.initialBalance * 100), projected: Math.round(a.initialBalance * 100), count: 0 },
+    ]),
+  );
+  for (const tx of transactions) {
+    const sum = sums.get(tx.accountId);
+    if (!sum) continue;
+    const delta = (tx.type === 'INCOME' ? 1 : -1) * Math.round(tx.amount * 100);
+    sum.projected += delta;
+    if (tx.date <= end) sum.current += delta;
+    sum.count++;
+  }
   return accounts.map((account) => {
-    const own = transactions.filter((t) => t.accountId === account.id);
-    const balanceAt = (limit) =>
-      (Math.round(account.initialBalance * 100) +
-        own
-          .filter((t) => t.date <= limit)
-          .reduce((sum, t) => sum + (t.type === 'INCOME' ? 1 : -1) * Math.round(t.amount * 100), 0)) /
-      100;
+    const sum = sums.get(account.id);
     return {
       account,
-      balance: balanceAt(end),
-      projectedBalance: balanceAt(Infinity),
-      count: own.length,
+      balance: sum.current / 100,
+      projectedBalance: sum.projected / 100,
+      count: sum.count,
     };
   });
 }

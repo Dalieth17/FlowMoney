@@ -4,7 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const validate = require('../middleware/validate');
 const { profileSchema, changePasswordSchema, deleteAccountSchema } = require('../validation/schemas');
 const profileService = require('../services/profileService');
-const { startSession, endSession } = require('../services/sessionService');
+const { setSessionCookie, endSession } = require('../services/sessionService');
 const { authLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
@@ -37,9 +37,9 @@ router.put(
   authLimiter,
   validate(changePasswordSchema),
   asyncHandler(async (req, res) => {
-    await profileService.changePassword(req.userId, req.valid.body);
+    const token = await profileService.changePassword(req.userId, req.valid.body);
     // Todas las sesiones se revocaron; este dispositivo sigue dentro con una sesión nueva.
-    await startSession(res, req.userId);
+    setSessionCookie(res, token);
     res.status(204).end();
   }),
 );

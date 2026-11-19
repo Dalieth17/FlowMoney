@@ -43,7 +43,15 @@ export function openModal(title, content, { onClose } = {}) {
   document.addEventListener('keydown', onKey);
   active = { overlay, onKey, previousFocus, onClose };
 
-  requestAnimationFrame(() => card.querySelector('.modal-body ' + FOCUSABLE)?.focus());
+  requestAnimationFrame(() => {
+    if (active?.overlay === overlay) card.querySelector('.modal-body ' + FOCUSABLE)?.focus();
+  });
+  // Una respuesta tardía solo puede cerrar el formulario que inició su petición.
+  return {
+    close: () => {
+      if (active?.overlay === overlay) closeModal();
+    },
+  };
 }
 
 export function closeModal() {

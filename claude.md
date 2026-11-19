@@ -106,6 +106,16 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 
 ## Estado
 
+- Revisión de lógica (docs/code-review-2026-11-19.md): registro/login/cambio de contraseña
+  crean sesiones en la transacción y entregan cookies después del commit; login revalida el
+  hash bajo bloqueo sin sobrescribir claves cambiadas. Saldos en una pasada por movimientos,
+  con cierre de día colombiano correcto. `openModal()` devuelve un cierre asociado al modal;
+  formularios y recargas de metas ignoran contextos abandonados. Android empareja filtros y
+  resultados de movimientos y comprueba desbordes al interpretar precios con «millones».
+  Store centraliza mutaciones y evita aplicar respuestas antiguas después de otra revisión;
+  reinicio/conversión usan una barrera de sustitución. Si falla recargar una escritura ya guardada,
+  `syncError` ofrece reintentar solo la carga mediante el aviso del panel.
+
 - Ayudas web: `goToCurrentMonth()` y botón Mes actual (deshabilitado en el período actual).
   Movimientos muestra chips de filtros individuales, devuelve foco al control al quitarlos y
   reinicia la paginación al filtrar. `runAction` marca `aria-busy`, muestra spinner por CSS y

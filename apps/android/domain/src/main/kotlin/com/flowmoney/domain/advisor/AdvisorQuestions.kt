@@ -210,7 +210,9 @@ object AdvisorQuestions {
         val decimals = if (decimalAt >= 0) raw.substring(decimalAt + 1).filter { it.isDigit() }.padEnd(2, '0').take(2) else "00"
         if (units.isEmpty() || units.length > 12) return null
         val cents = units.toLong() * 100 + decimals.toLong()
-        return (cents * multiplier).takeIf { it > 0 }
+        // "mil" y "millones" pueden desbordar Long y convertirse en otro precio positivo.
+        if (cents <= 0 || cents > Long.MAX_VALUE / multiplier) return null
+        return cents * multiplier
     }
 
     private fun expectedIncome(report: AdvisorReport): Long = report.projection?.expectedIncomeCents ?: report.summary.incomeCents

@@ -62,3 +62,23 @@ test('muestra progreso, escapa nombres y envía aportes sin crear movimientos fi
   assert.equal(calls[0].body.type, 'ADD');
   assert.equal(calls[0].body.amount, 20);
 });
+
+test('guardar una meta y salir antes de recibir respuesta no sustituye la nueva pantalla', async () => {
+  let resolve;
+  api.post = () =>
+    new Promise((done) => {
+      resolve = done;
+    });
+  await render(root);
+  const form = [...root.querySelectorAll('form')].find((f) => f.textContent.includes('Crear meta'));
+  control(form, 'Nombre de la meta').value = 'Nueva meta';
+  control(form, 'Objetivo de ahorro').value = '500';
+  form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+  await nextTurn();
+  assert.equal(typeof resolve, 'function');
+  globalThis.location.hash = '#/resumen';
+  root.textContent = 'Resumen actual';
+  resolve({});
+  await nextTurn();
+  assert.equal(root.textContent, 'Resumen actual');
+});

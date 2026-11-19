@@ -83,12 +83,18 @@ historial atómico en `transaction_history` (migración 006). Se consulta con
 `GET /api/transactions/:id/history` (últimos 100 cambios, solo del usuario autenticado).
 No reconstruye cambios antiguos ni registra la siembra o el reinicio masivo. Al eliminar
 la cuenta también desaparece su historial. Perfil permite exportar todos los datos activos a
-JSON además del CSV de movimientos. El JSON no incluye contraseñas ni sesiones; tampoco es
-una copia de seguridad del servidor ni existe aún una importación automática.
+JSON además del CSV de movimientos. El JSON no incluye contraseñas ni sesiones ni sustituye
+una copia de seguridad del servidor. Se restaura desde Operaciones, con vista previa y contraseña.
 
 Las sesiones vencidas se limpian al arrancar y cada minuto en lotes de 1000. Las migraciones
 se serializan con un bloqueo MySQL para impedir que dos instancias las apliquen simultáneamente.
 Los DDL de MySQL no ofrecen rollback conjunto: respalda la base antes de actualizar.
+
+El registro, el ingreso y el cambio de contraseña crean sus sesiones dentro de la misma
+transacción que valida o modifica las credenciales; la cookie se envía después del commit.
+Si falla crear la sesión, también se revierte el registro o cambio de contraseña.
+Los saldos actuales incluyen todo el día civil de Colombia, hasta las 23:59:59.999;
+los movimientos posteriores afectan únicamente al saldo proyectado.
 
 ## Funciones
 

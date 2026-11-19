@@ -74,7 +74,9 @@ export async function render(root) {
   try {
     const { goals, goalEntries } = await api.get('/goals');
     if (!active()) return;
-    const reload = () => render(root);
+    const reload = () => {
+      if (root.isConnected && location.hash === '#/metas') return render(root);
+    };
     const editor = h('div');
     const cards = goals.map((goal) => {
       const p = goalProgress(goal, goalEntries);

@@ -12,6 +12,8 @@ class Store {
   #state = { user: null, categories: [], accounts: [], transactions: [], budgets: [] };
   #listeners = new Set();
   #revision = 0;
+  #replacement = Promise.resolve();
+  #syncError = null;
 
   subscribe(fn) {
     this.#listeners.add(fn);
@@ -24,9 +26,47 @@ class Store {
     this.#listeners.forEach((fn) => fn(this.#state));
   }
 
+  async #mutate(send, apply) {
+    const revision = this.#revision;
+    const result = await send();
+    if (revision === this.#revision) apply(result);
+    else {
+      // Otra respuesta o una carga completa ya modificó la caché. El resultado
+      // antiguo no se puede mezclar con IDs o importes de una versión distinta.
+      await this.#replacement;
+      try {
+        await this.load();
+      } catch {
+        // La escritura SÍ terminó: no informar que falló ni invitar a duplicarla.
+        this.#syncError =
+          'El cambio se guardó, pero no se pudieron actualizar los datos en pantalla. Vuelve a cargar antes de continuar.';
+        this.#commit({});
+      }
+    }
+    return result;
+  }
+
+  async #replace(action) {
+    const previous = this.#replacement;
+    let finish;
+    this.#replacement = new Promise((resolve) => {
+      finish = resolve;
+    });
+    this.#revision++;
+    try {
+      await previous;
+      return await action();
+    } finally {
+      finish();
+    }
+  }
+
   // ---- Lectura ----
   get user() {
     return this.#state.user;
+  }
+  get syncError() {
+    return this.#syncError;
   }
   get categories() {
     return this.#state.categories;
@@ -67,6 +107,7 @@ class Store {
         cursor = page.nextCursor;
       } while (cursor !== null);
       setCurrency(data.user.currency);
+      this.#syncError = null;
       this.#commit(data);
     } catch (err) {
       if (revision === this.#revision) throw err;
@@ -75,62 +116,91 @@ class Store {
 
   // ---- Movimientos ----
   async addTransaction(payload) {
-    const tx = await api.post('/transactions', payload);
-    this.#commit({ transactions: [tx, ...this.transactions] });
-    return tx;
+    return this.#mutate(
+      () => api.post('/transactions', payload),
+      (tx) => this.#commit({ transactions: [tx, ...this.transactions] }),
+    );
   }
   async updateTransaction(id, payload) {
-    const tx = await api.put(`/transactions/${id}`, payload);
-    this.#commit({ transactions: replaceById(this.transactions, tx) });
+    return this.#mutate(
+      () => api.put(`/transactions/${id}`, payload),
+      (tx) => this.#commit({ transactions: replaceById(this.transactions, tx) }),
+    );
   }
   async deleteTransaction(id) {
-    await api.del(`/transactions/${id}`);
-    this.#commit({ transactions: withoutId(this.transactions, id) });
+    return this.#mutate(
+      () => api.del(`/transactions/${id}`),
+      () => this.#commit({ transactions: withoutId(this.transactions, id) }),
+    );
   }
 
   // ---- Categorías ----
   async addCategory(payload) {
-    const category = await api.post('/categories', payload);
-    this.#commit({ categories: [...this.categories, category] });
+    return this.#mutate(
+      () => api.post('/categories', payload),
+      (category) => this.#commit({ categories: [...this.categories, category] }),
+    );
   }
   async updateCategory(id, payload) {
-    const category = await api.put(`/categories/${id}`, payload);
-    this.#commit({ categories: replaceById(this.categories, category) });
+    return this.#mutate(
+      () => api.put(`/categories/${id}`, payload),
+      (category) => this.#commit({ categories: replaceById(this.categories, category) }),
+    );
   }
   async deleteCategory(id) {
-    await api.del(`/categories/${id}`);
-    this.#commit({
-      categories: withoutId(this.categories, id),
-      budgets: this.budgets.filter((b) => b.categoryId !== id),
-    });
+    return this.#mutate(
+      () => api.del(`/categories/${id}`),
+      () =>
+        this.#commit({
+          categories: withoutId(this.categories, id),
+          budgets: this.budgets.filter((b) => b.categoryId !== id),
+        }),
+    );
   }
 
   // ---- Cuentas ----
   async addAccount(payload) {
-    const account = await api.post('/accounts', payload);
-    this.#commit({ accounts: [...this.accounts, account] });
+    return this.#mutate(
+      () => api.post('/accounts', payload),
+      (account) => this.#commit({ accounts: [...this.accounts, account] }),
+    );
   }
   async updateAccount(id, payload) {
-    const account = await api.put(`/accounts/${id}`, payload);
-    this.#commit({ accounts: replaceById(this.accounts, account) });
+    return this.#mutate(
+      () => api.put(`/accounts/${id}`, payload),
+      (account) => this.#commit({ accounts: replaceById(this.accounts, account) }),
+    );
   }
   async deleteAccount(id) {
-    await api.del(`/accounts/${id}`);
-    this.#commit({ accounts: withoutId(this.accounts, id) });
+    return this.#mutate(
+      () => api.del(`/accounts/${id}`),
+      () => this.#commit({ accounts: withoutId(this.accounts, id) }),
+    );
   }
 
   // ---- Presupuestos ----
   async setBudget(categoryId, month, year, amount) {
-    const saved = await api.put('/budgets', { categoryId, month, year, amount });
-    const others = this.budgets.filter((b) => !(b.categoryId === categoryId && b.month === month && b.year === year));
-    this.#commit({ budgets: saved ? [...others, saved] : others });
+    return this.#mutate(
+      () => api.put('/budgets', { categoryId, month, year, amount }),
+      (saved) => {
+        const others = this.budgets.filter(
+          (b) => !(b.categoryId === categoryId && b.month === month && b.year === year),
+        );
+        this.#commit({ budgets: saved ? [...others, saved] : others });
+      },
+    );
   }
 
   // ---- Perfil ----
   async updateProfile(payload) {
-    const { convertedData, ...user } = await api.put('/profile', payload);
-    setCurrency(user.currency);
-    this.#commit({ ...convertedData, user });
+    const apply = ({ convertedData, ...user }) => {
+      setCurrency(user.currency);
+      if (convertedData) this.#syncError = null;
+      this.#commit({ ...convertedData, user });
+    };
+    if (payload.currency !== this.user?.currency)
+      return this.#replace(async () => apply(await api.put('/profile', payload)));
+    return this.#mutate(() => api.put('/profile', payload), apply);
   }
   changePassword(payload) {
     return api.put('/profile/password', payload);
@@ -138,8 +208,10 @@ class Store {
 
   // ---- Sesión / datos ----
   async resetToSample() {
-    await api.post('/data/reset');
-    await this.load();
+    return this.#replace(async () => {
+      await api.post('/data/reset');
+      await this.load();
+    });
   }
   /** Derecho de supresión: borra la cuenta de usuario en el servidor y vuelve a la página pública. */
   async deleteProfile(password) {

@@ -61,10 +61,10 @@ export function openCategoryForm(existing) {
       editing ? store.updateCategory(existing.id, payload) : store.addCategory(payload),
     );
     if (ok) {
-      closeModal();
+      modal.close();
       toast(editing ? 'Categoría actualizada' : 'Categoría creada');
     }
   });
 
-  openModal(editing ? 'Editar categoría' : 'Nueva categoría', form);
+  const modal = openModal(editing ? 'Editar categoría' : 'Nueva categoría', form);
 }

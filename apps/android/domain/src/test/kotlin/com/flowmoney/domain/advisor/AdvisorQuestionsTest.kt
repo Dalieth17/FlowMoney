@@ -131,4 +131,12 @@ class AdvisorQuestionsTest {
         assertEquals(150_000_000L, amount("1.5M"))
         assertNull(amount("sin numeros"))
     }
+
+    @Test
+    fun `un importe con millones nunca se desborda hacia un precio distinto`() {
+        assertNull(AdvisorQuestions.parseAmount("200000000000 millones"))
+        assertNull(AdvisorQuestions.parseAmount("999999999999 millones"))
+        assertEquals(9_223_372_036_854_000_000L, AdvisorQuestions.parseAmount("92233720368.54 millones"))
+        assertNull(AdvisorQuestions.parseAmount("92233720368.55 millones"))
+    }
 }

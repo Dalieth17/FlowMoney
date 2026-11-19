@@ -37,6 +37,35 @@ const transfer = (u) => ({
 });
 const snapshot = async (u) => (await u.agent.get('/api/finance/backup').expect(200)).body;
 
+test('saldo actual incluye el último milisegundo del día colombiano y excluye el siguiente', async () => {
+  const u = await user(),
+    accountId = u.data.accounts[0].id,
+    categoryId = u.data.categories[0].id;
+  const last = Date.parse(`${finance.today()}T23:59:59.999-05:00`);
+  for (const [amount, date] of [
+    [10, last],
+    [999, last + 1],
+  ])
+    await u.agent
+      .post('/api/transactions')
+      .send({ description: 'Cierre diario', amount, date, type: 'INCOME', accountId, categoryId })
+      .expect(201);
+  const state = (await u.agent.get('/api/finance').expect(200)).body;
+  const original = u.data.accounts[0].initialBalance;
+  assert.equal(state.accounts[0].currentBalance, original + 10);
+  assert.equal(state.accounts[0].projectedBalance, original + 1009);
+  await u.agent
+    .post(`/api/finance/reconciliations/${randomUUID()}`)
+    .send({
+      accountId,
+      categoryId,
+      expectedBalance: original + 10,
+      actualBalance: original + 15,
+      note: 'Conteo nocturno',
+    })
+    .expect(200);
+});
+
 test('transferencia concurrente e idempotente, edición completa, aislamiento y borrado atómico', async () => {
   const u = await user(),
     other = await user(),

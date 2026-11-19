@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -53,7 +54,9 @@ class MovementsViewModel @Inject constructor(
     val messages: Flow<MovementsMessage> = _messages.receiveAsFlow()
 
     // Cambiar de mes o de filtro cancela la consulta anterior y abre una nueva.
-    private val transactions = filter.flatMapLatest { observeTransactions(it) }
+    private val transactions = filter.flatMapLatest { selected ->
+        observeTransactions(selected).map { selected to it }
+    }
     private val categories = observeCategories()
 
     // El formulario con la sugerencia de la IA para lo que se está escribiendo. Se deriva (no se
@@ -71,7 +74,7 @@ class MovementsViewModel @Inject constructor(
         }
 
     val uiState: StateFlow<MovementsUiState> =
-        combine(filter, transactions, categories, editorWithSuggestion, pendingDelete) { filter, items, categories, editor, pending ->
+        combine(transactions, categories, editorWithSuggestion, pendingDelete) { (filter, items), categories, editor, pending ->
             MovementsUiState(
                 month = filter.month,
                 today = today,

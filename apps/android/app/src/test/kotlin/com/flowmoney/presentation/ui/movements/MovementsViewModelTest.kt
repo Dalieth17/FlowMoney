@@ -7,6 +7,9 @@ import com.flowmoney.domain.model.DefaultCategories
 import com.flowmoney.domain.model.Transaction
 import com.flowmoney.domain.model.TransactionError
 import com.flowmoney.domain.model.TransactionType
+import com.flowmoney.domain.model.TransactionDetails
+import com.flowmoney.domain.model.TransactionFilter
+import com.flowmoney.domain.repository.TransactionRepository
 import com.flowmoney.domain.testing.FakeBudgetRepository
 import com.flowmoney.domain.testing.FakeCategoryRepository
 import com.flowmoney.domain.testing.FakeTransactionRepository
@@ -18,11 +21,17 @@ import com.flowmoney.domain.usecase.transaction.ObserveTransactionsUseCase
 import com.flowmoney.domain.usecase.transaction.SaveTransactionUseCase
 import com.flowmoney.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -85,6 +94,36 @@ class MovementsViewModelTest {
     }
 
     private val state get() = viewModel.uiState.value
+
+    @Test
+    fun `una consulta lenta nunca muestra el mes nuevo con movimientos del anterior`() = runTest {
+        val slow = object : TransactionRepository by transactions {
+            override fun observe(filter: TransactionFilter): Flow<List<TransactionDetails>> = flow {
+                if (filter.month == YearMonth.of(2026, 10)) delay(100)
+                emitAll(transactions.observe(filter))
+            }
+        }
+        viewModel = MovementsViewModel(
+            ObserveTransactionsUseCase(slow),
+            ObserveCategoriesUseCase(categories),
+            SaveTransactionUseCase(slow, categories),
+            DeleteTransactionUseCase(slow),
+            CheckBudgetUseCase(budgets, categories, slow),
+            SuggestCategoryUseCase(slow),
+            clock,
+        )
+        subscribe()
+        val emitted = mutableListOf<MovementsUiState>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.toList(emitted) }
+        viewModel.onEvent(MovementsEvent.PreviousMonth)
+        advanceTimeBy(50)
+        assertEquals(YearMonth.of(2026, 11), state.month)
+        advanceTimeBy(51)
+        runCurrent()
+        assertEquals(YearMonth.of(2026, 10), state.month)
+        assertEquals(listOf("Octubre"), state.days.flatMap { it.items }.map { it.transaction.description })
+        assertTrue(emitted.all { snapshot -> snapshot.days.all { YearMonth.from(it.date) == snapshot.month } })
+    }
 
     @Test
     fun `abre en el mes actual con resumen y dias agrupados`() = runTest {

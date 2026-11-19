@@ -21,13 +21,16 @@ function tokenHashFrom(req) {
   return typeof token === 'string' && TOKEN_PATTERN.test(token) ? hashToken(token) : null;
 }
 
-/** Crea una sesión y la entrega en la cookie. Acepta una conexión para usarse dentro de una transacción. */
-async function startSession(res, userId, db) {
+/** Crea la sesión dentro de la transacción de autenticación. No envía cookies antes del commit. */
+async function createSession(userId, db) {
   const token = crypto.randomBytes(TOKEN_BYTES).toString('base64url');
-  await sessionRepository.removeExpiredByUser(userId, db);
+  // La limpieza periódica ya retira las vencidas. Borrarlas aquí introduciría
+  // bloqueos de rango entre registros concurrentes que aún no tienen sesiones.
   await sessionRepository.create({ tokenHash: hashToken(token), userId, ttlSeconds: TTL_SECONDS }, db);
-  res.cookie(cookieName, token, { ...cookieOptions, maxAge: cookieMaxAgeMs });
+  return token;
 }
+
+const setSessionCookie = (res, token) => res.cookie(cookieName, token, { ...cookieOptions, maxAge: cookieMaxAgeMs });
 
 /** { userId, tokenHash } de una sesión activa, o null. */
 async function readSession(req) {
@@ -43,4 +46,4 @@ async function endSession(req, res) {
   res.clearCookie(cookieName, cookieOptions);
 }
 
-module.exports = { startSession, readSession, endSession };
+module.exports = { createSession, setSessionCookie, readSession, endSession };

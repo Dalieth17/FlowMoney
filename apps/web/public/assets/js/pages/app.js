@@ -5,6 +5,7 @@ import { defineRoutes, mountRouter, render, shiftMonth, goToCurrentMonth } from 
 import { monthLabel } from '../core/format.js';
 import { openMovementForm } from '../forms/movementForm.js';
 import { mountThemeSwitches, THEME_EVENT } from '../core/theme.js';
+import { runAction } from '../ui/feedback.js';
 import * as resumen from '../views/resumen.js';
 import * as movimientos from '../views/movimientos.js';
 import * as cuentas from '../views/cuentas.js';
@@ -35,6 +36,8 @@ function renderUserCard() {
   $('user-name').textContent = name;
   $('user-email').textContent = email;
   $('user-initial').textContent = name.trim().charAt(0).toUpperCase() || '·';
+  $('sync-notice').hidden = !store.syncError;
+  $('sync-message').textContent = store.syncError ?? '';
 }
 
 function renderLoadError(err) {
@@ -56,6 +59,7 @@ async function init() {
   $('next-month').addEventListener('click', () => shiftMonth(1));
   $('current-month').addEventListener('click', goToCurrentMonth);
   $('logout').addEventListener('click', () => store.logout());
+  $('reload-data').addEventListener('click', () => runAction($('reload-data'), () => store.load()));
 
   try {
     await store.load();

@@ -3,6 +3,7 @@ const HttpError = require('../utils/httpError');
 const { hashPassword, verifyPassword } = require('../utils/password');
 const userRepository = require('../repositories/userRepository');
 const sessionRepository = require('../repositories/sessionRepository');
+const { createSession } = require('./sessionService');
 const { withUserTransaction, pool } = require('../db/pool');
 const currencyRepository = require('../repositories/currencyRepository');
 const exchangeRate = require('./exchangeRateService');
@@ -40,7 +41,7 @@ async function updateProfile(userId, { name, currency, exchange }) {
 
 /**
  * Cambia la contraseña y revoca TODAS las sesiones del usuario en la misma transacción
- * (quien la cambió recibe una sesión nueva desde la ruta).
+ * y crea la sesión nueva antes del commit. La ruta solo entrega la cookie ya confirmada.
  */
 async function changePassword(userId, { currentPassword, newPassword }) {
   const hash = await userRepository.findPasswordHash(userId);
@@ -50,12 +51,13 @@ async function changePassword(userId, { currentPassword, newPassword }) {
     throw HttpError.badRequest('La contraseña actual no es correcta');
   }
   const newHash = await hashPassword(newPassword);
-  await withUserTransaction(userId, async (conn) => {
+  return withUserTransaction(userId, async (conn) => {
     if ((await userRepository.findPasswordHash(userId, conn)) !== hash) {
       throw HttpError.badRequest('La contraseña cambió. Vuelve a intentarlo con la actual');
     }
     await userRepository.updatePassword(userId, newHash, conn);
     await sessionRepository.removeAllByUser(userId, conn);
+    return createSession(userId, conn);
   });
 }
 

@@ -179,11 +179,11 @@ export function openMovementForm(existing) {
       editing ? store.updateTransaction(existing.id, payload) : store.addTransaction(payload),
     );
     if (ok) {
-      closeModal();
+      modal.close();
       toast(editing ? 'Cambios guardados' : 'Movimiento registrado');
     }
   });
 
-  openModal(editing ? 'Editar movimiento' : 'Nuevo movimiento', form);
+  const modal = openModal(editing ? 'Editar movimiento' : 'Nuevo movimiento', form);
   setType(type);
 }
