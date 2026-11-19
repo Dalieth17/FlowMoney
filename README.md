@@ -108,6 +108,15 @@ Los DDL de MySQL no ofrecen rollback conjunto: respalda la base antes de actuali
 
 ## Arquitectura
 
+El gráfico 3D de **Resumen → Gastos por día** usa únicamente los movimientos del mes
+seleccionado: la altura de cada columna representa el gasto de ese día, con escala monetaria
+visible. Los días sin gastos no generan columnas y los gastos registrados para fechas futuras
+se muestran delineados como **Programados**, sin estimaciones automáticas basadas en presupuestos.
+Ingresos, transferencias y ajustes de conciliación no se cuentan como gastos; las comisiones sí.
+Se recalcula al crear, editar o borrar movimientos, cambiar de mes, moneda o tema.
+La tabla «Ver importes por día» permite comprobar gasto y acumulado. Sin WebGL, o si falla
+su carga, el gráfico SVG conserva exactamente los mismos datos diarios y la misma escala.
+
 ```
 Navegador ──► web (Nginx :8080) ──/api──► api (Express :3000) ──► db (MySQL 8)
               estáticos + CSP              routes → services → repositories

@@ -1,117 +1,89 @@
-// Gasto acumulado del mes en 3D: una columna por día bajo el "techo" de los presupuestos.
+// Una columna por día con gastos registrados. Su altura es proporcional al importe diario.
 import { mountScene, placeLabel } from './scene3d.js';
+import { dayTick } from '../../domain/spendingChart.js';
+import { money } from '../../core/format.js';
 
-/**
- * @param {HTMLCanvasElement} canvas
- * @param {{ days: {day:number, cumulative:number}[], today: number, limit: number|null, perDay: number,
- *           labels: HTMLElement, text: { today: string, limit: string, end: string } }} data
- *   today: último día con datos reales (los siguientes se dibujan como proyección).
- */
-export function mountColumns(canvas, { days, today, limit, perDay, labels, text }) {
-  return mountScene(canvas, (THREE, { scene, colors }) => {
-    scene.add(new THREE.AmbientLight(0xffffff, colors.dark ? 0.75 : 0.9));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.4);
-    sun.position.set(4, 7, 5);
-    scene.add(sun);
-    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 80);
+export function mountColumns(canvas, data) {
+  return mountScene(canvas, (THREE, context) => buildColumns(THREE, context, data), { animated: false });
+}
 
-    const n = days.length;
-    const lastReal = days[Math.min(today, n) - 1]?.cumulative ?? 0;
-    const projected = (d) => lastReal + Math.max(0, d - today) * perDay;
-    const top = Math.max(limit ?? 0, projected(n), lastReal, 1);
-    const scaleY = 3.2 / top;
-    const step = 0.3;
-    const x0 = -((n - 1) * step) / 2;
-    const edges = new THREE.LineBasicMaterial({ color: colors.line });
-    const ghost = new THREE.LineBasicMaterial({ color: colors.muted, transparent: true, opacity: 0.55 });
-    const group = new THREE.Group();
-    scene.add(group);
-
-    days.forEach(({ day, cumulative }) => {
-      const real = day <= today;
-      const value = real ? cumulative : projected(day);
-      const height = Math.max(0.02, value * scaleY);
-      const geo = new THREE.BoxGeometry(0.2, height, 0.2);
-      const x = x0 + (day - 1) * step;
-      if (real) {
-        const isToday = day === today;
-        const mesh = new THREE.Mesh(
-          geo,
-          new THREE.MeshStandardMaterial({
-            color: isToday ? colors.accent : colors.past,
-            roughness: 0.45,
-            metalness: 0.15,
-            emissive: isToday && colors.dark ? colors.accent : 0x000000,
-            emissiveIntensity: 0.35,
-          }),
-        );
-        mesh.position.set(x, height / 2, 0);
-        group.add(mesh);
-      }
-      const outline = new THREE.LineSegments(new THREE.EdgesGeometry(geo), real ? edges : ghost);
-      outline.position.set(x, height / 2, 0);
-      group.add(outline);
-    });
-
-    const width = n * step + 0.4;
-    if (limit) {
-      const y = limit * scaleY;
-      const plane = new THREE.Mesh(
-        new THREE.PlaneGeometry(width, 1.2),
-        new THREE.MeshBasicMaterial({
-          color: colors.ink,
-          transparent: true,
-          opacity: 0.05,
-          side: THREE.DoubleSide,
-          depthWrite: false,
-        }),
-      );
-      plane.rotation.x = -Math.PI / 2;
-      plane.position.y = y;
-      group.add(plane);
-      const rim = new THREE.LineSegments(
-        new THREE.EdgesGeometry(new THREE.PlaneGeometry(width, 1.2)),
-        new THREE.LineBasicMaterial({ color: colors.muted }),
-      );
-      rim.rotation.x = -Math.PI / 2;
-      rim.position.y = y;
-      group.add(rim);
-      const pace = new THREE.Line(
+/** La construcción se puede comprobar con Three.js sin depender de una GPU. */
+export function buildColumns(THREE, { scene, colors }, { days, top, ticks, labels }) {
+  scene.add(new THREE.AmbientLight(0xffffff, colors.dark ? 1.2 : 1.5));
+  const sun = new THREE.DirectionalLight(0xffffff, 2);
+  sun.position.set(-3, 6, 5);
+  scene.add(sun);
+  // Cámara fija y ortográfica: el ángulo no altera la comparación entre días.
+  const camera = new THREE.OrthographicCamera(-6, 6, 3, -3, 0.1, 80);
+  camera.position.set(0, 4.8, 12);
+  camera.lookAt(0, 1.5, 0);
+  const step = 0.2,
+    height = 3.2;
+  const x0 = (-(days.length - 1) * step) / 2;
+  const line = new THREE.LineBasicMaterial({ color: colors.muted, transparent: true, opacity: 0.5 });
+  let fill, scheduledFill, outline;
+  const tags = [];
+  labels.replaceChildren();
+  const tag = (text, point, className = '') => {
+    const el = document.createElement('span');
+    el.className = `label3d ${className}`;
+    el.textContent = text;
+    labels.append(el);
+    tags.push({ el, point });
+  };
+  for (const value of ticks) {
+    const y = (value / top) * height;
+    scene.add(
+      new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(x0, 0, 0.25),
-          new THREE.Vector3(x0 + (n - 1) * step, y, 0.25),
+          new THREE.Vector3(x0 - step / 2, y, -0.16),
+          new THREE.Vector3(-x0 + step / 2, y, -0.16),
         ]),
-        new THREE.LineDashedMaterial({ color: colors.muted, dashSize: 0.08, gapSize: 0.08 }),
-      );
-      pace.computeLineDistances();
-      group.add(pace);
+        line,
+      ),
+    );
+    tag(money(value), new THREE.Vector3(x0 - 0.18, y, 0), 'axis3d axis3d-y');
+  }
+  for (const day of days) {
+    const x = x0 + (day.day - 1) * step;
+    if (dayTick(day.day, days.length)) tag(String(day.day), new THREE.Vector3(x, -0.12, 0), 'axis3d axis3d-x');
+    if (day.expense <= 0) continue; // cero significa ausencia de columna, sin altura artificial
+    const size = (day.expense / top) * height;
+    const geometry = new THREE.BoxGeometry(0.12, size, 0.16);
+    if (!day.scheduled)
+      fill ??= new THREE.MeshStandardMaterial({ color: colors.accent, roughness: 0.55, metalness: 0.05 });
+    else
+      scheduledFill ??= new THREE.MeshStandardMaterial({
+        color: colors.muted,
+        roughness: 0.8,
+        transparent: true,
+        opacity: 0.15,
+        depthWrite: false,
+      });
+    const bar = new THREE.Mesh(geometry, day.scheduled ? scheduledFill : fill);
+    bar.position.set(x, size / 2, 0);
+    bar.userData = { day: day.day, amount: day.expense, scheduled: day.scheduled };
+    scene.add(bar);
+    if (day.scheduled) {
+      outline ??= new THREE.LineDashedMaterial({ color: colors.muted, dashSize: 0.045, gapSize: 0.035 });
+      const rim = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), outline);
+      rim.position.copy(bar.position);
+      rim.computeLineDistances();
+      scene.add(rim);
     }
-    group.add(new THREE.GridHelper(14, 28, colors.grid, colors.grid));
-
-    const tag = (html) => {
-      const el = document.createElement('span');
-      el.className = 'label3d';
-      el.innerHTML = html;
-      labels.append(el);
-      return el;
-    };
-    labels.replaceChildren();
-    const lToday = today >= 1 ? tag(text.today) : null;
-    const lLimit = limit ? tag(text.limit) : null;
-    const lEnd = today < n ? tag(text.end) : null;
-
-    return {
-      camera,
-      update(t, { size }) {
-        const a = -0.5 + Math.sin(t * 0.3) * 0.12;
-        camera.position.set(Math.sin(a) * 10.5, 3.2, Math.cos(a) * 10.5);
-        camera.lookAt(0.3, 1.1, 0);
-        if (lToday)
-          placeLabel(lToday, new THREE.Vector3(x0 + (today - 1) * step, lastReal * scaleY + 0.25, 0), camera, size);
-        if (lLimit) placeLabel(lLimit, new THREE.Vector3(x0 + 9 * step, limit * scaleY + 0.05, 0.6), camera, size);
-        if (lEnd)
-          placeLabel(lEnd, new THREE.Vector3(x0 + (n - 1) * step, projected(n) * scaleY + 0.25, 0), camera, size);
-      },
-    };
-  });
+  }
+  return {
+    camera,
+    update(_t, { size }) {
+      const aspect = size.w / size.h;
+      camera.left = (-days.length * step) / 2 - 1.7;
+      camera.right = (days.length * step) / 2 + 0.3;
+      const halfHeight = Math.max((camera.right - camera.left) / aspect / 2, 2.15);
+      camera.top = halfHeight;
+      camera.bottom = -halfHeight;
+      camera.updateProjectionMatrix();
+      camera.updateMatrixWorld();
+      for (const { el, point } of tags) placeLabel(el, point, camera, size);
+    },
+  };
 }

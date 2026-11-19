@@ -9,7 +9,9 @@ export const loadThree = () => (threePromise ??= import('../../../vendor/three/t
 export function webglAvailable() {
   try {
     const c = document.createElement('canvas');
-    return Boolean(c.getContext('webgl2') || c.getContext('webgl'));
+    const context = c.getContext('webgl2') || c.getContext('webgl');
+    context?.getExtension('WEBGL_lose_context')?.loseContext();
+    return Boolean(context);
   } catch {
     return false;
   }
@@ -37,57 +39,76 @@ export function palette() {
  * `{ camera, update(t) }`. Devuelve una función que libera todo; además se libera sola
  * cuando el canvas sale del documento (al cambiar de vista).
  */
-export async function mountScene(canvas, build) {
+export async function mountScene(canvas, build, { animated = true } = {}) {
   const THREE = await loadThree();
   if (!canvas.isConnected) return () => {};
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  const scene = new THREE.Scene();
-  const ctx = { scene, renderer, colors: palette(), size: { w: 1, h: 1 } };
-  const { camera, update } = build(THREE, ctx);
-
-  const resize = () => {
-    const w = canvas.clientWidth || 1;
-    const h = canvas.clientHeight || 1;
-    ctx.size = { w, h };
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  };
-  resize();
-  const observer = new ResizeObserver(resize);
-  observer.observe(canvas);
-
-  const still = reducedMotion();
-  const t0 = performance.now();
-  let frame = 0;
-  let disposed = false;
+  let renderer, scene, observer, removalObserver;
+  let frame = 0,
+    disposed = false;
   const dispose = () => {
     if (disposed) return;
     disposed = true;
     cancelAnimationFrame(frame);
-    observer.disconnect();
-    removalObserver.disconnect();
-    scene.traverse((o) => {
-      o.geometry?.dispose();
-      [].concat(o.material ?? []).forEach((m) => m.dispose());
+    observer?.disconnect();
+    removalObserver?.disconnect();
+    canvas.removeEventListener('webglcontextlost', dispose);
+    const geometries = new Set(),
+      materials = new Set();
+    scene?.traverse((o) => {
+      if (o.geometry) geometries.add(o.geometry);
+      for (const material of [].concat(o.material ?? [])) materials.add(material);
     });
-    renderer.dispose();
+    for (const geometry of geometries) geometry.dispose();
+    for (const material of materials) material.dispose();
+    renderer?.dispose();
+    // La portada reutiliza el mismo canvas al cambiar el tema; no perder ese contexto.
+    if (!canvas.isConnected) renderer?.forceContextLoss();
   };
-  // En reduced-motion no hay otro cuadro que detecte la salida del DOM.
-  const removalObserver = new MutationObserver(() => {
-    if (!canvas.isConnected) dispose();
-  });
-  removalObserver.observe(document.body, { childList: true, subtree: true });
-  const tick = () => {
-    if (!canvas.isConnected) return dispose();
-    // Con "reducir movimiento" se dibuja un cuadro fijo y la escena no se anima.
-    update(still ? 4 : (performance.now() - t0) / 1000, ctx);
-    renderer.render(scene, camera);
-    if (!still) frame = requestAnimationFrame(tick);
-  };
-  tick();
-  return dispose;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    scene = new THREE.Scene();
+    const ctx = { scene, renderer, colors: palette(), size: { w: 1, h: 1 } };
+    const { camera, update } = build(THREE, ctx);
+    const still = !animated || reducedMotion();
+    const t0 = performance.now();
+    const draw = () => {
+      if (disposed) return;
+      if (!canvas.isConnected) return dispose();
+      update(still ? 4 : (performance.now() - t0) / 1000, ctx);
+      renderer.render(scene, camera);
+    };
+    const resize = () => {
+      if (disposed) return;
+      const w = canvas.clientWidth || 1,
+        h = canvas.clientHeight || 1;
+      ctx.size = { w, h };
+      renderer.setSize(w, h, false);
+      if (camera.isPerspectiveCamera) camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      // También se redibuja al cambiar el tamaño con movimiento reducido o cámara fija.
+      draw();
+    };
+    observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    removalObserver = new MutationObserver(() => {
+      if (!canvas.isConnected) dispose();
+    });
+    removalObserver.observe(document.body, { childList: true, subtree: true });
+    canvas.addEventListener('webglcontextlost', dispose);
+    resize();
+    if (!still) {
+      const tick = () => {
+        draw();
+        if (!disposed) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    }
+    return dispose;
+  } catch (err) {
+    dispose();
+    throw err;
+  }
 }
 
 /** Posiciona una etiqueta HTML sobre un punto 3D. */

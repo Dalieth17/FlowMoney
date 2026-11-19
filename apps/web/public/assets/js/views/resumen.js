@@ -4,7 +4,7 @@ import { groupedBars } from '../ui/charts.js';
 import { panel, emptyState, budgetMeter, movementRow } from '../ui/widgets.js';
 import { store } from '../core/store.js';
 import { go } from '../core/router.js';
-import { money, signedBalance, monthLabel, MONTHS, transactionDate } from '../core/format.js';
+import { money, signedBalance, monthLabel, transactionDate } from '../core/format.js';
 import {
   inMonth,
   totals,
@@ -14,10 +14,8 @@ import {
   budgetStatus,
   spentInCategory,
   availableToSpend,
-  dailyExpense,
 } from '../domain/selectors.js';
-import { webglAvailable } from '../ui/three/scene3d.js';
-import { mountColumns } from '../ui/three/columnsScene.js';
+import { spendingChartCard } from '../ui/spendingChart.js';
 
 const RECENT_COUNT = 6;
 const BUDGET_PREVIEW_COUNT = 4;
@@ -40,7 +38,7 @@ export function render(root, { month, year }) {
       ]),
     ]),
     h('div', { class: 'grid-wide' }, [
-      spendChart(list, month, year, today, available),
+      spendingChartCard(list, month, year, today),
       panel('Presupuestos', 'el más ajustado primero', budgetPreview(list, month, year)),
     ]),
     h('div', { class: 'grid-2' }, [
@@ -96,70 +94,6 @@ function availableBlock(a, t) {
 
 const figure = (label, value, tone) =>
   h('div', { class: 'fig' }, [h('span', {}, label), h('b', { class: `tnum${tone ? ` ${tone}` : ''}` }, value)]);
-
-/** Gasto acumulado del mes: columnas 3D con Three.js o, sin WebGL, las barras semanales. */
-function spendChart(list, month, year, today, available) {
-  const days = dailyExpense(list, month, year);
-  const isCurrent = today.getMonth() === month && today.getFullYear() === year;
-  const isPast = year * 12 + month < today.getFullYear() * 12 + today.getMonth();
-  let lastDay = 0;
-  if (isPast) lastDay = days.length;
-  else if (isCurrent) lastDay = today.getDate();
-  const shortMonth = MONTHS[month].slice(0, 3).toLowerCase();
-  const total = days[days.length - 1].cumulative;
-
-  const card = h('section', { class: 'panel chart3d' }, [
-    h('div', { class: 'panel-head' }, [
-      h('div', {}, [
-        h('h3', {}, 'Gasto acumulado'),
-        h('span', { class: 'sub' }, `${monthLabel(month, year)}, una columna por día`),
-      ]),
-      h('div', { class: 'legend' }, [
-        h('span', {}, [h('i', { class: 'lg-spent' }), 'Gastado']),
-        lastDay < days.length ? h('span', {}, [h('i', { class: 'lg-proj' }), 'Proyección']) : null,
-        available ? h('span', {}, [h('i', { class: 'lg-limit' }), 'Presupuestos']) : null,
-      ]),
-    ]),
-  ]);
-  if (!webglAvailable()) {
-    card.append(
-      h('div', { class: 'chart-pad', html: groupedBars(weeklyFlow(list, month, year), { width: 560, height: 220 }) }),
-    );
-    return card;
-  }
-  const canvas = h('canvas', { class: 'scene', 'aria-hidden': 'true' });
-  const labels = h('div', { class: 'scene-labels' });
-  const perDay = available ? available.perDay : 0;
-  card.append(
-    h(
-      'div',
-      {
-        class: 'scene-box',
-        role: 'img',
-        'aria-label': `Gasto acumulado de ${monthLabel(month, year)}: ${money(total)}`,
-      },
-      [canvas, labels],
-    ),
-  );
-  const lastReal = lastDay ? days[lastDay - 1].cumulative : 0;
-  const end = lastReal + Math.max(0, days.length - lastDay) * perDay;
-  // Se monta cuando el canvas ya está en el documento (tiene tamaño).
-  requestAnimationFrame(() =>
-    mountColumns(canvas, {
-      days,
-      today: lastDay,
-      limit: available?.limit ?? null,
-      perDay,
-      labels,
-      text: {
-        today: `${isCurrent ? `Hoy, ${lastDay} ${shortMonth}` : 'Total'} <b>${money(lastReal)}</b>`,
-        limit: `Presupuestos <b>${money(available?.limit ?? 0)}</b>`,
-        end: `Cierre si sigues así <b>${money(Math.round(end))}</b>`,
-      },
-    }),
-  );
-  return card;
-}
 
 function categoryBreakdown(list) {
   const cats = expenseByCategory(list, store.categories);

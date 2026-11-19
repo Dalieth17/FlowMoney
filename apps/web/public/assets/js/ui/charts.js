@@ -2,6 +2,7 @@
 // Devuelven cadenas SVG; todo texto variable pasa por esc().
 
 import { money, compact } from '../core/format.js';
+import { dayTick } from '../domain/spendingChart.js';
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
@@ -106,4 +107,40 @@ function niceStep(max) {
   const n = raw / pow;
   const mult = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
   return Math.max(1, mult * pow);
+}
+
+/** Mismos gastos diarios y escala que la escena 3D; no genera proyecciones. */
+export function dailyBars({ days, top, ticks, total }) {
+  const w = 640,
+    h = 300,
+    left = 92,
+    right = 18,
+    bottom = 38,
+    upper = 24;
+  const plotWidth = w - left - right,
+    plotHeight = h - upper - bottom;
+  const step = plotWidth / days.length;
+  const y = (value) => upper + plotHeight * (1 - value / top);
+  const grid = ticks
+    .map(
+      (value) => `<line x1="${left}" x2="${w - right}" y1="${y(value)}" y2="${y(value)}" class="grid"/>
+    <text x="${left - 10}" y="${y(value) + 4}" text-anchor="end" class="axis">${esc(money(value))}</text>`,
+    )
+    .join('');
+  const bars = days
+    .filter((d) => d.expense > 0)
+    .map((d) => {
+      const x = left + (d.day - 1) * step + step * 0.2;
+      return `<rect x="${x}" y="${y(d.expense)}" width="${step * 0.6}" height="${(plotHeight * d.expense) / top}"
+      data-day="${d.day}" data-amount="${d.expense}" class="${d.scheduled ? 'bar-scheduled' : 'bar-spent'}">
+      <title>${esc(d.label)} · ${d.scheduled ? 'Programado' : 'Gastado'} ${esc(money(d.expense))}</title></rect>`;
+    })
+    .join('');
+  const labels = days
+    .filter((d) => dayTick(d.day, days.length))
+    .map(
+      (d) => `<text x="${left + (d.day - 0.5) * step}" y="${h - 12}" text-anchor="middle" class="axis">${d.day}</text>`,
+    )
+    .join('');
+  return `<svg viewBox="0 0 ${w} ${h}" class="bars-svg daily-bars" role="img" aria-label="Gastos diarios registrados: ${esc(money(total))}">${grid}${bars}${labels}</svg>`;
 }

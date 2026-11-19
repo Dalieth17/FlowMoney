@@ -106,6 +106,13 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
 
 ## Estado
 
+- Resumen web: `domain/spendingChart.js` agrega gastos diarios reales/programados del mes
+  (sin proyección por presupuesto); modelo común para `ui/spendingChart.js`, SVG y tabla.
+  `columnsScene.js` crea geometría proporcional al gasto diario, omite ceros y usa cámara
+  ortográfica fija con ejes monetarios. Actualización por store/mes/moneda/tema.
+  `mountScene(...,{animated:false})` dibuja al montar/redimensionar y libera recursos/contextos;
+  reduced-motion también se redibuja al redimensionar. Errores o pérdida de WebGL muestran SVG.
+
 - Conversión web COP/USD: Perfil consulta `/profile/exchange-rate` (ExchangeRate-API, caché 1 h,
   máximo 72 h de antigüedad; manual si falla). PUT `/profile` exige `exchange` al cambiar moneda:
   `{fromCurrency,copPerUsd,source,quotedAt?}`; automático verifica la cotización en servidor.

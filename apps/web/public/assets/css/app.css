@@ -466,10 +466,16 @@ body {
 }
 
 /* ---- Gráfica 3D (Three.js) ---- */
+.chart3d {
+  min-width: 0;
+}
+.chart3d .panel-head {
+  flex-wrap: wrap;
+}
 .chart3d .legend {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   white-space: nowrap;
   gap: 14px;
   font-size: 12px;
@@ -508,6 +514,77 @@ body {
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+}
+.daily-chart-viewport,
+.daily-chart-data {
+  overflow-x: auto;
+}
+.daily-scene.scene-box {
+  min-width: 560px;
+  height: 300px;
+  margin: 0;
+}
+.daily-chart-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-items: center;
+}
+.daily-chart-fallback[hidden],
+.scene-labels[hidden] {
+  display: none;
+}
+.daily-bars .bar-spent {
+  fill: var(--pine);
+}
+.daily-bars .bar-scheduled {
+  fill: var(--line-soft);
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.daily-chart-summary {
+  margin: 12px 0 6px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.daily-chart-data {
+  margin-top: 14px;
+  font-size: 12px;
+}
+.daily-chart-data summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+.daily-chart-data table {
+  width: 100%;
+  min-width: 460px;
+  margin-top: 12px;
+  border-collapse: collapse;
+  text-align: left;
+}
+.daily-chart-data caption {
+  text-align: left;
+  padding: 8px;
+  color: var(--muted);
+}
+.daily-chart-data td,
+.daily-chart-data th {
+  padding: 8px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.label3d.axis3d {
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.label3d.axis3d-y {
+  transform: translate(-100%, -50%);
+}
+.label3d.axis3d-x {
+  transform: translate(-50%, 0);
 }
 .stat-grid {
   display: grid;
