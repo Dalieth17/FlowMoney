@@ -44,28 +44,28 @@ const txPayload = (data, overrides = {}) => ({
 });
 
 describe('autenticación', () => {
-  test('el registro abre sesión y siembra datos de ejemplo', async () => {
-    const { data } = await signUp();
+  test('el registro abre sesión y comienza sin dinero ni movimientos', async () => {
+    const { agent, data } = await signUp();
     assert.equal(data.user.name, 'Ana');
-    assert.equal(data.user.currency, 'COP', 'sin elegir, la moneda es el peso colombiano');
+    assert.equal(data.user.currency, 'COP');
     assert.equal(data.categories.length, 9);
     assert.equal(data.accounts.length, 2);
-    assert.equal(data.transactions.length, 17);
-    assert.equal(data.budgets.length, 5);
-    assert.ok(
-      data.transactions.every((t) => t.accountId !== null),
-      'todo movimiento sembrado tiene cuenta',
-    );
+    assert.ok(data.accounts.every((a) => a.initialBalance === 0));
+    assert.deepEqual(data.transactions, []);
+    assert.deepEqual(data.budgets, []);
+    const { body: reloaded } = await agent.get('/api/bootstrap').expect(200);
+    assert.deepEqual(reloaded.transactions, []);
+    assert.ok(reloaded.accounts.every((a) => a.initialBalance === 0));
   });
 
-  test('el registro guarda la moneda elegida y siembra montos acordes', async () => {
-    const { data: cop } = await signUp('Ana', { currency: 'COP' });
-    const { data: usd } = await signUp('Bob', { currency: 'USD' });
-    assert.equal(usd.user.currency, 'USD');
-    const salary = (d) => d.transactions.find((t) => t.description === 'Sueldo del mes').amount;
-    assert.equal(salary(cop), 4500000);
-    assert.equal(salary(usd), 4200);
-    assert.equal(usd.transactions.length, 17);
+  test('el registro empieza en cero en COP y USD', async () => {
+    for (const currency of ['COP', 'USD']) {
+      const { data } = await signUp('Ana', { currency });
+      assert.equal(data.user.currency, currency);
+      assert.ok(data.accounts.every((a) => a.initialBalance === 0));
+      assert.deepEqual(data.transactions, []);
+      assert.deepEqual(data.budgets, []);
+    }
   });
 
   test('rechaza una moneda no soportada al registrarse', async () => {
@@ -145,7 +145,7 @@ describe('movimientos', () => {
   test('aislamiento: un usuario no puede tocar datos de otro', async () => {
     const ana = await signUp('Ana');
     const beto = await signUp('Beto');
-    const anaTx = ana.data.transactions[0];
+    const { body: anaTx } = await ana.agent.post('/api/transactions').send(txPayload(ana.data)).expect(201);
 
     await beto.agent.put(`/api/transactions/${anaTx.id}`).send(txPayload(beto.data)).expect(404);
     await beto.agent.delete(`/api/transactions/${anaTx.id}`).expect(404);
@@ -204,6 +204,7 @@ describe('cuentas', () => {
 
   test('no se elimina una cuenta con movimientos', async () => {
     const { agent, data } = await signUp();
+    await agent.post('/api/transactions').send(txPayload(data)).expect(201);
     const res = await agent.delete(`/api/accounts/${data.accounts[0].id}`).expect(409);
     assert.equal(res.body.error, 'La cuenta tiene movimientos');
   });
@@ -294,7 +295,8 @@ describe('eliminar la cuenta', () => {
 describe('datos', () => {
   test('reiniciar restaura el mes de ejemplo', async () => {
     const { agent, data } = await signUp();
-    await agent.delete(`/api/transactions/${data.transactions[0].id}`).expect(204);
+    const { body: tx } = await agent.post('/api/transactions').send(txPayload(data)).expect(201);
+    await agent.delete(`/api/transactions/${tx.id}`).expect(204);
     await agent.post('/api/data/reset').expect(204);
     const { body } = await agent.get('/api/bootstrap').expect(200);
     assert.equal(body.transactions.length, 17);

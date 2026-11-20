@@ -84,7 +84,19 @@ describe('Correcciones de revisión', () => {
     const { cookie } = await register();
     const { cookie: other } = await register();
     const { body } = await bootstrapWith(cookie).expect(200);
-    const tx = body.transactions[0];
+    const { body: tx } = await request(app)
+      .post('/api/transactions')
+      .set('Cookie', cookie)
+      .send({
+        amount: 100,
+        type: 'EXPENSE',
+        description: 'Compra',
+        date: Date.now(),
+        categoryId: body.categories[0].id,
+        accountId: body.accounts[0].id,
+        note: '',
+      })
+      .expect(201);
     await request(app)
       .put(`/api/transactions/${tx.id}`)
       .set('Cookie', cookie)
@@ -97,7 +109,7 @@ describe('Correcciones de revisión', () => {
       .expect(200);
     assert.deepEqual(
       history.map((h) => h.action),
-      ['DELETE', 'UPDATE'],
+      ['DELETE', 'UPDATE', 'CREATE'],
     );
     assert.equal(history[0].beforeData.amount, 123);
     const { body: hidden } = await request(app)
@@ -220,7 +232,8 @@ describe('QA #4 — montos positivos que se redondeaban a cero', () => {
   test('un límite de 0.004 se rechaza y no borra el presupuesto existente', async () => {
     const { cookie } = await register();
     const { body } = await bootstrapWith(cookie).expect(200);
-    const budget = body.budgets[0];
+    const budget = { categoryId: body.categories[0].id, month: 0, year: 2026, amount: 100 };
+    await request(app).put('/api/budgets').set('Cookie', cookie).send(budget).expect(200);
     const period = { categoryId: budget.categoryId, month: budget.month, year: budget.year };
 
     const res = await request(app)

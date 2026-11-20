@@ -4,7 +4,7 @@ const { hashPassword, verifyPassword } = require('../utils/password');
 const userRepository = require('../repositories/userRepository');
 const { withTransaction, withUserTransaction } = require('../db/pool');
 const { createSession } = require('./sessionService');
-const { seedUserData } = require('../db/seed');
+const { initializeUserData } = require('../db/seed');
 const { TERMS_VERSION } = require('../config/legal');
 
 // Hash ficticio para comparar cuando el correo no existe: así el tiempo de
@@ -24,7 +24,7 @@ async function register({ name, email, password, currency = 'COP' }) {
         { name, email, passwordHash, currency, termsVersion: TERMS_VERSION },
         conn,
       );
-      await seedUserData(userId, conn, new Date(), currency);
+      await initializeUserData(userId, conn);
       const user = await userRepository.findById(userId, conn);
       const token = await createSession(userId, conn);
       return { user, token };

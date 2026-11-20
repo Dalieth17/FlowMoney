@@ -3,7 +3,7 @@ import { mountThemeSwitches, THEME_EVENT } from '../core/theme.js';
 import { webglAvailable } from '../ui/three/scene3d.js';
 import { mountFlow } from '../ui/three/flowScene.js';
 
-// Reparto de un mes de ejemplo (el mismo que se siembra al crear una cuenta en pesos).
+// Vista de demostración pública; las cuentas nuevas empiezan en cero.
 const SAMPLE = [
   { name: 'Alimentación', share: 37 },
   { name: 'Servicios', share: 23 },

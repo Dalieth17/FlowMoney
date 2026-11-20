@@ -30,7 +30,7 @@ de la raíz construyen un servicio con web y API; MySQL se conecta como servicio
 docker compose up --build
 ```
 
-Abre http://localhost:8080 → **Crear cuenta** → el panel arranca con un mes de ejemplo.
+Abre http://localhost:8080 → **Crear cuenta** → el panel arranca en cero, sin movimientos ni presupuestos y con las cuentas vacías.
 
 ### Recuperar acceso a la cuenta
 

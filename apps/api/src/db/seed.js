@@ -1,5 +1,4 @@
-// Datos iniciales para un usuario nuevo: categorías predeterminadas, cuentas
-// y un mes de ejemplo. Se ejecuta dentro de la transacción del registro/reinicio.
+// El registro crea categorías y cuentas en cero. El ejemplo requiere una acción explícita.
 const categoryRepository = require('../repositories/categoryRepository');
 const accountRepository = require('../repositories/accountRepository');
 const transactionRepository = require('../repositories/transactionRepository');
@@ -80,27 +79,30 @@ const SAMPLES = Object.freeze({
   },
 });
 
-/** @param {'COP'|'USD'} currency define los montos y comercios del mes de ejemplo. */
-async function seedUserData(userId, conn, now = new Date(), currency = 'COP') {
-  const sample = SAMPLES[currency] ?? SAMPLES.COP;
+/** Categorías y cuentas vacías para el registro; nunca crea dinero ni movimientos. */
+async function initializeUserData(userId, conn, balances = { cash: 0, bank: 0 }) {
   const categoryIds = {};
   for (const category of DEFAULT_CATEGORIES) {
     const created = await categoryRepository.create(userId, { ...category, isDefault: true }, conn);
     categoryIds[category.name] = created.id;
   }
-
-  // Saldos iniciales realistas: así ninguna cuenta del ejemplo empieza en negativo.
   const cash = await accountRepository.create(
     userId,
-    { name: 'Efectivo', type: 'CASH', initialBalance: sample.balances.cash },
+    { name: 'Efectivo', type: 'CASH', initialBalance: balances.cash },
     conn,
   );
   const bank = await accountRepository.create(
     userId,
-    { name: 'Banco', type: 'BANK', initialBalance: sample.balances.bank },
+    { name: 'Banco', type: 'BANK', initialBalance: balances.bank },
     conn,
   );
-  const accountIds = { Efectivo: cash.id, Banco: bank.id };
+  return { categoryIds, accountIds: { Efectivo: cash.id, Banco: bank.id } };
+}
+
+/** Datos de demostración: solo se cargan mediante la acción explícita de restaurar ejemplo. */
+async function seedUserData(userId, conn, now = new Date(), currency = 'COP') {
+  const sample = SAMPLES[currency] ?? SAMPLES.COP;
+  const { categoryIds, accountIds } = await initializeUserData(userId, conn, sample.balances);
 
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Bogota',
@@ -132,4 +134,4 @@ async function seedUserData(userId, conn, now = new Date(), currency = 'COP') {
   }
 }
 
-module.exports = { seedUserData, DEFAULT_CATEGORIES };
+module.exports = { initializeUserData, seedUserData, DEFAULT_CATEGORIES };
