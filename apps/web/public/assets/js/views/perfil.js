@@ -182,13 +182,14 @@ function dataPanel() {
   const stat = (label, value) =>
     h('div', { class: 'pstat' }, [h('span', { class: 'pstat-v tnum' }, value), h('span', { class: 'pstat-k' }, label)]);
 
-  const resetButton = h('button', { class: 'btn ghost-danger sm' }, 'Restaurar datos de ejemplo');
+  const resetButton = h('button', { class: 'btn ghost-danger sm' }, 'Reiniciar mis finanzas');
   resetButton.addEventListener('click', async () => {
     const confirmed = await confirmDialog(
-      'Se borrarán tus movimientos, categorías propias, cuentas y presupuestos, y se cargará el mes de ejemplo.',
-      { confirmText: 'Restaurar' },
+      'Se eliminarán tus movimientos, cuentas, categorías propias, presupuestos, metas e historial financiero. Se crearán Efectivo y Banco con saldo cero. Conservas tu usuario y contraseña. Exporta un respaldo antes de continuar.',
+      { confirmText: 'Reiniciar en cero' },
     );
-    if (confirmed && (await runAction(resetButton, () => store.resetToSample()))) toast('Datos de ejemplo restaurados');
+    if (confirmed && (await runAction(resetButton, () => store.resetData())))
+      toast('Tus finanzas se reiniciaron en cero');
   });
 
   return panel(
@@ -246,8 +247,12 @@ function dataPanel() {
       ]),
       h('div', { class: 'data-action danger' }, [
         h('div', {}, [
-          h('p', { class: 'da-t' }, 'Volver al ejemplo'),
-          h('p', { class: 'da-s' }, 'Reemplaza todos tus datos por el mes de ejemplo. No se puede deshacer.'),
+          h('p', { class: 'da-t' }, 'Empezar de cero'),
+          h(
+            'p',
+            { class: 'da-s' },
+            'Borra tus datos financieros y deja tus cuentas en cero. Exporta un respaldo primero; no se puede deshacer.',
+          ),
         ]),
         resetButton,
       ]),

@@ -101,7 +101,7 @@ test('un alta pendiente espera al reinicio completo y no mezcla IDs anteriores',
     reset = deferred();
   api.post = (path) => (path === '/data/reset' ? reset.promise : creation.promise);
   const adding = store.addTransaction({ amount: 100 });
-  const replacing = store.resetToSample();
+  const replacing = store.resetData();
   await nextTurn();
   creation.resolve({ id: 55, amount: 100 });
   await nextTurn();

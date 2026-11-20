@@ -293,20 +293,42 @@ describe('eliminar la cuenta', () => {
 });
 
 describe('datos', () => {
-  test('reiniciar restaura el mes de ejemplo', async () => {
+  test('reiniciar borra los datos financieros y devuelve las cuentas a cero', async () => {
     const { agent, data } = await signUp();
+    const other = await signUp('Otro');
+    await other.agent
+      .post('/api/transactions')
+      .send(txPayload(other.data, { amount: 25 }))
+      .expect(201);
+    await agent
+      .put('/api/budgets')
+      .send({ categoryId: data.categories[0].id, month: 10, year: 2026, amount: 100 })
+      .expect(200);
     const { body: tx } = await agent.post('/api/transactions').send(txPayload(data)).expect(201);
-    await agent.delete(`/api/transactions/${tx.id}`).expect(204);
+    assert.ok(tx.id);
+    await agent
+      .put(`/api/accounts/${data.accounts[0].id}`)
+      .send({ name: 'Efectivo', type: 'CASH', initialBalance: 500 })
+      .expect(200);
     await agent.post('/api/data/reset').expect(204);
     const { body } = await agent.get('/api/bootstrap').expect(200);
-    assert.equal(body.transactions.length, 17);
+    assert.equal(body.transactions.length, 0);
+    assert.deepEqual(body.budgets, []);
+    assert.ok(body.accounts.every((a) => a.initialBalance === 0));
     assert.equal(body.categories.length, 9);
+    const { body: preserved } = await other.agent.get('/api/bootstrap').expect(200);
+    assert.equal(preserved.transactions.length, 1);
+    assert.equal(preserved.transactions[0].amount, 25);
+    assert.equal(body.user.id, data.user.id);
   });
 
-  test('reiniciar usa los montos de la moneda del usuario', async () => {
+  test('reiniciar conserva la moneda del usuario sin inventar dinero', async () => {
     const { agent } = await signUp('Bob', { currency: 'USD' });
     await agent.post('/api/data/reset').expect(204);
     const { body } = await agent.get('/api/bootstrap').expect(200);
-    assert.equal(body.transactions.find((t) => t.description === 'Sueldo del mes').amount, 4200);
+    assert.equal(body.user.currency, 'USD');
+    assert.deepEqual(body.transactions, []);
+    assert.deepEqual(body.budgets, []);
+    assert.ok(body.accounts.every((a) => a.initialBalance === 0));
   });
 });

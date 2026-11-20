@@ -229,7 +229,7 @@ class Store {
   }
 
   // ---- Sesión / datos ----
-  async resetToSample() {
+  async resetData() {
     return this.#replace(async () => {
       await api.post('/data/reset');
       await this.load();

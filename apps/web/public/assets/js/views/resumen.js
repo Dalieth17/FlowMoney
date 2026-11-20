@@ -15,6 +15,8 @@ import {
   spentInCategory,
   availableToSpend,
 } from '../domain/selectors.js';
+import { gettingStartedCard } from '../ui/gettingStarted.js';
+import { openMovementForm } from '../forms/movementForm.js';
 import { spendingChartCard } from '../ui/spendingChart.js';
 
 const RECENT_COUNT = 6;
@@ -28,6 +30,7 @@ export function render(root, { month, year }) {
 
   mount(
     root,
+    gettingStartedCard(store, () => openMovementForm()),
     h('div', { class: 'overview' }, [
       availableBlock(available, t),
       h('div', { class: 'figs' }, [

@@ -55,7 +55,7 @@ function buildApiRouter() {
   router.post(
     '/data/reset',
     asyncHandler(async (req, res) => {
-      await dataService.resetToSample(req.userId);
+      await dataService.resetData(req.userId);
       res.status(204).end();
     }),
   );

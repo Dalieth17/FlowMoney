@@ -132,7 +132,7 @@ los movimientos posteriores afectan únicamente al saldo proyectado.
 | **Categorías**   | Predeterminadas + propias con ícono y color.                                                                                                                                 |
 | **Presupuestos** | Límite mensual por categoría; aviso al 80 % y al superarlo.                                                                                                                  |
 | **Reportes**     | Dona por categoría, barras de 6 meses, tasa de ahorro, exportar a PDF (imprimir).                                                                                            |
-| **Perfil**       | Nombre, moneda (pesos COP o dólares USD), tema, cambio de contraseña, exportar todo, restaurar ejemplo.                                                                      |
+| **Perfil**       | Nombre, moneda (pesos COP o dólares USD), tema, cambio de contraseña, exportar todo, reiniciar finanzas en cero.                                                             |
 | **Legal**        | Términos de uso y Política de tratamiento de datos (Ley 1581 de 2012); aceptación obligatoria al registrarse, guardada con versión y fecha; eliminar la cuenta desde Perfil. |
 | **Apariencia**   | Dos temas a elección: **Verde y negro** (por defecto) o **Blanco y negro**. Escenas 3D con Three.js.                                                                         |
 | **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador).                                                                                |
@@ -232,14 +232,14 @@ La API no publica ningún puerto (vive en la red interna de Docker) y MySQL solo
 
 ### Backend (`apps/api/src`) — capas al estilo Clean Architecture
 
-| Capa            | Responsabilidad                                                           |
-| --------------- | ------------------------------------------------------------------------- |
-| `routes/`       | HTTP: valida la entrada (zod) y responde. Sin lógica de negocio.          |
-| `services/`     | Reglas: propiedad de los datos, categorías protegidas, cuentas en uso.    |
-| `repositories/` | SQL parametrizado y mapeo fila → entidad. Aceptan una transacción.        |
-| `validation/`   | Esquemas zod con mensajes en español.                                     |
-| `db/`           | Pool, migraciones versionadas (`db/migrations/*.sql`) y datos de ejemplo. |
-| `middleware/`   | Autenticación, validación, rate limit del login, errores centralizados.   |
+| Capa            | Responsabilidad                                                                    |
+| --------------- | ---------------------------------------------------------------------------------- |
+| `routes/`       | HTTP: valida la entrada (zod) y responde. Sin lógica de negocio.                   |
+| `services/`     | Reglas: propiedad de los datos, categorías protegidas, cuentas en uso.             |
+| `repositories/` | SQL parametrizado y mapeo fila → entidad. Aceptan una transacción.                 |
+| `validation/`   | Esquemas zod con mensajes en español.                                              |
+| `db/`           | Pool, migraciones versionadas (`db/migrations/*.sql`) y valores iniciales en cero. |
+| `middleware/`   | Autenticación, validación, rate limit del login, errores centralizados.            |
 
 Seguridad: sesiones opacas en el servidor (solo se guarda el hash del token; cerrar sesión o
 cambiar la contraseña las revoca al instante), contraseñas con scrypt sin límite de 72 bytes
@@ -307,7 +307,7 @@ Todas las rutas (salvo `health` y `auth`) requieren sesión y operan solo sobre 
 | GET                 | `/api/reports/monthly?month=0&year=2026&accountId=none` | Reporte SQL; cuenta opcional, mes 0–11    |
 | GET POST PUT DELETE | `/api/categories[/:id]`                                 | Categorías                                |
 | GET · PUT           | `/api/budgets`                                          | Presupuestos (PUT con monto 0 lo elimina) |
-| POST                | `/api/data/reset`                                       | Restaura el mes de ejemplo                |
+| POST                | `/api/data/reset`                                       | Reinicia las finanzas en cero             |
 
 La importación usa `POST /api/transactions/import/preview` con `{csv,currency}` y devuelve
 `{currency,digest,summary,rows,valid}` sin escribir. La confirmación es

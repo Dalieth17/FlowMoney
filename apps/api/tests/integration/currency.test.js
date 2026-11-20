@@ -25,7 +25,10 @@ async function user(currency = 'COP') {
     .send({ name: 'Cambio', email: uniqueEmail('cambio'), password: 'secret123', acceptTerms: true, currency })
     .expect(201);
   // Esta suite prueba conversiones sobre datos de demostración cargados explícitamente.
-  await agent.post('/api/data/reset').expect(204);
+  await require('../../src/db/pool').withUserTransaction(body.user.id, async (db) => {
+    await backup.clear(body.user.id, db);
+    await require('../fixtures/exampleData').seedUserData(body.user.id, db, new Date(), currency);
+  });
   const { body: data } = await agent.get('/api/bootstrap').expect(200);
   return { agent, id: body.user.id, data };
 }

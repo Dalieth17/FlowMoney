@@ -2105,3 +2105,44 @@ textarea.input {
   color: var(--ink-soft);
   text-underline-offset: 2px;
 }
+
+/* Primeros pasos con datos propios, sin ejemplos financieros. */
+.getting-started h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+.getting-started p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+.getting-started-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+.getting-started-step {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+.getting-started-step h3 {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+.getting-started-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--card-2);
+  color: var(--ink);
+  font-weight: 600;
+}
