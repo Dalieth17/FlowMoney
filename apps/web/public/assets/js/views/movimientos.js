@@ -125,9 +125,12 @@ export function render(root, { month, year }) {
     next.disabled = page === pages - 1;
     pageLabel.textContent = `Página ${page + 1} de ${pages}`;
     summary.replaceChildren(
-      h('span', { class: 'count' }, `${visible.length} de ${monthList.length}`),
-      h('span', { class: 'in' }, `+${money(t.income)}`),
-      h('span', { class: 'out' }, `−${money(t.expense)}`),
+      h('div', { class: 'movement-metric count' }, [
+        h('span', {}, 'Movimientos'),
+        h('b', {}, `${visible.length} de ${monthList.length}`),
+      ]),
+      h('div', { class: 'movement-metric in' }, [h('span', {}, 'Ingresos'), h('b', {}, `+${money(t.income)}`)]),
+      h('div', { class: 'movement-metric out' }, [h('span', {}, 'Gastos'), h('b', {}, `−${money(t.expense)}`)]),
     );
     listHost.replaceChildren(
       visible.length

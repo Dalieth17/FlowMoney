@@ -32,6 +32,11 @@ conserva el límite ante números inválidos y permite reintentar un guardado fa
 no se ocultan por llamarse Salario; alcanzar el 100 % se distingue de superar el presupuesto.
 Los avisos repetidos se agrupan y se mantienen como máximo tres avisos recientes.
 
+Configuración incluye una preferencia 2D/3D, guardada en el navegador e independiente del tema.
+Barras volumétricas y anillo por categoría usan las mismas cifras, con giro manual, importes
+consultables y retorno a 2D sin WebGL o al imprimir. Movimientos encuadra su conteo e importes;
+Operaciones ofrece tarjetas de cuenta accesibles y los campos numéricos no muestran incrementadores.
+
 ## Configuración para usar los flujos
 
 - `docker compose up --build` aplica las migraciones automáticamente. La migración 010 añade
@@ -60,7 +65,7 @@ no se presenta este cambio como paginación remota de toda la aplicación.
 
 ## Validación de esta entrega
 
-- `npm run check`: lint, formato, 104 pruebas web/DOM y 42 unitarias de API.
+- `npm run check`: lint, formato, 115 pruebas web/DOM y 42 unitarias de API.
 - MySQL 8: 81 pruebas de integración, incluidas entrega SMTP local, caducidad, consumo
   concurrente del enlace, revocación de sesiones y reportes con límites de fecha colombianos.
 - Chromium: registro, navegación por las nueve vistas, filtro por cuenta, generación PDF,
@@ -74,3 +79,7 @@ no se presenta este cambio como paginación remota de toda la aplicación.
 - Presupuestos: copia concurrente sin sobrescribir, cambio de año, rollback, aislamiento y moneda;
   resumen en céntimos, validación y reintento. Chromium comprueba negativos y números incompletos,
   copia del mes anterior, error de red/reintento, 100 %, eliminación explícita y anchos 375/1440.
+- Diseño: preferencia persistente 2D/3D, opciones de configuración, fallback sin GPU, geometría
+  proporcional de columnas y sectores, liberación de interacciones y selección de cuentas.
+  Chromium comprueba WebGL real, giro con movimiento reducido, PDF en 2D, pérdida de contexto,
+  transferencia desde las tarjetas, cifras encuadradas y tamaños de 375/1440 en ambos temas.

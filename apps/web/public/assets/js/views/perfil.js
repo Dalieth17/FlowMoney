@@ -8,6 +8,7 @@ import { api } from '../core/api.js';
 import { CURRENCIES, MONTHS, isoDate } from '../core/format.js';
 import { THEMES, getTheme, setTheme } from '../core/theme.js';
 import { currencyExchange, currencyChangeNote } from '../ui/currencyExchange.js';
+import { CHART_STYLES, getChartStyle, setChartStyle } from '../core/chartStyle.js';
 
 const MIN_PASSWORD = 6;
 
@@ -15,7 +16,7 @@ export function render(root) {
   mount(
     root,
     h('div', { class: 'profile-grid' }, [
-      h('div', { class: 'profile-col' }, [personalPanel(), appearancePanel(), securityPanel()]),
+      h('div', { class: 'profile-col' }, [personalPanel(), appearancePanel(), chartStylePanel(), securityPanel()]),
       h('div', { class: 'profile-col' }, [dataPanel()]),
     ]),
   );
@@ -132,6 +133,43 @@ function securityPanel() {
   });
 
   return panel('Seguridad', 'cambia tu contraseña', form);
+}
+
+function chartStylePanel() {
+  const current = getChartStyle();
+  return panel(
+    'Diseño de los gráficos',
+    'elige cómo ver tus finanzas',
+    h('div', { class: 'form' }, [
+      h(
+        'div',
+        { class: 'chart-style-options', role: 'radiogroup', 'aria-label': 'Diseño de los gráficos' },
+        CHART_STYLES.map((style) =>
+          h('label', { class: 'chart-style-option' }, [
+            h('input', {
+              type: 'radio',
+              name: 'chartStyle',
+              value: style.id,
+              checked: current === style.id,
+              onchange: () => setChartStyle(style.id),
+            }),
+            h('span', { class: `chart-style-preview ${style.id === '3d' ? 'depth' : ''}`, 'aria-hidden': 'true' }, [
+              h('i'),
+              h('i'),
+              h('i'),
+              h('span', { class: 'preview-ring' }),
+            ]),
+            h('span', {}, [h('b', {}, style.label), h('span', { class: 'field-hint' }, style.description)]),
+          ]),
+        ),
+      ),
+      h(
+        'p',
+        { class: 'field-hint' },
+        'Se aplica al Resumen y a Reportes y se recuerda en este navegador. Los importes son los mismos en ambos diseños. Si el equipo no admite 3D, se muestra la vista 2D.',
+      ),
+    ]),
+  );
 }
 
 function dataPanel() {

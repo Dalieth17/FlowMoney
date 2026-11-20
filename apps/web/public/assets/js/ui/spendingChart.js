@@ -5,6 +5,7 @@ import { spendingChart } from '../domain/spendingChart.js';
 import { money, monthLabel } from '../core/format.js';
 import { webglAvailable } from './three/scene3d.js';
 import { mountColumns } from './three/columnsScene.js';
+import { getChartStyle } from '../core/chartStyle.js';
 
 export function spendingChartCard(transactions, month, year, today) {
   const data = spendingChart(transactions, month, year, today);
@@ -92,7 +93,7 @@ export function spendingChartCard(transactions, month, year, today) {
     ]),
   );
   // El SVG permanece visible mientras carga Three.js y también ante errores de GPU/red.
-  if (webglAvailable())
+  if (getChartStyle() === '3d' && webglAvailable())
     requestAnimationFrame(async () => {
       if (!canvas.isConnected) return;
       try {

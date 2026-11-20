@@ -1,6 +1,6 @@
 // Vista Reportes: resumen, dona por categoría y barras de 6 meses. Exporta a PDF (imprimir).
 import { h, mount, field } from '../ui/dom.js';
-import { donut, groupedBars } from '../ui/charts.js';
+import { donutChart, barsChart } from '../ui/financialChart.js';
 import { statCard, panel, emptyState } from '../ui/widgets.js';
 import { store } from '../core/store.js';
 import { money, signedBalance, monthLabel, MONTHS_SHORT } from '../core/format.js';
@@ -105,20 +105,21 @@ export async function render(root, { month, year }) {
         'Gastos por categoría',
         monthLabel(month, year),
         h('div', { class: 'donut-wrap' }, [
-          h('div', {
-            class: 'donut-chart',
-            html: donut(
+          h(
+            'div',
+            { class: 'donut-chart' },
+            donutChart(
               cats.map((c) => ({ label: c.category.name, value: c.value, color: c.category.color })),
               { total: t.expense },
             ),
-          }),
+          ),
           cats.length ? legend : emptyState('Sin gastos', 'No hay gastos este mes para graficar.'),
         ]),
       ),
       panel(
         'Ingresos y gastos',
         `últimos ${HISTORY_MONTHS} meses`,
-        h('div', { class: 'chart-pad', html: groupedBars(history, { width: 560, height: 240 }) }),
+        h('div', { class: 'chart-pad' }, barsChart(history, { width: 560, height: 240 })),
       ),
     ]),
     panel(
@@ -142,13 +143,16 @@ function accountActivity(accounts) {
         role: 'region',
         'aria-label': 'Gráfico de ingresos y gastos por cuenta',
       },
-      h('div', {
-        style: { minWidth: `${width}px`, width: `${width}px`, marginInline: 'auto' },
-        html: groupedBars(
+      h(
+        'div',
+        {
+          style: { minWidth: `${width}px`, width: `${width}px`, marginInline: 'auto' },
+        },
+        barsChart(
           accounts.map((a) => ({ ...a, label: a.label.length > 18 ? `${a.label.slice(0, 17)}…` : a.label })),
           { width, height: 240 },
         ),
-      }),
+      ),
     ),
     h(
       'div',

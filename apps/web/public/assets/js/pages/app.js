@@ -5,6 +5,7 @@ import { defineRoutes, mountRouter, render, shiftMonth, goToCurrentMonth } from 
 import { monthLabel } from '../core/format.js';
 import { openMovementForm } from '../forms/movementForm.js';
 import { mountThemeSwitches, THEME_EVENT } from '../core/theme.js';
+import { CHART_STYLE_EVENT } from '../core/chartStyle.js';
 import { runAction } from '../ui/feedback.js';
 import * as resumen from '../views/resumen.js';
 import * as movimientos from '../views/movimientos.js';
@@ -26,7 +27,7 @@ const ROUTES = [
   { id: 'categorias', title: 'Categorías', monthScoped: false, render: categorias.render },
   { id: 'presupuestos', title: 'Presupuestos', monthScoped: true, render: presupuestos.render },
   { id: 'reportes', title: 'Reportes', monthScoped: true, render: reportes.render },
-  { id: 'perfil', title: 'Perfil', monthScoped: false, render: perfil.render },
+  { id: 'perfil', title: 'Perfil y configuración', monthScoped: false, render: perfil.render },
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -84,7 +85,11 @@ async function init() {
     render();
   });
   // Las gráficas (SVG y 3D) leen los colores del tema al dibujarse: se redibuja la vista.
-  document.addEventListener(THEME_EVENT, () => render());
+  const redrawCharts = () => {
+    if (location.hash !== '#/perfil') render();
+  };
+  document.addEventListener(THEME_EVENT, redrawCharts);
+  document.addEventListener(CHART_STYLE_EVENT, redrawCharts);
 }
 
 init();

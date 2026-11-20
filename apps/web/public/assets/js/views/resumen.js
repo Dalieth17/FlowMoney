@@ -1,6 +1,6 @@
 // Vista Resumen: totales del mes, flujo semanal, categorías, presupuestos y recientes.
 import { h, mount } from '../ui/dom.js';
-import { groupedBars } from '../ui/charts.js';
+import { barsChart } from '../ui/financialChart.js';
 import { panel, emptyState, budgetMeter, movementRow } from '../ui/widgets.js';
 import { store } from '../core/store.js';
 import { go } from '../core/router.js';
@@ -45,7 +45,7 @@ export function render(root, { month, year }) {
       panel(
         'Flujo semanal',
         'ingresos vs. gastos',
-        h('div', { class: 'chart-pad', html: groupedBars(weeklyFlow(list, month, year), { width: 560, height: 220 }) }),
+        h('div', { class: 'chart-pad' }, barsChart(weeklyFlow(list, month, year), { width: 560, height: 220 })),
       ),
       panel('Gasto por categoría', monthLabel(month, year), categoryBreakdown(list)),
     ]),

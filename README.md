@@ -183,6 +183,26 @@ API: `POST /api/budgets/copy-previous` con `{month,year}` del mes destino (mes 0
 `{copied,existing,source,budgets}`. La copia solo opera sobre el usuario autenticado y rechaza
 períodos fuera de 2000–2100; enero de 2000 no tiene un mes anterior válido.
 
+### Diseño visual y gráficos 2D/3D (web)
+
+En **Configuración → Diseño de los gráficos** puedes elegir **2D · Claro y sencillo** o
+**3D · Inmersivo**, independientemente del tema Verde y negro / Blanco y negro. La elección
+se recuerda en este navegador; 2D es el valor inicial.
+
+El modo 3D utiliza los mismos importes: columnas con volumen para los gráficos del Resumen
+y Reportes, y un anillo extruido por categoría en el gráfico circular. Arrastra horizontalmente
+o utiliza los botones de giro y **Restablecer vista**. Los gráficos no añaden datos ni columnas
+para valores cero. La tabla desplegable permite consultar los importes exactos.
+
+La vista permanece quieta hasta interactuar, respeta movimiento reducido y vuelve a 2D si
+WebGL no está disponible. Al imprimir o exportar PDF se utilizan los gráficos 2D para conservar
+su legibilidad. Three.js solo se carga para las gráficas financieras al elegir 3D.
+
+En Movimientos, el conteo, los ingresos y los gastos se muestran en cuadros. En Operaciones,
+las cuentas se eligen con tarjetas de nombre, tipo e icono, también manejables con teclado.
+Los campos numéricos conservan su validación y permiten escribir directamente sin las flechas
+incrementales del navegador.
+
 ## Arquitectura
 
 Pequeñas ayudas de uso: el selector de fechas incluye **Mes actual** para regresar de un salto;

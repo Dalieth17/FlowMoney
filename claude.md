@@ -193,3 +193,13 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
   conserva destino/origen, es atómico e idempotente y funciona en el cambio de año. El store
   actualiza únicamente el mes destino y usa su control de revisiones para respuestas antiguas.
   `budgetStatus` distingue 100 % exacto de exceso. Toasts sin texto repetido y máximo tres recientes.
+- Diseño web: `core/chartStyle.js` + `flowmoney.chartStyle` (2d/3d, inicial 2d) y evento
+  `CHART_STYLE_EVENT`; `theme-init.js` restaura la preferencia antes del render. Perfil/configuración
+  ofrece radios independientes del tema. `ui/financialChart.js` conserva SVG y carga perezosamente
+  `three/financialScene.js` solo en 3D. Anillo extruido por proporciones y barras con alturas reales;
+  cámara ortográfica sin distorsión de aspecto, giro manual/botones, sin animación continua.
+  PDF usa SVG, fallos WebGL conservan 2D y una tabla permite consultar importes. El gráfico diario
+  respeta la misma preferencia. `mountScene` admite invalidate y cleanup para liberar listeners.
+  `accountPicker` usa fieldset/legend y radios nativos con tarjetas; mantiene valor para formularios
+  de transferencias, conciliación y recurrencias. Métricas de Movimientos en cuadros, sin steppers
+  visuales en campos numéricos. Mantener los íconos de tema (hoja y cuadrados) existentes.

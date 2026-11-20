@@ -27,6 +27,7 @@ export function palette() {
     ink: hex('--ink'),
     muted: hex('--muted'),
     accent: hex('--pine'),
+    expense: hex('--clay'),
     line: hex('--line'),
     grid: hex('--scene-grid'),
     past: hex('--scene-past'),
@@ -43,11 +44,13 @@ export async function mountScene(canvas, build, { animated = true } = {}) {
   const THREE = await loadThree();
   if (!canvas.isConnected) return () => {};
   let renderer, scene, observer, removalObserver;
+  let teardown;
   let frame = 0,
     disposed = false;
   const dispose = () => {
     if (disposed) return;
     disposed = true;
+    teardown?.();
     cancelAnimationFrame(frame);
     observer?.disconnect();
     removalObserver?.disconnect();
@@ -68,8 +71,10 @@ export async function mountScene(canvas, build, { animated = true } = {}) {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     scene = new THREE.Scene();
-    const ctx = { scene, renderer, colors: palette(), size: { w: 1, h: 1 } };
-    const { camera, update } = build(THREE, ctx);
+    let invalidate = () => {};
+    const ctx = { scene, renderer, colors: palette(), size: { w: 1, h: 1 }, invalidate: () => invalidate() };
+    const { camera, update, dispose: cleanup } = build(THREE, ctx);
+    teardown = cleanup;
     const still = !animated || reducedMotion();
     const t0 = performance.now();
     const draw = () => {
@@ -79,6 +84,7 @@ export async function mountScene(canvas, build, { animated = true } = {}) {
       renderer.render(scene, camera);
     };
     const resize = () => {
+      invalidate = draw;
       if (disposed) return;
       const w = canvas.clientWidth || 1,
         h = canvas.clientHeight || 1;

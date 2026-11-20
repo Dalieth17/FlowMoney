@@ -63,6 +63,9 @@ export function mountThemeSwitches(root = document) {
 
 function syncSwitches() {
   const current = getTheme();
+  document.querySelectorAll('input[name="theme"]').forEach((input) => {
+    input.checked = input.value === current;
+  });
   document.querySelectorAll('[data-theme-switch] button').forEach((b) => {
     b.setAttribute('aria-pressed', String(b.dataset.theme === current));
   });

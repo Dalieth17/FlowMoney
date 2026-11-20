@@ -1085,6 +1085,29 @@ body {
   font-weight: 600;
   font-size: 14px;
 }
+.movement-metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 115px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+.movement-metric > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.movement-metric b {
+  white-space: nowrap;
+  font-size: 14px;
+}
+.movement-metric.count b {
+  color: var(--ink);
+}
 .toolbar-sum > span,
 .toolbar-end .btn {
   white-space: nowrap;
@@ -1379,6 +1402,122 @@ input[readonly].input {
   color: var(--ink-soft);
 }
 
+.financial-chart {
+  min-width: 0;
+}
+.financial-chart.donut {
+  max-width: none;
+}
+.financial-viewport {
+  position: relative;
+  height: 280px;
+  background: radial-gradient(ellipse at 50% 65%, color-mix(in srgb, var(--pine) 7%, var(--card)), var(--card) 72%);
+  border-radius: 14px;
+}
+.financial-viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.financial-viewport canvas:active {
+  cursor: grabbing;
+}
+.financial-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.financial-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  padding: 3px 5px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.financial-label.axis {
+  transform: translate(-100%, -50%);
+}
+.financial-total {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: max-content;
+  max-width: 85%;
+  white-space: nowrap;
+  padding: 7px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  pointer-events: none;
+}
+.financial-total small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.financial-total b {
+  font-size: clamp(13px, 1.5vw, 20px);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.financial-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.financial-control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.financial-control-buttons .btn {
+  font-size: 11px;
+}
+.financial-data {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.financial-data summary {
+  cursor: pointer;
+}
+.financial-chart.donut .financial-chart-fallback {
+  max-width: 240px;
+  margin-inline: auto;
+}
+.donut-wrap:has([data-requested-style='3d']) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.donut-wrap:has([data-requested-style='3d']) .donut-chart {
+  width: 100%;
+}
+@media print {
+  .financial-viewport,
+  .financial-controls,
+  .financial-data,
+  .daily-scene canvas,
+  .daily-scene .scene-labels {
+    display: none !important;
+  }
+  .financial-chart-fallback[hidden],
+  .daily-chart-fallback[hidden] {
+    display: block !important;
+  }
+}
 .loading {
   color: var(--muted);
   text-align: center;
@@ -1418,6 +1557,206 @@ input[readonly].input {
   outline: none;
   border-color: var(--sage);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--pine) 18%, transparent);
+}
+/* Entrada manual de cifras, conservando validación y teclado decimal. */
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+select.input {
+  appearance: none;
+  padding-right: 38px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 13px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+.transfer-accounts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.account-picker {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.account-picker legend {
+  margin-bottom: 10px;
+}
+.account-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  gap: 10px;
+  max-height: 290px;
+  overflow-y: auto;
+  padding: 3px;
+}
+.account-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card-2);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.account-option:hover {
+  border-color: var(--sage);
+}
+.account-option:has(input:checked) {
+  border-color: var(--pine);
+  background: color-mix(in srgb, var(--pine) 10%, var(--card));
+}
+.account-option:has(input:focus-visible) {
+  outline: 2px solid var(--pine);
+  outline-offset: 2px;
+}
+.account-option input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.account-option-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: var(--card);
+  font-size: 23px;
+}
+.account-option-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.account-option-copy b {
+  font-size: 14px;
+}
+.account-option-copy small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.account-option-check {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: transparent;
+  text-align: center;
+}
+.account-option:has(input:checked) .account-option-check {
+  color: var(--on-pine);
+  background: var(--pine);
+  border-color: var(--pine);
+}
+.chart-style-options {
+  display: grid;
+  gap: 12px;
+}
+.chart-style-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+}
+.chart-style-option:has(input:checked) {
+  border-color: var(--pine);
+  background: color-mix(in srgb, var(--pine) 6%, var(--card));
+}
+.chart-style-option input {
+  accent-color: var(--pine);
+}
+.chart-style-option b {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+.chart-style-preview {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  width: 88px;
+  height: 54px;
+  flex-shrink: 0;
+  padding: 8px;
+  background: var(--card-2);
+  border-radius: 10px;
+}
+.chart-style-preview i {
+  width: 9px;
+  height: 18px;
+  background: var(--pine);
+  border-radius: 2px;
+}
+.chart-style-preview i:nth-child(2) {
+  height: 30px;
+}
+.chart-style-preview i:nth-child(3) {
+  height: 24px;
+}
+.chart-style-preview .preview-ring {
+  align-self: center;
+  width: 24px;
+  height: 24px;
+  border: 6px solid var(--brass);
+  border-radius: 50%;
+  margin-left: 4px;
+}
+.chart-style-preview.depth i {
+  transform: skewY(-12deg);
+  box-shadow: 4px 3px 0 color-mix(in srgb, var(--pine) 45%, var(--card));
+}
+.chart-style-preview.depth .preview-ring {
+  transform: rotateX(48deg) rotateZ(-20deg);
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--brass) 50%, var(--card));
+}
+@media (max-width: 700px) {
+  .transfer-accounts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .toolbar-sum {
+    width: 100%;
+    gap: 8px;
+  }
+  .movement-metric {
+    min-width: max-content;
+    flex: 1 1 110px;
+    padding: 9px 11px;
+  }
+  .movement-metric b {
+    font-size: 13px;
+  }
+  .chart-style-preview {
+    width: 65px;
+  }
 }
 textarea.input {
   resize: vertical;

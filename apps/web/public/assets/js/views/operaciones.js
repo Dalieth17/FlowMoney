@@ -5,6 +5,7 @@ import { api } from '../core/api.js';
 import { store } from '../core/store.js';
 import { money, isoDate, isoDateToMs } from '../core/format.js';
 import { uuid } from '../core/id.js';
+import { accountPicker } from '../ui/accountPicker.js';
 
 const input = (type, value = '', attrs = {}) => h('input', { class: 'input', type, value, ...attrs });
 const select = (items, value) =>
@@ -15,11 +16,7 @@ const select = (items, value) =>
       h('option', { value: id, selected: String(id) === String(value ?? items[0]?.[0]) }, name),
     ),
   );
-const accountSelect = (value) =>
-  select(
-    store.accounts.map((a) => [a.id, a.name]),
-    value,
-  );
+const accountSelect = (value, label = 'Cuenta') => accountPicker(store.accounts, value, { label });
 const categorySelect = (value) =>
   select(
     store.categories.map((c) => [c.id, c.name]),
@@ -41,8 +38,8 @@ async function refreshed() {
 function transferForm(existing) {
   const d = existing?.data;
   const id = existing?.id ?? uuid();
-  const from = accountSelect(d?.fromAccountId),
-    to = accountSelect(d?.toAccountId ?? store.accounts[1]?.id);
+  const from = accountSelect(d?.fromAccountId, 'Desde'),
+    to = accountSelect(d?.toAccountId ?? store.accounts[1]?.id, 'Hacia');
   const amount = input('number', d?.amount ?? '', { min: '0.01', max: '9999999999.99', step: '0.01', required: true });
   const fee = input('number', d?.fee ?? 0, { min: 0, step: '0.01' });
   const category = categorySelect(d?.categoryId);
@@ -54,8 +51,7 @@ function transferForm(existing) {
   const note = input('text', d?.note ?? '', { maxlength: 200 });
   return form(
     [
-      field('Desde', from),
-      field('Hacia', to),
+      h('div', { class: 'transfer-accounts' }, [from, to]),
       field('Monto', amount),
       field('Comisión (gasto real)', fee),
       field('Categoría de la comisión', category),
@@ -75,6 +71,8 @@ function transferForm(existing) {
         description: description.value,
         note: note.value,
       };
+      if (payload.fromAccountId === payload.toAccountId)
+        throw Error('Elige cuentas distintas para el origen y el destino.');
       await api[existing ? 'put' : 'post'](`/finance/transfers/${id}`, payload);
       toast('Transferencia guardada');
       await refreshed();
@@ -82,12 +80,7 @@ function transferForm(existing) {
   );
 }
 function reconciliationForm(accounts) {
-  const account = select(
-    accounts.map((a) => [
-      a.id,
-      `${a.name} · actual ${money(a.currentBalance)} · proyectado ${money(a.projectedBalance)}`,
-    ]),
-  );
+  const account = accountPicker(accounts, undefined, { label: 'Cuenta y saldo calculado hoy' });
   const actual = input('number', '', { step: '0.01', required: true });
   const note = input('text', '', { required: true, maxlength: 200 });
   const category = categorySelect();
@@ -99,7 +92,7 @@ function reconciliationForm(accounts) {
         {},
         'Compara el saldo actual con tu banco o efectivo. El ajuste queda registrado y no cuenta como ingreso o gasto. Los movimientos futuros solo aparecen en el saldo proyectado.',
       ),
-      field('Cuenta y saldo calculado hoy', account),
+      account,
       field('Saldo real observado', actual),
       field('Motivo de la diferencia', note),
       field('Categoría de referencia', category),
@@ -154,7 +147,7 @@ function scheduleForm(existing) {
       field('Monto mensual', amount),
       field('Tipo', type),
       field('Categoría', category),
-      field('Cuenta', account),
+      account,
       field('Desde', start),
       field('Hasta (opcional)', end),
       field('Día del mes', day, 'Si no existe ese día, se utiliza el último del mes.'),

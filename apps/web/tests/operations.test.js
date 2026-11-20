@@ -75,6 +75,34 @@ test('transferencia usa dos cuentas y conserva UUID para reintentos', async () =
   assert.ok(refreshes >= 2);
 });
 
+test('tarjetas de cuenta envían el origen y destino seleccionados sin un select nativo', async () => {
+  await reset();
+  const form = section('Transferencias').querySelector('form');
+  const pickers = [...form.querySelectorAll('fieldset.account-picker')];
+  assert.equal(pickers.length, 2);
+  assert.equal(pickers[0].querySelector('legend').textContent, 'Desde');
+  const choose = (picker, value) => {
+    const radio = [...picker.querySelectorAll('input[type=radio]')].find((r) => r.value === String(value));
+    radio.checked = true;
+    radio.dispatchEvent(new window.Event('change'));
+  };
+  choose(pickers[0], 2);
+  choose(pickers[1], 1);
+  control(form, 'Monto').value = '100';
+  await submit(form);
+  assert.equal(calls[0].body.fromAccountId, 2);
+  assert.equal(calls[0].body.toAccountId, 1);
+});
+test('elegir la misma cuenta en ambas tarjetas no envía una transferencia', async () => {
+  await reset();
+  const form = section('Transferencias').querySelector('form');
+  const pickers = form.querySelectorAll('fieldset.account-picker');
+  pickers[1].value = pickers[0].value;
+  control(form, 'Monto').value = '100';
+  await submit(form);
+  assert.equal(calls.length, 0);
+});
+
 test('conciliación requiere confirmación y envía el saldo esperado de la vista', async () => {
   await reset();
   const form = section('Conciliar saldos').querySelector('form');

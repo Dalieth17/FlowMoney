@@ -9,4 +9,12 @@
     /* almacenamiento bloqueado: se usa el tema por defecto */
   }
   document.documentElement.dataset.theme = theme;
+  let chartStyle = '2d';
+  try {
+    const saved = localStorage.getItem('flowmoney.chartStyle');
+    if (saved === '2d' || saved === '3d') chartStyle = saved;
+  } catch {
+    /* preferencia opcional */
+  }
+  document.documentElement.dataset.chartStyle = chartStyle;
 })();
