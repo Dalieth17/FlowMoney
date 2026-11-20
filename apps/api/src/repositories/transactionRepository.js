@@ -98,4 +98,11 @@ async function listPage(userId, { limit, beforeId, from, to }, db = pool) {
   return { items, nextCursor: rows.length > limit ? items.at(-1).id : null };
 }
 
-module.exports = { listByUser, listPage, findOwned, create, update, remove, removeAllByUser };
+async function listForImport(userId, from, to, db = pool) {
+  const [rows] = await db.query(
+    `SELECT ${COLUMNS} FROM transactions WHERE user_id=? AND date>=? AND date<? AND kind='NORMAL' AND operation_id IS NULL`,
+    [userId, from, to],
+  );
+  return rows.map(toTransaction);
+}
+module.exports = { listByUser, listPage, listForImport, findOwned, create, update, remove, removeAllByUser };

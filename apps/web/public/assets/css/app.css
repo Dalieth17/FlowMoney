@@ -702,6 +702,26 @@ body {
   border-collapse: collapse;
   font-size: 13px;
 }
+.csv-preview {
+  max-height: 340px;
+  overflow: auto;
+}
+.csv-preview .report-table {
+  min-width: 470px;
+}
+.csv-preview td {
+  overflow-wrap: anywhere;
+}
+.csv-preview th:first-child,
+.csv-preview td:first-child,
+.csv-preview .tnum {
+  white-space: nowrap;
+}
+.csv-preview thead {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+}
 .report-table caption {
   text-align: left;
   margin: 14px 0 8px;

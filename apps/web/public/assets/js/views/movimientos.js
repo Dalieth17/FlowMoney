@@ -6,6 +6,7 @@ import { store } from '../core/store.js';
 import { money } from '../core/format.js';
 import { inMonth, totals, filterTransactions } from '../domain/selectors.js';
 import { openMovementForm } from '../forms/movementForm.js';
+import { openTransactionImport } from '../forms/importTransactions.js';
 
 const DEFAULT_FILTERS = Object.freeze({ type: 'ALL', categoryId: 'ALL', accountId: 'ALL', query: '' });
 // A nivel de módulo: los filtros sobreviven a los re-renders (p. ej. tras guardar).
@@ -196,7 +197,11 @@ export function render(root, { month, year }) {
         select('accountId', 'Cuenta', [['ALL', 'Todas las cuentas'], ...store.accounts.map((a) => [a.id, a.name])]),
         resetButton,
       ]),
-      h('div', { class: 'toolbar-end' }, [summary, exportButton]),
+      h('div', { class: 'toolbar-end' }, [
+        summary,
+        h('button', { class: 'btn btn-ghost sm', onclick: openTransactionImport }, 'Importar CSV'),
+        exportButton,
+      ]),
     ]),
     activeFilters,
     listHost,

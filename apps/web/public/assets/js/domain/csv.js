@@ -2,7 +2,7 @@
 // un texto que empieza por = + - @ se abre en Excel como fórmula, así que se
 // antepone un apóstrofo. Los números se dejan tal cual.
 
-const FORMULA_START = /^[=+\-@\t\r]/;
+const FORMULA_START = /^[=+\-@'\t\r\n]/;
 
 export function csvCell(value) {
   if (value == null) return '';

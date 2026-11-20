@@ -63,6 +63,7 @@ function buildApiRouter() {
   router.use('/budgets', budgetRoutes);
   router.use('/categories', crudRouter(categoryService, categorySchema));
   router.use('/accounts', crudRouter(accountService, accountSchema));
+  router.use('/transactions/import', require('./transactionImport.routes'));
   router.get(
     '/transactions/page',
     validate(transactionQuerySchema, 'query'),

@@ -162,3 +162,24 @@ test('si falla la recarga tras un guardado confirmado, avisa sin informar que fa
   await store.load();
   assert.equal(store.syncError, null);
 });
+
+test('importación confirmada mantiene el éxito si falla recargar y permite recuperar la caché', async () => {
+  const server = data('Importación');
+  serve(server);
+  await store.load();
+  api.post = async () => ({ imported: 2, skipped: 1, excluded: 0 });
+  api.get = async () => {
+    throw Error('Sin conexión');
+  };
+  const result = await store.importTransactions({ csv: 'CSV revisado', currency: 'COP', digest: 'a'.repeat(64) });
+  assert.equal(result.imported, 2);
+  assert.match(store.syncError, /La importación se guardó/);
+  server.transactions = [
+    { id: 101, amount: 10 },
+    { id: 102, amount: 20 },
+  ];
+  serve(server);
+  await store.load();
+  assert.equal(store.transactions.length, 2);
+  assert.equal(store.syncError, null);
+});

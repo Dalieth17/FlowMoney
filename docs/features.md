@@ -20,6 +20,12 @@ fuera de orden. Esta lista define el alcance actual; no implica que cualquier fu
 | Respaldos    | Descarga JSON, vista previa, confirmación con contraseña y restauración atómica con remapeo de IDs.                                                     |
 | Interfaz     | Temas, estados vacíos/errores, confirmaciones, protección contra doble envío, descarte de respuestas antiguas y recarga tras pérdida de sincronización. |
 
+La vista Movimientos permite importar CSV mediante una plantilla actual o una exportación nueva.
+La vista previa distingue altas, coincidencias, operaciones excluidas y errores. El lote solo se
+guarda si todas sus filas normales son válidas; se exige revisar de nuevo si cambia el plan.
+Máximo 500 filas/256 KB; no hay conversión de moneda ni interpretación de CSV bancarios arbitrarios.
+Las operaciones especiales se trasladan mediante JSON, no como movimientos ordinarios.
+
 ## Configuración para usar los flujos
 
 - `docker compose up --build` aplica las migraciones automáticamente. La migración 010 añade
@@ -48,10 +54,14 @@ no se presenta este cambio como paginación remota de toda la aplicación.
 
 ## Validación de esta entrega
 
-- `npm run check`: lint, formato, 84 pruebas web/DOM y 34 unitarias de API.
-- MySQL 8: 69 pruebas de integración, incluidas entrega SMTP local, caducidad, consumo
+- `npm run check`: lint, formato, 92 pruebas web/DOM y 42 unitarias de API.
+- MySQL 8: 76 pruebas de integración, incluidas entrega SMTP local, caducidad, consumo
   concurrente del enlace, revocación de sesiones y reportes con límites de fecha colombianos.
 - Chromium: registro, navegación por las nueve vistas, filtro por cuenta, generación PDF,
   recuperación en la misma pestaña y reingreso con la nueva contraseña; sin errores JavaScript.
   Reportes verificado a 375 y 1440 píxeles sin desbordamiento de página.
 - CI ejecuta además compilación de imágenes Docker y build/tests/lint Android.
+- Importación CSV: parseo RFC 4180, coincidencias con multiplicidad, exclusión de operaciones,
+  confirmaciones concurrentes sin duplicados, rollback completo, moneda, aislamiento, respuesta
+  tardía de otro archivo y recuperación tras fallo de recarga. Chromium comprueba exportación,
+  importación de cuatro filas, saldos exactos, reimportación y errores a 375/1440 píxeles.

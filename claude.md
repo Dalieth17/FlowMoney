@@ -176,3 +176,12 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
   Vistas asíncronas descartan respuestas de otra ruta, período, render o moneda; PDF respeta filtro.
   Resumen y otras vistas siguen utilizando el histórico local cargado por páginas.
 - Estado detallado y alcance Android offline: `docs/features.md`.
+- Importación CSV web: `forms/importTransactions.js`, `domain/transactionCsv.js`,
+  `transactionImportService`, `utils/transactionCsv.js`, `transactionImport.routes` y esquemas.
+  POST `/transactions/import/preview` devuelve plan/digest; POST `/transactions/import` lo
+  revalida bajo bloqueo del usuario y escribe todas las altas/historial o ninguna. 500 filas,
+  256 KB UTF-8, encabezados estrictos de la plantilla (incluidos Clase y Operación), sin conversión.
+  Coincidencias por día colombiano y campos financieros/texto; se conserva multiplicidad del CSV.
+  TRANSFER/ADJUSTMENT y toda fila con operationId se excluyen. Usar JSON para conservar relaciones.
+  Exportaciones nuevas añaden Clase/Operación y escapan apóstrofos para poder reimportar texto literal.
+  Store importa mediante su barrera de sustitución y distingue guardado exitoso de recarga fallida.

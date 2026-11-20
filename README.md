@@ -134,6 +134,34 @@ los movimientos posteriores afectan únicamente al saldo proyectado.
 | **Apariencia**   | Dos temas a elección: **Verde y negro** (por defecto) o **Blanco y negro**. Escenas 3D con Three.js.                                                                         |
 | **IA**           | Sugiere la categoría al escribir la descripción (reglas por palabras clave, en el navegador).                                                                                |
 
+### Importar movimientos CSV (web)
+
+En **Movimientos → Importar CSV**, descarga la plantilla, reemplaza la fila de ejemplo con tus
+movimientos y selecciona el archivo. También se admite el CSV exportado por la versión actual.
+La vista previa muestra filas nuevas, coincidencias, operaciones excluidas y errores. Solo se
+guarda al confirmar y no se escribe nada si hay alguna fila inválida.
+
+- Máximo **500 filas y 256 KB** por archivo, en UTF-8. Las columnas, en este orden, son:
+  `Fecha,Descripción,Tipo,Categoría,Cuenta,Monto (COP),Nota,Clase,Operación`.
+  En una cuenta USD, el encabezado del monto debe ser `Monto (USD)`.
+- Fecha `AAAA-MM-DD`, tipo `Ingreso` o `Gasto`, monto sin separadores de miles y con punto decimal
+  (máximo dos decimales). Los gastos pueden escribirse positivos o negativos; los ingresos son positivos.
+- Categorías y cuentas deben existir y se buscan por nombre; Cuenta puede estar vacía. Nombres
+  repetidos se consideran ambiguos y deben corregirse antes de importar. Para filas individuales
+  usa `Clase=NORMAL` y deja `Operación` vacía.
+- Se omiten coincidencias que ya existen por día colombiano, tipo, monto, descripción, categoría,
+  cuenta y nota. Se respeta la cantidad de filas iguales: si el archivo contiene dos y ya existe
+  una, se añade una. Los movimientos existentes no se modifican.
+- Los CSV nuevos identifican transferencias, conciliaciones y comisiones vinculadas; esas filas se
+  excluyen. Para trasladar operaciones, recurrencias y metas con sus relaciones utiliza el respaldo
+  JSON. Los CSV antiguos sin las dos columnas finales deben adaptarse a la plantilla actual.
+- No hay conversión de moneda durante la importación. Si cambian la moneda, las referencias o
+  las coincidencias después de revisar el archivo, se exige revisarlo de nuevo. Cada alta deja
+  historial y todo el lote se confirma en una sola transacción.
+
+El formato es el de FlowMoney. Un CSV bancario con otras columnas debe adaptarse a la plantilla;
+no se interpretan automáticamente formatos de bancos ni separadores decimales ambiguos.
+
 ## Arquitectura
 
 Pequeñas ayudas de uso: el selector de fechas incluye **Mes actual** para regresar de un salto;
@@ -236,6 +264,11 @@ Todas las rutas (salvo `health` y `auth`) requieren sesión y operan solo sobre 
 | GET POST PUT DELETE | `/api/categories[/:id]`                                 | Categorías                                |
 | GET · PUT           | `/api/budgets`                                          | Presupuestos (PUT con monto 0 lo elimina) |
 | POST                | `/api/data/reset`                                       | Restaura el mes de ejemplo                |
+
+La importación usa `POST /api/transactions/import/preview` con `{csv,currency}` y devuelve
+`{currency,digest,summary,rows,valid}` sin escribir. La confirmación es
+`POST /api/transactions/import` con `{csv,currency,digest}` y devuelve
+`{imported,skipped,excluded}`. El servidor vuelve a calcular el plan; un digest obsoleto recibe 409.
 
 Errores: `{ "error": "mensaje en español" }` con 400 (validación), 401, 404, 409 (regla de negocio) o 429.
 

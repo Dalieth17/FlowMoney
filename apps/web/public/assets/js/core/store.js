@@ -115,6 +115,19 @@ class Store {
   }
 
   // ---- Movimientos ----
+  async importTransactions(payload) {
+    return this.#replace(async () => {
+      const result = await api.post('/transactions/import', payload);
+      try {
+        await this.load();
+      } catch {
+        this.#syncError =
+          'La importación se guardó, pero no se pudieron actualizar los datos en pantalla. Vuelve a cargar el panel.';
+        this.#commit({});
+      }
+      return result;
+    });
+  }
   async addTransaction(payload) {
     return this.#mutate(
       () => api.post('/transactions', payload),
