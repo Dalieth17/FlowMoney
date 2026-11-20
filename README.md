@@ -23,6 +23,9 @@ Compose y las herramientas de calidad se ejecutan desde esta raíz.
 
 ## Ejecutar
 
+Para Railway, consulta la [guía de despliegue](docs/railway.md). El `Dockerfile` y `railway.json`
+de la raíz construyen un servicio con web y API; MySQL se conecta como servicio separado.
+
 ```bash
 docker compose up --build
 ```

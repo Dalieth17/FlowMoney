@@ -6,7 +6,7 @@ const config = require('./config');
 const buildApiRouter = require('./routes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
-function createApp() {
+function createApp({ serveWeb = config.web.enabled, webRoot = config.web.root } = {}) {
   const app = express();
 
   // Detrás de Nginx: confiar en X-Forwarded-For (IP real para el rate limit).
@@ -26,6 +26,8 @@ function createApp() {
     },
     buildApiRouter(),
   );
+
+  if (serveWeb) app.use(require('./middleware/serveWeb')(webRoot, { production: config.isProduction }));
 
   app.use(notFound);
   app.use(errorHandler);

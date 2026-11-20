@@ -1,11 +1,16 @@
 // Configuración centralizada. Único lugar que lee process.env.
 
 const env = process.env.NODE_ENV || 'development';
+const path = require('node:path');
+// Railway publica estos nombres; DB_* conserva prioridad para Compose y otras instalaciones.
+const dbPassword = process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || '';
 
 if (env === 'production') {
-  const password = process.env.DB_PASSWORD || '';
+  const password = dbPassword;
   if (password.length < 16 || /^(flowmoney|rootpass|cambia-esta-clave)$/i.test(password)) {
-    throw new Error('En producción DB_PASSWORD debe ser una contraseña propia de al menos 16 caracteres');
+    throw new Error(
+      'En producción DB_PASSWORD (o MYSQLPASSWORD) debe ser una contraseña propia de al menos 16 caracteres',
+    );
   }
   if (process.env.COOKIE_SECURE !== 'true') {
     throw new Error('En producción se requiere HTTPS y COOKIE_SECURE=true');
@@ -40,6 +45,10 @@ const config = Object.freeze({
   isTest: env === 'test',
   port: toInt(process.env.PORT, 3000),
   trustProxy: Number(trustProxy),
+  web: Object.freeze({
+    enabled: process.env.SERVE_WEB === 'true',
+    root: path.resolve(process.env.WEB_ROOT || path.join(__dirname, '../../../web/public')),
+  }),
   publicUrl: publicUrl.origin,
   mail: Object.freeze({
     enabled: Boolean(mailHost),
@@ -52,11 +61,11 @@ const config = Object.freeze({
   }),
 
   db: Object.freeze({
-    host: process.env.DB_HOST || 'localhost',
-    port: toInt(process.env.DB_PORT, 3306),
-    user: process.env.DB_USER || 'flowmoney',
-    password: process.env.DB_PASSWORD || 'flowmoney',
-    database: process.env.DB_NAME || 'flowmoney',
+    host: process.env.DB_HOST || process.env.MYSQLHOST || 'localhost',
+    port: toInt(process.env.DB_PORT || process.env.MYSQLPORT, 3306),
+    user: process.env.DB_USER || process.env.MYSQLUSER || 'flowmoney',
+    password: dbPassword || 'flowmoney',
+    database: process.env.DB_NAME || process.env.MYSQLDATABASE || 'flowmoney',
     connectionLimit: toInt(process.env.DB_POOL_SIZE, 10),
   }),
 

@@ -37,3 +37,39 @@ test('recuperación exige origen público HTTPS en producción y sin credenciale
   ])
     assert.notEqual(load({ ...production, PUBLIC_APP_URL }).status, 0);
 });
+
+test('Railway acepta MYSQLPASSWORD y mantiene la validación de producción', () => {
+  const base = { DB_PASSWORD: '', MYSQLPASSWORD: 'railway-only-test-password', COOKIE_SECURE: 'true' };
+  assert.equal(load(base).status, 0);
+  assert.notEqual(load({ ...base, MYSQLPASSWORD: 'flowmoney' }).status, 0);
+  assert.notEqual(load({ ...base, DB_PASSWORD: 'cambia-esta-clave' }).status, 0);
+});
+
+test('variables MYSQL de Railway se resuelven y DB tiene prioridad si se especifica', () => {
+  const print = `const c=require(${JSON.stringify(path.resolve(__dirname, '../../src/config'))});process.stdout.write(JSON.stringify({host:c.db.host,port:c.db.port,user:c.db.user,database:c.db.database}))`;
+  const env = {
+    ...process.env,
+    NODE_ENV: 'test',
+    DB_HOST: '',
+    DB_PORT: '',
+    DB_USER: '',
+    DB_NAME: '',
+    MYSQLHOST: 'mysql.railway.internal',
+    MYSQLPORT: '3307',
+    MYSQLUSER: 'railway-user',
+    MYSQLDATABASE: 'railway-db',
+  };
+  const first = spawnSync(process.execPath, ['-e', print], { env, encoding: 'utf8' });
+  assert.equal(first.status, 0);
+  assert.deepEqual(JSON.parse(first.stdout), {
+    host: 'mysql.railway.internal',
+    port: 3307,
+    user: 'railway-user',
+    database: 'railway-db',
+  });
+  const second = spawnSync(process.execPath, ['-e', print], {
+    env: { ...env, DB_HOST: 'db', DB_PORT: '3308', DB_USER: 'local-user', DB_NAME: 'local-db' },
+    encoding: 'utf8',
+  });
+  assert.deepEqual(JSON.parse(second.stdout), { host: 'db', port: 3308, user: 'local-user', database: 'local-db' });
+});

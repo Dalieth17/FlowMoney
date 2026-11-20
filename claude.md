@@ -203,3 +203,11 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
   `accountPicker` usa fieldset/legend y radios nativos con tarjetas; mantiene valor para formularios
   de transferencias, conciliación y recurrencias. Métricas de Movimientos en cuadros, sin steppers
   visuales en campos numéricos. Mantener los íconos de tema (hoja y cuadrados) existentes.
+- Railway: `railway.json` usa el `Dockerfile` raíz (contexto raíz), que instala solo dependencias
+  API y copia la web a `/app/public`. `SERVE_WEB=true` + `WEB_ROOT` activa estáticos con CSP,
+  revalidación y rutas privadas protegidas; la API separada de Compose sigue sin publicar HTML.
+  Se escucha `PORT` y se mantienen los requisitos de producción/HTTPS. Config acepta los alias
+  `MYSQLHOST/PORT/USER/PASSWORD/DATABASE` de Railway con prioridad para `DB_*`. La raíz tiene
+  `npm start`; el Dockerfile ejecuta `node src/server.js`. Guía en `docs/railway.md`.
+  CI construye/arranca la imagen unificada con MySQL y valida login/cookie segura mediante
+  `scripts/railway-smoke.cjs`. No incluir secretos ni usar el hostname Docker `db` en Railway.

@@ -15,7 +15,7 @@ export default [
     languageOptions: { sourceType: 'module', globals: globals.node },
   },
   {
-    files: ['apps/api/**/*.js'],
+    files: ['apps/api/**/*.js', 'scripts/**/*.cjs'],
     languageOptions: { sourceType: 'commonjs', globals: globals.node },
   },
   {

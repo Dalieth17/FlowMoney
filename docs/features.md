@@ -65,7 +65,7 @@ no se presenta este cambio como paginación remota de toda la aplicación.
 
 ## Validación de esta entrega
 
-- `npm run check`: lint, formato, 115 pruebas web/DOM y 42 unitarias de API.
+- `npm run check`: lint, formato, 115 pruebas web/DOM y 48 unitarias de API.
 - MySQL 8: 81 pruebas de integración, incluidas entrega SMTP local, caducidad, consumo
   concurrente del enlace, revocación de sesiones y reportes con límites de fecha colombianos.
 - Chromium: registro, navegación por las nueve vistas, filtro por cuenta, generación PDF,

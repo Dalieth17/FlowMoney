@@ -1,0 +1,13 @@
+.git
+**/node_modules
+**/.env
+**/.env.*
+**/npm-debug.log*
+**/tests
+**/build
+**/.gradle
+apps/android
+docs
+.github
+.vscode
+FlowMoney
