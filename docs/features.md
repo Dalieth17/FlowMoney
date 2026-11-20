@@ -26,6 +26,12 @@ guarda si todas sus filas normales son válidas; se exige revisar de nuevo si ca
 Máximo 500 filas/256 KB; no hay conversión de moneda ni interpretación de CSV bancarios arbitrarios.
 Las operaciones especiales se trasladan mediante JSON, no como movimientos ordinarios.
 
+Presupuestos permite copiar los límites del mes anterior sin sobrescribir los del destino.
+El resumen separa gastos con/sin límite y muestra el exceso real. La edición valida céntimos,
+conserva el límite ante números inválidos y permite reintentar un guardado fallido. Las categorías
+no se ocultan por llamarse Salario; alcanzar el 100 % se distingue de superar el presupuesto.
+Los avisos repetidos se agrupan y se mantienen como máximo tres avisos recientes.
+
 ## Configuración para usar los flujos
 
 - `docker compose up --build` aplica las migraciones automáticamente. La migración 010 añade
@@ -54,8 +60,8 @@ no se presenta este cambio como paginación remota de toda la aplicación.
 
 ## Validación de esta entrega
 
-- `npm run check`: lint, formato, 92 pruebas web/DOM y 42 unitarias de API.
-- MySQL 8: 76 pruebas de integración, incluidas entrega SMTP local, caducidad, consumo
+- `npm run check`: lint, formato, 104 pruebas web/DOM y 42 unitarias de API.
+- MySQL 8: 81 pruebas de integración, incluidas entrega SMTP local, caducidad, consumo
   concurrente del enlace, revocación de sesiones y reportes con límites de fecha colombianos.
 - Chromium: registro, navegación por las nueve vistas, filtro por cuenta, generación PDF,
   recuperación en la misma pestaña y reingreso con la nueva contraseña; sin errores JavaScript.
@@ -65,3 +71,6 @@ no se presenta este cambio como paginación remota de toda la aplicación.
   confirmaciones concurrentes sin duplicados, rollback completo, moneda, aislamiento, respuesta
   tardía de otro archivo y recuperación tras fallo de recarga. Chromium comprueba exportación,
   importación de cuatro filas, saldos exactos, reimportación y errores a 375/1440 píxeles.
+- Presupuestos: copia concurrente sin sobrescribir, cambio de año, rollback, aislamiento y moneda;
+  resumen en céntimos, validación y reintento. Chromium comprueba negativos y números incompletos,
+  copia del mes anterior, error de red/reintento, 100 %, eliminación explícita y anchos 375/1440.

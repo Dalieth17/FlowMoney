@@ -134,6 +134,7 @@ const budgetSchema = z.object({
 });
 
 const idParamSchema = z.object({ id: positiveId('Identificador no válido') });
+const copyBudgetSchema = budgetSchema.pick({ month: true, year: true });
 
 const transactionQuerySchema = z
   .object({
@@ -176,6 +177,7 @@ module.exports = {
   accountSchema,
   transactionSchema,
   budgetSchema,
+  copyBudgetSchema,
   idParamSchema,
   transactionQuerySchema,
   monthlyReportQuery,

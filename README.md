@@ -162,6 +162,27 @@ guarda al confirmar y no se escribe nada si hay alguna fila inválida.
 El formato es el de FlowMoney. Un CSV bancario con otras columnas debe adaptarse a la plantilla;
 no se interpretan automáticamente formatos de bancos ni separadores decimales ambiguos.
 
+### Presupuestos mensuales (web)
+
+**Presupuestos → Copiar del mes anterior** completa las categorías que aún no tienen límite.
+Conserva los importes ya definidos en el mes destino, funciona al cambiar de diciembre a enero
+y no duplica límites al repetir una solicitud. El botón se deshabilita cuando no hay nada que copiar.
+La copia usa la moneda actual y se guarda en una sola transacción.
+
+El resumen separa **Gastos con límite** de **Gastos sin límite**. Disponible compara los límites
+con los gastos de sus categorías; si el resultado es negativo, muestra **Excedido** con el importe
+del exceso. Se incluyen los gastos registrados para todo el mes, también los de fechas futuras.
+Todas las categorías pueden tener límite, incluidas las llamadas Salario.
+
+Los límites admiten céntimos y se guardan al salir del campo. Un número negativo o incompleto
+se marca como error y no borra el límite anterior. Vacío o cero lo quita expresamente. Si falla
+la conexión, se conserva el valor escrito y se ofrece **Reintentar guardado**.
+Al llegar exactamente al 100 % se indica **Límite alcanzado**, y por encima, **Presupuesto superado**.
+
+API: `POST /api/budgets/copy-previous` con `{month,year}` del mes destino (mes 0–11) devuelve
+`{copied,existing,source,budgets}`. La copia solo opera sobre el usuario autenticado y rechaza
+períodos fuera de 2000–2100; enero de 2000 no tiene un mes anterior válido.
+
 ## Arquitectura
 
 Pequeñas ayudas de uso: el selector de fechas incluye **Mes actual** para regresar de un salto;

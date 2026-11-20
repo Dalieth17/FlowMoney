@@ -20,4 +20,19 @@ async function set(userId, { categoryId, month, year, amount }) {
   });
 }
 
-module.exports = { list, set };
+async function copyPrevious(userId, target) {
+  const previous = new Date(Date.UTC(target.year, target.month - 1, 1));
+  const source = { month: previous.getUTCMonth(), year: previous.getUTCFullYear() };
+  if (source.year < 2000) throw HttpError.badRequest('No hay un mes anterior válido para enero de 2000');
+  return withUserTransaction(userId, async (db) => {
+    const available = await budgetRepository.listPeriod(userId, source, db);
+    const copied = await budgetRepository.copyMissing(userId, source, target, db);
+    return {
+      copied,
+      existing: available.length - copied,
+      source,
+      budgets: await budgetRepository.listPeriod(userId, target, db),
+    };
+  });
+}
+module.exports = { list, set, copyPrevious };

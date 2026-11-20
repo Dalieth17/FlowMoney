@@ -192,6 +192,15 @@ class Store {
   }
 
   // ---- Presupuestos ----
+  async copyPreviousBudgets(month, year) {
+    return this.#mutate(
+      () => api.post('/budgets/copy-previous', { month, year }),
+      (result) =>
+        this.#commit({
+          budgets: [...this.budgets.filter((b) => b.month !== month || b.year !== year), ...result.budgets],
+        }),
+    );
+  }
   async setBudget(categoryId, month, year, amount) {
     return this.#mutate(
       () => api.put('/budgets', { categoryId, month, year, amount }),

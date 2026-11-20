@@ -71,6 +71,9 @@ export function toast(message, type = 'ok') {
     host = h('div', { class: 'toast-host', role: 'status', 'aria-live': 'polite' });
     document.body.append(host);
   }
+  // Con cambios rápidos, conserva los avisos recientes sin repetir el mismo texto.
+  for (const previous of [...host.children]) if (previous.textContent === String(message)) previous.remove();
+  while (host.childElementCount >= 3) host.firstElementChild.remove();
   const el = h('div', { class: `toast ${type}` }, message);
   host.append(el);
   requestAnimationFrame(() => el.classList.add('show'));

@@ -70,7 +70,7 @@ export function monthlySeries(transactions, month, year, count, labelOf) {
 export function budgetStatus(spent, budget) {
   if (!(budget > 0)) return null;
   const pct = (spent / budget) * 100;
-  if (pct >= 100) return { pct, level: 'over', label: 'Presupuesto superado' };
+  if (pct >= 100) return { pct, level: 'over', label: pct === 100 ? 'Límite alcanzado' : 'Presupuesto superado' };
   if (pct >= BUDGET_WARNING_PCT) return { pct, level: 'warn', label: 'Cerca del límite' };
   return { pct, level: 'ok', label: 'En control' };
 }

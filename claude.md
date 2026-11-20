@@ -185,3 +185,11 @@ Paper `#f1f4ef` · Ink `#16231e` · Pine `#1f4d3a` (ingresos) · Clay `#c25a44` 
   TRANSFER/ADJUSTMENT y toda fila con operationId se excluyen. Usar JSON para conservar relaciones.
   Exportaciones nuevas añaden Clase/Operación y escapan apóstrofos para poder reimportar texto literal.
   Store importa mediante su barrera de sustitución y distingue guardado exitoso de recarga fallida.
+- Presupuestos web: `domain/budgets.js` calcula con céntimos y separa gastos con/sin límite;
+  muestra Excedido sin recortar la diferencia a cero. Todas las categorías son editables,
+  sin inferir su tipo por el nombre. `parseBudgetAmount` rechaza negativos/incompletos y
+  fracciones de céntimo; vacío/0 quitan el límite, error de red ofrece reintentar el mismo borrador.
+  POST `/budgets/copy-previous {month,year}` copia solo límites ausentes bajo bloqueo del usuario;
+  conserva destino/origen, es atómico e idempotente y funciona en el cambio de año. El store
+  actualiza únicamente el mes destino y usa su control de revisiones para respuestas antiguas.
+  `budgetStatus` distingue 100 % exacto de exceso. Toasts sin texto repetido y máximo tres recientes.

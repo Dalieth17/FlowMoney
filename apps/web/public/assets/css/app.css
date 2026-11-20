@@ -1239,6 +1239,12 @@ body {
 .bud-row .field {
   margin: 0;
 }
+.bud-row .field-error {
+  display: block;
+  margin-top: 6px;
+  color: var(--clay);
+  font-size: 12px;
+}
 
 /* cuentas */
 .acc-grid {

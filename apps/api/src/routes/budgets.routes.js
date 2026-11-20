@@ -2,10 +2,17 @@
 const express = require('express');
 const asyncHandler = require('../utils/asyncHandler');
 const validate = require('../middleware/validate');
-const { budgetSchema } = require('../validation/schemas');
+const { budgetSchema, copyBudgetSchema } = require('../validation/schemas');
 const budgetService = require('../services/budgetService');
 
 const router = express.Router();
+router.post(
+  '/copy-previous',
+  validate(copyBudgetSchema),
+  asyncHandler(async (req, res) => {
+    res.json(await budgetService.copyPrevious(req.userId, req.valid.body));
+  }),
+);
 
 router.get(
   '/',

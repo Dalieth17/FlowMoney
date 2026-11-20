@@ -47,4 +47,22 @@ async function removeAllByUser(userId, db = pool) {
   await db.query('DELETE FROM budgets WHERE user_id = ?', [userId]);
 }
 
-module.exports = { listByUser, find, upsert, remove, removeAllByUser };
+async function listPeriod(userId, { month, year }, db = pool) {
+  const [rows] = await db.query(
+    `SELECT ${COLUMNS} FROM budgets WHERE user_id=? AND month=? AND year=? AND amount>0 ORDER BY id`,
+    [userId, month, year],
+  );
+  return rows.map(toBudget);
+}
+
+async function copyMissing(userId, source, target, db) {
+  const [result] = await db.query(
+    `INSERT INTO budgets (user_id,category_id,amount,month,year)
+    SELECT s.user_id,s.category_id,s.amount,?,? FROM budgets s
+    LEFT JOIN budgets t ON t.user_id=s.user_id AND t.category_id=s.category_id AND t.month=? AND t.year=?
+    WHERE s.user_id=? AND s.month=? AND s.year=? AND s.amount>0 AND t.id IS NULL`,
+    [target.month, target.year, target.month, target.year, userId, source.month, source.year],
+  );
+  return result.affectedRows;
+}
+module.exports = { listByUser, listPeriod, copyMissing, find, upsert, remove, removeAllByUser };
