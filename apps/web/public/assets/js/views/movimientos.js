@@ -1,5 +1,7 @@
 // Vista Movimientos: lista del mes con búsqueda, filtros y exportación a CSV.
 import { h, mount } from '../ui/dom.js';
+import { movementFilter, filterIcon } from '../ui/movementFilter.js';
+import { ACCOUNT_TYPES } from '../domain/accountTypes.js';
 import { emptyState, movementRow } from '../ui/widgets.js';
 import { exportTransactionsCsv } from '../ui/exportCsv.js';
 import { store } from '../core/store.js';
@@ -56,7 +58,7 @@ export function render(root, { month, year }) {
     'aria-label': 'Filtros activos',
     hidden: true,
   });
-  const filterControls = {};
+  const resetControls = {};
   const listHost = h('div');
   const exportButton = h(
     'button',
@@ -103,16 +105,15 @@ export function render(root, { month, year }) {
               'aria-label': `Quitar filtro ${labels[key]}`,
               onclick: () => {
                 filters[key] = DEFAULT_FILTERS[key];
-                const control = filterControls[key];
-                control.value = filters[key];
+                resetControls[key]();
                 page = 0;
                 draw();
-                control.focus();
               },
             },
             [h('span', { class: 'filter-chip-text' }, labels[key]), h('span', { 'aria-hidden': 'true' }, '×')],
           ),
         ),
+      resetButton,
     );
   }
 
@@ -144,7 +145,6 @@ export function render(root, { month, year }) {
             ),
     );
     exportButton.disabled = visible.length === 0;
-    resetButton.hidden = !isFiltered();
     drawFilters();
     exportButton.title = `Exportar ${visible.length} movimientos${isFiltered() ? ' filtrados' : ' del mes'}`;
     listHost.append(
@@ -153,13 +153,16 @@ export function render(root, { month, year }) {
   }
 
   const search = h('input', {
-    class: 'input slim search',
+    class: 'movement-query',
     type: 'search',
-    placeholder: 'Buscar por descripción o nota…',
+    placeholder: 'Descripción o nota…',
     value: filters.query,
     'aria-label': 'Buscar movimientos',
   });
-  filterControls.query = search;
+  resetControls.query = () => {
+    search.value = '';
+    search.focus();
+  };
   search.addEventListener('input', () => {
     filters.query = search.value;
     page = 0;
@@ -167,38 +170,42 @@ export function render(root, { month, year }) {
   });
 
   const select = (key, label, options) => {
-    const el = h(
-      'select',
-      { class: 'input slim', 'aria-label': label },
-      options.map(([value, text]) =>
-        h('option', { value: String(value), selected: String(filters[key]) === String(value) }, text),
-      ),
-    );
-    el.addEventListener('change', () => {
-      filters[key] = el.value;
-      page = 0;
-      draw();
+    const picker = movementFilter({
+      key,
+      label,
+      options,
+      value: filters[key],
+      onChange: (value) => {
+        filters[key] = value;
+        page = 0;
+        draw();
+      },
     });
-    filterControls[key] = el;
-    return el;
+    resetControls[key] = picker.reset;
+    return picker.root;
   };
 
   mount(
     root,
-    h('div', { class: 'toolbar' }, [
-      h('div', { class: 'filters' }, [
-        search,
+    h('div', { class: 'movement-tools' }, [
+      h('div', { class: 'movement-filters', role: 'group', 'aria-label': 'Filtrar movimientos' }, [
+        h('label', { class: 'movement-search' }, [
+          filterIcon('search'),
+          h('span', { class: 'filter-copy' }, [h('small', {}, 'Buscar'), search]),
+        ]),
         select('type', 'Tipo', [
-          ['ALL', 'Todos los tipos'],
-          ['INCOME', 'Ingresos'],
-          ['EXPENSE', 'Gastos'],
+          { value: 'ALL', name: 'Todos los tipos' },
+          { value: 'INCOME', name: 'Ingresos', icon: '↙' },
+          { value: 'EXPENSE', name: 'Gastos', icon: '↗' },
         ]),
         select('categoryId', 'Categoría', [
-          ['ALL', 'Todas las categorías'],
-          ...store.categories.map((c) => [c.id, `${c.icon}  ${c.name}`]),
+          { value: 'ALL', name: 'Todas las categorías' },
+          ...store.categories.map((c) => ({ value: String(c.id), name: c.name, icon: c.icon, color: c.color })),
         ]),
-        select('accountId', 'Cuenta', [['ALL', 'Todas las cuentas'], ...store.accounts.map((a) => [a.id, a.name])]),
-        resetButton,
+        select('accountId', 'Cuenta', [
+          { value: 'ALL', name: 'Todas las cuentas' },
+          ...store.accounts.map((a) => ({ value: String(a.id), name: a.name, icon: ACCOUNT_TYPES[a.type]?.icon })),
+        ]),
       ]),
       h('div', { class: 'toolbar-end' }, [
         summary,
