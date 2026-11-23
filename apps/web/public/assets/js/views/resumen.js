@@ -77,20 +77,18 @@ function availableBlock(a, t) {
   }
   const over = a.remaining < 0;
   let pace = '';
-  if (a.daysLeft > 0 && Math.abs(a.aheadOfPace) >= 1) {
-    pace =
-      a.aheadOfPace > 0
-        ? `Vas ${money(Math.round(a.aheadOfPace))} por encima del ritmo parejo.`
-        : `Vas ${money(Math.round(-a.aheadOfPace))} por debajo del ritmo parejo.`;
+  if (a.daysLeft > 0 && a.aheadOfPace !== 0) {
+    const direction = a.aheadOfPace > 0 ? 'por encima' : 'por debajo';
+    pace = `Vas ${money(Math.abs(a.aheadOfPace))} ${direction} del ritmo previsto hasta hoy.`;
   }
   let detail;
-  if (over) detail = `Te pasaste ${money(-a.remaining)} de la suma de tus presupuestos.`;
+  if (over) detail = `Los gastos registrados superan tus presupuestos en ${money(-a.remaining)}.`;
   else if (a.daysLeft > 0)
-    detail = `Unos ${money(Math.floor(a.perDay))} al día durante ${a.daysLeft === 1 ? 'el día que falta' : `los ${a.daysLeft} días que faltan`}.`;
+    detail = `Unos ${money(a.perDay)} al día durante ${a.daysLeft === 1 ? 'el día que falta' : `los ${a.daysLeft} días que faltan`}.`;
   else detail = `Te sobraron ${money(a.remaining)} de tus presupuestos.`;
   return h('div', { class: `available${over ? ' over' : ''}` }, [
     h('p', { class: 'av-k' }, a.daysLeft > 0 ? 'Disponible para gastar' : 'Resultado del mes'),
-    h('p', { class: 'av-v tnum' }, money(Math.max(0, a.remaining))),
+    h('p', { class: 'av-v tnum' }, money(a.daysLeft > 0 ? Math.max(0, a.remaining) : a.remaining)),
     h('p', { class: 'av-s' }, [detail, pace ? ' ' : '', pace ? h('span', {}, pace) : null]),
   ]);
 }

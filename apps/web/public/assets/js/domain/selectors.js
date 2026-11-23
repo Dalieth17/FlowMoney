@@ -8,6 +8,9 @@ export const BUDGET_WARNING_PCT = 80;
 const sum = (list) => list.reduce((acc, t) => acc + Math.round(t.amount * 100), 0) / 100;
 export const isOperating = (t) => !t.kind || t.kind === 'NORMAL';
 
+// Primer instante del día siguiente en Bogotá a partir de una fecha civil.
+const nextDayStart = (day) => Date.UTC(day.getFullYear(), day.getMonth(), day.getDate() + 1, 5);
+
 export function inMonth(transactions, month, year) {
   return transactions
     .filter((t) => {
@@ -77,8 +80,7 @@ export function budgetStatus(spent, budget) {
 
 /** Saldo de cada cuenta: saldo inicial + ingresos − gastos (histórico). */
 export function accountBalances(accounts, transactions, now = Date.now()) {
-  const d = transactionDate(now);
-  const end = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate() + 1, 5) - 1;
+  const tomorrow = nextDayStart(transactionDate(now));
   const sums = new Map(
     accounts.map((a) => [
       a.id,
@@ -90,7 +92,7 @@ export function accountBalances(accounts, transactions, now = Date.now()) {
     if (!sum) continue;
     const delta = (tx.type === 'INCOME' ? 1 : -1) * Math.round(tx.amount * 100);
     sum.projected += delta;
-    if (tx.date <= end) sum.current += delta;
+    if (tx.date < tomorrow) sum.current += delta;
     sum.count++;
   }
   return accounts.map((account) => {
@@ -127,8 +129,17 @@ export function filterTransactions(list, { type = 'ALL', categoryId = 'ALL', acc
 export function availableToSpend(list, budgets, month, year, today = transactionDate()) {
   const own = budgets.filter((b) => b.month === month && b.year === year);
   if (!own.length) return null;
-  const limit = sum(own);
-  const spent = own.reduce((acc, b) => acc + Math.round(spentInCategory(list, b.categoryId) * 100), 0) / 100;
+  const limitCents = own.reduce((total, b) => total + Math.round(b.amount * 100), 0);
+  const categories = new Set(own.map((b) => b.categoryId));
+  const tomorrow = nextDayStart(today);
+  let spentCents = 0;
+  let spentToDateCents = 0;
+  for (const tx of list) {
+    if (tx.type !== 'EXPENSE' || !isOperating(tx) || !categories.has(tx.categoryId)) continue;
+    const cents = Math.round(tx.amount * 100);
+    spentCents += cents;
+    if (tx.date < tomorrow) spentToDateCents += cents;
+  }
   const days = new Date(year, month + 1, 0).getDate();
   const monthKey = year * 12 + month;
   const todayKey = today.getFullYear() * 12 + today.getMonth();
@@ -138,10 +149,16 @@ export function availableToSpend(list, budgets, month, year, today = transaction
   else if (monthKey > todayKey) throughToday = 0;
   else throughToday = today.getDate();
   const daysLeft = monthKey < todayKey ? 0 : days - Math.max(0, throughToday - 1);
-  const remaining = Math.round((limit - spent) * 100) / 100;
-  const perDay = daysLeft > 0 ? Math.max(0, remaining) / daysLeft : 0;
-  const expectedByNow = (limit * throughToday) / days;
-  return { limit, spent, remaining, daysLeft, perDay, aheadOfPace: spent - expectedByNow };
+  const remainingCents = limitCents - spentCents;
+  const expectedCents = Math.round((limitCents * throughToday) / days);
+  return {
+    limit: limitCents / 100,
+    spent: spentCents / 100,
+    remaining: remainingCents / 100,
+    daysLeft,
+    perDay: daysLeft > 0 ? Math.floor(Math.max(0, remainingCents) / daysLeft) / 100 : 0,
+    aheadOfPace: (spentToDateCents - expectedCents) / 100,
+  };
 }
 
 /** Gasto de cada día del mes y su acumulado (para la gráfica 3D). */

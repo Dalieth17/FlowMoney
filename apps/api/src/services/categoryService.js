@@ -1,6 +1,7 @@
 // Reglas de categorías: las predeterminadas y las que tienen movimientos no se borran.
 const HttpError = require('../utils/httpError');
 const categoryRepository = require('../repositories/categoryRepository');
+const budgetRepository = require('../repositories/budgetRepository');
 const { withUserTransaction } = require('../db/pool');
 const finance = require('../repositories/financeRepository');
 
@@ -34,6 +35,11 @@ async function remove(userId, id) {
     if (category.isDefault) throw HttpError.conflict('No se pueden eliminar las categorías predeterminadas');
     if ((await categoryRepository.countTransactions(id, userId, conn)) > 0) {
       throw HttpError.conflict('La categoría tiene movimientos');
+    }
+    if (await budgetRepository.hasForCategory(userId, id, conn)) {
+      throw HttpError.conflict(
+        'La categoría tiene presupuestos. Quita sus límites en Presupuestos antes de eliminarla.',
+      );
     }
     await categoryRepository.remove(id, userId, conn);
   });

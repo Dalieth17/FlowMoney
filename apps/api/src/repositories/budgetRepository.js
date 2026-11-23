@@ -24,6 +24,14 @@ async function find(userId, { categoryId, month, year }, db = pool) {
   return rows[0] ? toBudget(rows[0]) : null;
 }
 
+async function hasForCategory(userId, categoryId, db = pool) {
+  const [rows] = await db.query('SELECT 1 FROM budgets WHERE user_id = ? AND category_id = ? LIMIT 1', [
+    userId,
+    categoryId,
+  ]);
+  return rows.length > 0;
+}
+
 /** Inserta o actualiza el monto (clave única: usuario + categoría + mes + año). */
 async function upsert(userId, { categoryId, month, year, amount }, db = pool) {
   await db.query(
@@ -65,4 +73,4 @@ async function copyMissing(userId, source, target, db) {
   );
   return result.affectedRows;
 }
-module.exports = { listByUser, listPeriod, copyMissing, find, upsert, remove, removeAllByUser };
+module.exports = { listByUser, listPeriod, copyMissing, find, hasForCategory, upsert, remove, removeAllByUser };

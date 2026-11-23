@@ -31,6 +31,32 @@ const data = (transactions = []) => ({
 const chart = () => root.querySelector('.chart3d');
 api.get = async (path) => (path.startsWith('/bootstrap') ? data() : { items: [], nextCursor: null });
 
+test('Resumen muestra centavos en el disponible diario, el ritmo y el déficit de un mes cerrado', async (t) => {
+  const snapshot = data();
+  snapshot.user.currency = 'USD';
+  snapshot.budgets[0].amount = 1.8;
+  const items = [
+    { ...transaction, amount: 1 },
+    { ...transaction, id: 2, date: at(30), amount: 0.11 },
+  ];
+  t.mock.method(api, 'get', async (path) =>
+    path.startsWith('/bootstrap') ? structuredClone(snapshot) : { items, nextCursor: null },
+  );
+  let today = at(29);
+  t.mock.method(Date, 'now', () => today);
+  await store.load();
+  render(root, { month: 10, year: 2026 });
+  assert.equal(root.querySelector('.av-v').textContent, 'US$ 0.69');
+  assert.match(root.querySelector('.av-s').textContent, /US\$ 0\.34 al día/);
+  assert.match(root.querySelector('.av-s').textContent, /US\$ 0\.74 por debajo/);
+
+  snapshot.budgets[0].amount = 1;
+  today = Date.UTC(2026, 11, 1, 17);
+  await store.load();
+  render(root, { month: 10, year: 2026 });
+  assert.equal(root.querySelector('.av-v').textContent, '-US$ 0.11');
+});
+
 test('Resumen se actualiza con alta, edición, cambio de fecha y borrado; el presupuesto no crea barras', async () => {
   await store.load();
   const draw = () => render(root, { month: 10, year: 2026 });

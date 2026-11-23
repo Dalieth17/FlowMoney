@@ -185,6 +185,36 @@ describe('categorías', () => {
       .expect(201);
     await agent.delete(`/api/categories/${pets.body.id}`).expect(409);
   });
+
+  test('conserva los presupuestos de todos los meses al intentar borrar su categoría', async () => {
+    const { agent } = await signUp();
+    const { body: category } = await agent
+      .post('/api/categories')
+      .send({ name: 'Mascotas', icon: '🐶', color: '#B0506B' })
+      .expect(201);
+    const periods = [
+      { categoryId: category.id, month: 11, year: 2025, amount: 45.25 },
+      { categoryId: category.id, month: 0, year: 2027, amount: 80 },
+    ];
+    const saved = [];
+    for (const period of periods) {
+      const { body } = await agent.put('/api/budgets').send(period).expect(200);
+      saved.push(body);
+    }
+    const { body: error } = await agent.delete(`/api/categories/${category.id}`).expect(409);
+    assert.match(error.error, /presupuesto/i);
+    assert.deepEqual((await agent.get('/api/budgets').expect(200)).body, saved);
+    await agent
+      .put('/api/budgets')
+      .send({ ...periods[0], amount: 0 })
+      .expect(204);
+    await agent.delete(`/api/categories/${category.id}`).expect(409);
+    await agent
+      .put('/api/budgets')
+      .send({ ...periods[1], amount: 0 })
+      .expect(204);
+    await agent.delete(`/api/categories/${category.id}`).expect(204);
+  });
 });
 
 describe('cuentas', () => {

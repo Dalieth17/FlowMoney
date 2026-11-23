@@ -189,7 +189,7 @@ describe('disponible para gastar', () => {
     assert.equal(a.spent, 900);
     assert.equal(a.remaining, 600);
     assert.equal(a.daysLeft, 7); // 24 al 30 de noviembre
-    assert.ok(Math.abs(a.perDay - 600 / 7) < 1e-9);
+    assert.equal(a.perDay, 85.71);
     assert.equal(a.aheadOfPace, 900 - 1500 * (24 / 30));
   });
 
@@ -201,6 +201,19 @@ describe('disponible para gastar', () => {
     assert.equal(future.daysLeft, 30);
     assert.equal(future.perDay, 50);
     assert.equal(future.aheadOfPace, 0);
+  });
+
+  test('reserva pagos futuros y mide el ritmo hasta medianoche de Bogotá', () => {
+    const limits = [{ categoryId: 1, amount: 30, month: 10, year: 2026 }];
+    const scheduled = [
+      tx(1, 'EXPENSE', 3.25, { date: Date.parse('2026-11-11T04:59:59.999Z') }),
+      tx(2, 'EXPENSE', 20, { date: Date.parse('2026-11-11T05:00:00Z') }),
+    ];
+    const current = availableToSpend(scheduled, limits, 10, 2026, new Date(2026, 10, 10));
+    assert.equal(current.remaining, 6.75);
+    assert.equal(current.aheadOfPace, -6.75);
+    assert.equal(current.perDay, 0.32);
+    assert.equal(availableToSpend(scheduled, limits, 10, 2026, new Date(2026, 9, 31)).aheadOfPace, 0);
   });
 
   test('si se pasó del límite el diario es cero y sin presupuestos devuelve null', () => {
