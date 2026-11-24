@@ -100,6 +100,7 @@ export async function render(root, { month, year }) {
       statCard('Balance', signedBalance(t.balance), 'var(--brass)', { strong: true }),
       statCard('Tasa de ahorro', `${t.savingRate}%`, 'var(--sage)'),
     ]),
+    data.comparison ? monthlyComparison(data.comparison, data.history.at(-2), t) : null,
     h('div', { class: 'grid-2' }, [
       panel(
         'Gastos por categoría',
@@ -129,6 +130,55 @@ export async function render(root, { month, year }) {
         ? accountActivity(data.accounts)
         : emptyState('Sin movimientos', 'No hay ingresos ni gastos en este período.'),
     ),
+  );
+}
+
+function monthlyComparison({ change, hasPrevious, hasCurrent }, previous, current) {
+  const period = monthLabel(previous.month, previous.year);
+  let body;
+  if (change) {
+    const previousBalance = (Math.round(previous.income * 100) - Math.round(previous.expense * 100)) / 100;
+    const metrics = [
+      ['Ingresos', previous.income, current.income, change.income],
+      ['Gastos', previous.expense, current.expense, change.expense],
+      ['Balance', previousBalance, current.balance, change.balance],
+    ];
+    body = h(
+      'div',
+      { class: 'report-table-wrap', role: 'region', 'aria-label': 'Comparación mensual', tabindex: '0' },
+      h('table', { class: 'report-table' }, [
+        h(
+          'thead',
+          {},
+          h(
+            'tr',
+            {},
+            ['Concepto', period, 'Mes seleccionado', 'Diferencia'].map((label) => h('th', { scope: 'col' }, label)),
+          ),
+        ),
+        h(
+          'tbody',
+          {},
+          metrics.map(([label, before, now, delta]) =>
+            h('tr', {}, [
+              h('th', { scope: 'row' }, label),
+              h('td', { class: 'tnum' }, money(before)),
+              h('td', { class: 'tnum' }, money(now)),
+              h('td', { class: 'tnum' }, delta === 0 ? 'Sin cambio' : signedBalance(delta)),
+            ]),
+          ),
+        ),
+      ]),
+    );
+  } else {
+    const missing =
+      !hasPrevious && !hasCurrent ? 'ninguno de los dos meses' : !hasPrevious ? period : 'el mes seleccionado';
+    body = h('p', { class: 'muted' }, `Sin ingresos ni gastos registrados en ${missing} para este filtro.`);
+  }
+  return panel(
+    'Comparación con el mes anterior',
+    `Frente a ${period}. Los totales incluyen los movimientos de fecha futura registrados en cada mes.`,
+    body,
   );
 }
 

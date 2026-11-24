@@ -7,15 +7,15 @@ function scope(accountId, params) {
   }
   return '';
 }
-async function daily(userId, from, to, accountId, db) {
+async function monthlyTotals(userId, from, to, accountId, db) {
   const params = [userId, from, to];
   const account = scope(accountId, params);
   const [rows] = await db.query(
     `SELECT
-    DATE_FORMAT(TIMESTAMPADD(SECOND,FLOOR(t.date/1000)-18000,'1970-01-01 00:00:00'),'%Y-%m-%d') AS day,
-    t.type,SUM(t.amount) AS amount,COUNT(*) AS count
+    DATE_FORMAT(TIMESTAMPADD(SECOND,FLOOR(t.date/1000)-18000,'1970-01-01 00:00:00'),'%Y-%m') AS period,
+    t.type,SUM(t.amount) AS amount
     FROM transactions t WHERE t.user_id=? AND t.date>=? AND t.date<? AND t.kind='NORMAL'${account}
-    GROUP BY day,t.type ORDER BY day,t.type`,
+    GROUP BY period,t.type`,
     params,
   );
   return rows;
@@ -45,4 +45,4 @@ async function accounts(userId, from, to, accountId, db) {
   );
   return rows;
 }
-module.exports = { daily, categories, accounts };
+module.exports = { monthlyTotals, categories, accounts };

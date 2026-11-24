@@ -53,6 +53,23 @@ test('reportes solicita agregados, filtra por cuenta y habilita PDF tras cargar'
   await nextTurn();
   assert.equal(calls.at(-1), '/reports/monthly?month=0&year=2025&accountId=7');
 });
+test('comparación mensual distingue un cambio cero de un período sin actividad', async () => {
+  const data = report();
+  data.history.unshift({ month: 11, year: 2024, income: 100, expense: 20 });
+  data.comparison = { hasPrevious: true, hasCurrent: true, change: { income: 0, expense: -8, balance: 8 } };
+  api.get = async () => data;
+  await render(root, { month: 0, year: 2025 });
+  const table = root.querySelector('[aria-label="Comparación mensual"]');
+  assert.match(table.textContent, /Diciembre 2024/);
+  assert.deepEqual(
+    [...table.querySelectorAll('tbody tr')].map((row) => row.lastElementChild.textContent),
+    ['Sin cambio', '−$ 8', '+$ 8'],
+  );
+  data.comparison = { hasPrevious: false, hasCurrent: true, change: null };
+  await render(root, { month: 0, year: 2025 });
+  assert.match(root.textContent, /Sin ingresos ni gastos registrados en Diciembre 2024/);
+  assert.equal(root.querySelector('[aria-label="Comparación mensual"]'), null);
+});
 test('cargar otro mes descarta respuestas y errores del mes anterior', async () => {
   for (const fail of [false, true]) {
     const pending = [];
