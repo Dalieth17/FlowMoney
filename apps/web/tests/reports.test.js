@@ -30,6 +30,8 @@ api.get = async (path) =>
     : { items: [], nextCursor: null };
 await store.load();
 const report = (expense = 12) => ({
+  year: 2025,
+  month: 0,
   currency: 'COP',
   summary: { income: 100, expense, balance: 100 - expense, savingRate: 100 - expense },
   categories: [],
@@ -52,6 +54,43 @@ test('reportes solicita agregados, filtra por cuenta y habilita PDF tras cargar'
   select.dispatchEvent(new window.Event('change'));
   await nextTurn();
   assert.equal(calls.at(-1), '/reports/monthly?month=0&year=2025&accountId=7');
+});
+test('descarga el reporte filtrado con su moneda, histórico y diferencias en columnas numéricas', async (t) => {
+  let blob, filename;
+  t.mock.method(URL, 'createObjectURL', (file) => {
+    blob = file;
+    return 'blob:reporte';
+  });
+  document.addEventListener(
+    'click',
+    (e) => {
+      if (e.target.tagName === 'A') filename = e.target.getAttribute('download');
+    },
+    { capture: true, signal: t.signal },
+  );
+  const data = report(120.01);
+  data.summary.balance = -20.01;
+  data.history.unshift({ month: 11, year: 2024, income: 100, expense: 0.1 });
+  data.categories = [{ category: { name: 'Comida, "casa"', color: '#112233' }, value: 120.01 }];
+  data.comparison = { hasCurrent: true, hasPrevious: true, change: { income: 0, expense: 119.91, balance: -119.91 } };
+  api.get = async () => data;
+  await render(root, { month: 0, year: 2025 });
+  const select = root.querySelector('select');
+  select.value = '7';
+  select.dispatchEvent(new window.Event('change'));
+  await nextTurn();
+  const exportCsv = () => [...root.querySelectorAll('button')].find((b) => b.textContent === 'Exportar CSV');
+  exportCsv().click();
+  assert.equal(filename, 'flowmoney-reporte-2025-01-cuenta-7-COP.csv');
+  const lines = (await blob.text()).split('\r\n');
+  assert.ok(lines.includes('2024-12,Banco <personal>,COP,Histórico,,100,0.1,99.9,'));
+  assert.ok(lines.includes('2025-01,Banco <personal>,COP,Variación mensual,Frente a 2024-12,0,119.91,-119.91,'));
+  assert.ok(lines.includes('2025-01,Banco <personal>,COP,Gastos por categoría,"Comida, ""casa""",,120.01,,'));
+  assert.ok(lines.includes('2025-01,Banco <personal>,COP,Actividad por cuenta,Banco <personal>,100,120.01,-20.01,'));
+  data.comparison = { hasPrevious: false, hasCurrent: true, change: null };
+  await render(root, { month: 0, year: 2025 });
+  exportCsv().click();
+  assert.match(await blob.text(), /Sin actividad comparable frente a 2024-12,,,,/);
 });
 test('comparación mensual distingue un cambio cero de un período sin actividad', async () => {
   const data = report();
@@ -76,7 +115,7 @@ test('cargar otro mes descarta respuestas y errores del mes anterior', async () 
     api.get = () => new Promise((resolve, reject) => pending.push({ resolve, reject }));
     const first = render(root, { month: 0, year: 2025 });
     const second = render(root, { month: 1, year: 2025 });
-    assert.equal(root.querySelector('button').disabled, true);
+    assert.ok([...root.querySelectorAll('.toolbar button')].every((b) => b.disabled));
     pending[1].resolve(report(20));
     await second;
     const text = root.textContent;

@@ -1,5 +1,6 @@
-// Vista Reportes: resumen, dona por categoría y barras de 6 meses. Exporta a PDF (imprimir).
-import { h, mount, field } from '../ui/dom.js';
+// Vista Reportes: resumen, dona por categoría y barras de 6 meses. Exporta a PDF y CSV.
+import { monthlyReportCsv } from '../domain/reportCsv.js';
+import { h, mount, field, downloadText } from '../ui/dom.js';
 import { donutChart, barsChart } from '../ui/financialChart.js';
 import { statCard, panel, emptyState } from '../ui/widgets.js';
 import { store } from '../core/store.js';
@@ -44,13 +45,20 @@ export async function render(root, { month, year }) {
       : selectedAccount === 'none'
         ? 'Sin cuenta'
         : store.accounts.find((a) => String(a.id) === selectedAccount)?.name;
+  const csv = h('button', { type: 'button', class: 'btn btn-ghost sm', disabled: true }, 'Exportar CSV');
+  const fileScope =
+    selectedAccount === 'all'
+      ? 'todas-las-cuentas'
+      : selectedAccount === 'none'
+        ? 'sin-cuenta'
+        : `cuenta-${selectedAccount}`;
   const body = h('div', { class: 'report-content', 'aria-busy': 'true', 'aria-live': 'polite' }, 'Cargando reporte…');
   mount(
     root,
     h('div', { class: 'toolbar' }, [
       h('p', { class: 'muted' }, `Resumen de ${monthLabel(month, year)} · ${scope}`),
       h('div', { class: 'no-print' }, field('Filtrar por cuenta', account)),
-      pdf,
+      h('div', { class: 'toolbar no-print' }, [pdf, csv]),
     ]),
     body,
   );
@@ -74,6 +82,12 @@ export async function render(root, { month, year }) {
   }
   body.setAttribute('aria-busy', 'false');
   pdf.disabled = false;
+  csv.disabled = false;
+  csv.addEventListener('click', () => {
+    if (!active()) return;
+    const filename = `flowmoney-reporte-${year}-${String(month + 1).padStart(2, '0')}-${fileScope}-${currency}.csv`;
+    downloadText(filename, monthlyReportCsv(data, scope));
+  });
   const t = data.summary;
   const cats = data.categories;
   const history = data.history.map((r) => ({ ...r, label: `${MONTHS_SHORT[r.month]} ${r.year}` }));
