@@ -160,6 +160,18 @@ test('recurrencias: fin de mes, concurrencia, pausa y borrados no regeneran el m
     .put(`/api/finance/schedules/${s.id}`)
     .send({ ...schedule, creationKey: randomUUID() })
     .expect(409);
+  const previewAt = async (iso) => (await finance.state(u.id, new Date(iso))).schedules[0].preview;
+  assert.deepEqual(await previewAt('2024-02-29T04:59:59Z'), {
+    pending: 1,
+    firstPending: '2024-01-31',
+    nextDate: '2024-02-29',
+  });
+  assert.deepEqual(await previewAt('2024-02-29T05:00:00Z'), {
+    pending: 2,
+    firstPending: '2024-01-31',
+    nextDate: '2024-03-31',
+  });
+  assert.equal((await snapshot(u)).transactions.length, 0);
   const results = await Promise.all([1, 2, 3].map(() => finance.runSchedules(u.id, new Date('2024-03-31T22:00:00Z'))));
   assert.equal(
     results.reduce((n, r) => n + r.generated, 0),
@@ -172,11 +184,17 @@ test('recurrencias: fin de mes, concurrencia, pausa y borrados no regeneran el m
     '2024-03-31',
   ]);
   await u.agent.delete(`/api/transactions/${data.transactions[0].id}`).expect(204);
+  assert.deepEqual(await previewAt('2024-03-31T22:00:00Z'), { pending: 0, firstPending: null, nextDate: null });
   assert.equal((await finance.runSchedules(u.id, new Date('2024-03-31T22:00:00Z'))).generated, 0);
   await u.agent
     .put(`/api/finance/schedules/${s.id}`)
     .send({ ...schedule, active: false, endDate: null })
     .expect(200);
+  assert.deepEqual((await u.agent.get('/api/finance').expect(200)).body.schedules[0].preview, {
+    pending: 0,
+    firstPending: null,
+    nextDate: null,
+  });
   assert.equal((await finance.runSchedules(u.id)).generated, 0);
   data = await snapshot(u);
   assert.equal(data.occurrences.length, 3);

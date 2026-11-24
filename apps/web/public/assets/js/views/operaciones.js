@@ -174,6 +174,37 @@ function scheduleForm(existing) {
     },
   );
 }
+const scheduleDate = new Intl.DateTimeFormat('es-CO', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+const formatDue = (day) => scheduleDate.format(isoDateToMs(day));
+
+function scheduleCard({ data, preview }, actions) {
+  const tx = data.transaction;
+  const account = store.account(tx.accountId)?.name ?? 'Sin cuenta';
+  const dates = [];
+  if (data.active && preview) {
+    if (preview.pending)
+      dates.push(
+        `${preview.pending} ${preview.pending === 1 ? 'pendiente' : 'pendientes'} desde el ${formatDue(preview.firstPending)}`,
+      );
+    if (preview.nextDate) dates.push(`Próxima fecha: ${formatDue(preview.nextDate)}`);
+    else dates.push('Sin fechas futuras');
+  }
+  return h('article', { class: 'recurring-card' }, [
+    h('strong', {}, tx.description),
+    h('span', { class: 'tnum' }, `${tx.type === 'INCOME' ? 'Ingreso' : 'Gasto'} de ${money(tx.amount)} · ${account}`),
+    h(
+      'small',
+      { class: 'muted' },
+      [data.active ? `Día ${data.dayOfMonth} de cada mes` : 'Pausada', ...dates].join(' · '),
+    ),
+    h('div', { class: 'recurring-actions' }, actions),
+  ]);
+}
 function backupPanel() {
   const file = input('file', '', { accept: '.json,application/json' });
   const preview = h('div', { 'aria-live': 'polite' });
@@ -269,20 +300,15 @@ export function render(root) {
           'Recurrencias mensuales',
           'Se registran al pulsar Procesar pendientes; cada mes se procesa una sola vez, incluso si borras después el movimiento.',
           h('div', { class: 'form' }, [
-            button('Procesar pendientes', async () => {
-              await runAction(null, async () => {
+            button('Procesar pendientes', async (event) => {
+              await runAction(event.currentTarget, async () => {
                 const r = await api.post('/finance/schedules/run', {});
                 toast(`${r.generated} movimientos registrados${r.more ? '; pulsa otra vez para continuar' : ''}`);
                 await refreshed();
               });
             }),
             ...data.schedules.map((s) =>
-              h('div', {}, [
-                h(
-                  'p',
-                  {},
-                  `${s.data.transaction.description} · día ${s.data.dayOfMonth} · ${s.data.active ? 'Activa' : 'Pausada'}`,
-                ),
+              scheduleCard(s, [
                 button('Editar', () => edit(scheduleForm(s))),
                 button(s.data.active ? 'Pausar' : 'Reanudar', async () => {
                   await runAction(null, async () => {

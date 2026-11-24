@@ -78,8 +78,8 @@ async function removeTransfer(userId, id) {
     await repo.removeOperation(userId, id, db);
   });
 }
-async function balances(userId, db) {
-  const dayEnd = Date.parse(`${today()}T23:59:59.999-05:00`);
+async function balances(userId, db, now) {
+  const dayEnd = Date.parse(`${today(now)}T23:59:59.999-05:00`);
   return accounts.balancesByUser(userId, dayEnd, db);
 }
 async function reconcile(userId, id, data) {
@@ -145,30 +145,46 @@ async function saveSchedule(userId, id, data) {
     return { id, data };
   });
 }
+async function processedPeriods(userId, db) {
+  return new Set((await repo.occurrences(userId, db)).map((o) => `${o.scheduleId}:${o.period}`));
+}
+
+function* unprocessedDates({ id, data }, existing, until) {
+  if (!data.active) return;
+  const [year, month] = data.startDate.split('-').map(Number);
+  const last = data.endDate && data.endDate < until ? data.endDate : until;
+  const lastMonth = Number(last.slice(0, 4)) * 12 + Number(last.slice(5, 7)) - 1;
+  for (let key = year * 12 + month - 1; key <= lastMonth; key++) {
+    const y = Math.floor(key / 12),
+      m = key % 12;
+    const period = `${y}-${String(m + 1).padStart(2, '0')}`;
+    const day = Math.min(data.dayOfMonth, new Date(Date.UTC(y, m + 1, 0)).getUTCDate());
+    const due = `${period}-${String(day).padStart(2, '0')}`;
+    if (due >= data.startDate && due <= last && !existing.has(`${id}:${period}`)) yield { period, due };
+  }
+}
+
+function schedulePreview(schedule, existing, current) {
+  const preview = { pending: 0, firstPending: null, nextDate: null };
+  for (const { due } of unprocessedDates(schedule, existing, '2100-12-31')) {
+    if (due > current) {
+      preview.nextDate = due;
+      break;
+    }
+    preview.firstPending ??= due;
+    preview.pending++;
+  }
+  return preview;
+}
+
 async function runSchedules(userId, now = new Date()) {
   return withUserTransaction(userId, async (db) => {
     const current = today(now);
-    const existing = new Set((await repo.occurrences(userId, db)).map((o) => `${o.scheduleId}:${o.period}`));
+    const existing = await processedPeriods(userId, db);
     let generated = 0;
-    for (const { id, data } of await repo.schedules(userId, db)) {
-      if (!data.active) continue;
-      const [year, month] = data.startDate.split('-').map(Number);
-      for (
-        let key = year * 12 + month - 1;
-        key <= Number(current.slice(0, 4)) * 12 + Number(current.slice(5, 7)) - 1;
-        key++
-      ) {
-        const y = Math.floor(key / 12),
-          m = key % 12;
-        const period = `${y}-${String(m + 1).padStart(2, '0')}`;
-        const due = `${period}-${String(Math.min(data.dayOfMonth, new Date(Date.UTC(y, m + 1, 0)).getUTCDate())).padStart(2, '0')}`;
-        if (
-          due < data.startDate ||
-          due > current ||
-          (data.endDate && due > data.endDate) ||
-          existing.has(`${id}:${period}`)
-        )
-          continue;
+    for (const schedule of await repo.schedules(userId, db)) {
+      const { id, data } = schedule;
+      for (const { period, due } of unprocessedDates(schedule, existing, current)) {
         if (generated >= 120) return { generated, more: true };
         await refs(userId, data.transaction.categoryId, [data.transaction.accountId], db);
         const tx = await post(userId, { ...data.transaction, date: at(due) }, db);
@@ -179,11 +195,16 @@ async function runSchedules(userId, now = new Date()) {
     return { generated, more: false };
   });
 }
-async function state(userId) {
-  return withUserTransaction(userId, async (db) => ({
-    accounts: await balances(userId, db),
-    operations: await repo.operations(userId, db),
-    schedules: await repo.schedules(userId, db),
-  }));
+async function state(userId, now = new Date()) {
+  return withUserTransaction(userId, async (db) => {
+    const schedules = await repo.schedules(userId, db);
+    const existing = schedules.length ? await processedPeriods(userId, db) : new Set();
+    const current = today(now);
+    return {
+      accounts: await balances(userId, db, now),
+      operations: await repo.operations(userId, db),
+      schedules: schedules.map((s) => ({ ...s, preview: schedulePreview(s, existing, current) })),
+    };
+  });
 }
 module.exports = { transfer, removeTransfer, reconcile, saveSchedule, runSchedules, state, today, at, balances };

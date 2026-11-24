@@ -116,6 +116,30 @@ test('conciliación requiere confirmación y envía el saldo esperado de la vist
   assert.equal(calls[0].body.actualBalance, 503);
 });
 
+test('recurrencias muestra monto, cuenta y fechas pendientes sin registrar movimientos', async (t) => {
+  const data = {
+    transaction: { description: 'Arriendo', type: 'EXPENSE', amount: 80.5, accountId: 1 },
+    dayOfMonth: 31,
+    active: true,
+  };
+  t.mock.method(api, 'get', async () => ({
+    accounts,
+    operations: [],
+    schedules: [
+      { id: 1, data, preview: { pending: 1, firstPending: '2024-01-31', nextDate: '2024-02-29' } },
+      { id: 2, data: { ...data, active: false }, preview: { pending: 0, firstPending: null, nextDate: null } },
+    ],
+  }));
+  await reset();
+  const [active, paused] = section('Recurrencias mensuales').querySelectorAll('article');
+  assert.match(active.textContent, /Gasto de \$ 80,50 · Banco/);
+  assert.match(active.textContent, /1 pendiente desde el 31/);
+  assert.match(active.textContent, /Próxima fecha: 29.*feb.*2024/);
+  assert.match(paused.textContent, /Pausada/);
+  assert.doesNotMatch(paused.textContent, /pendiente|Próxima fecha/);
+  assert.equal(calls.length, 0);
+});
+
 test('respaldo muestra vista previa, confirma y restaura el archivo revisado', async () => {
   await reset();
   const form = section('Respaldos y restauración').querySelector('form');

@@ -1820,6 +1820,21 @@ select.input {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
 }
+.recurring-card {
+  display: grid;
+  gap: 5px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-2);
+  overflow-wrap: anywhere;
+}
+.recurring-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
 .account-picker {
   border: 0;
   padding: 0;
