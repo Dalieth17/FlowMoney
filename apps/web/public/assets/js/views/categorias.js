@@ -5,8 +5,7 @@ import { store } from '../core/store.js';
 import { openCategoryForm } from '../forms/categoryForm.js';
 
 export function render(root) {
-  const counts = new Map();
-  store.transactions.forEach((t) => counts.set(t.categoryId, (counts.get(t.categoryId) || 0) + 1));
+  const counts = store.categoryCounts;
   const plural = (n) => `${n} movimiento${n === 1 ? '' : 's'}`;
 
   const remove = async (category) => {
@@ -28,11 +27,7 @@ export function render(root) {
           h('div', { class: 'cat-ic', style: { background: c.color }, 'aria-hidden': 'true' }, c.icon),
           h('div', { class: 'cat-info' }, [
             h('div', { class: 'cat-nm' }, c.name),
-            h(
-              'div',
-              { class: 'cat-meta' },
-              `${c.isDefault ? 'Predeterminada · ' : ''}${plural(counts.get(c.id) || 0)}`,
-            ),
+            h('div', { class: 'cat-meta' }, `${c.isDefault ? 'Predeterminada · ' : ''}${plural(counts[c.id] || 0)}`),
           ]),
           h('div', { class: 'cat-actions' }, [
             h(

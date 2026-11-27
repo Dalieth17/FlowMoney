@@ -183,3 +183,42 @@ test('importación confirmada mantiene el éxito si falla recargar y permite rec
   assert.equal(store.transactions.length, 2);
   assert.equal(store.syncError, null);
 });
+
+test('apertura mensual con historial de 20 000 movimientos, navegación y exportación bajo demanda', async () => {
+  const current = { month: 10, year: 2026 };
+  const previous = { month: 9, year: 2026 };
+  const history = Array.from({ length: 20_000 }, (_, i) => ({ id: i + 1, categoryId: 1 }));
+  const summary = { total: history.length, unassigned: 178, byCategory: { 1: history.length } };
+  const calls = [];
+  const monthData = (rows) => ({ ...data('Mensual'), transactions: rows, transactionSummary: summary });
+  const slowMonth = deferred();
+  api.get = async (path) => {
+    calls.push(path);
+    if (path === '/bootstrap/month?month=10&year=2026') return monthData(history.slice(-2));
+    if (path === '/bootstrap/month?month=9&year=2026') return slowMonth.promise;
+    const query = new URLSearchParams(path.split('?')[1]);
+    assert.match(path, /^\/transactions\/page\?/);
+    const end = Number(query.get('beforeId') ?? history.length + 1) - 1;
+    const start = Math.max(end - Number(query.get('limit')), 0);
+    return { items: history.slice(start, end).reverse(), nextCursor: start ? start + 1 : null };
+  };
+  await store.load(current);
+  assert.deepEqual(calls, ['/bootstrap/month?month=10&year=2026']);
+  assert.deepEqual(store.transactions, history.slice(-2));
+  assert.equal(store.transactionCount, 20_000);
+  assert.equal(store.unassignedCount, 178);
+  assert.equal(store.categoryCounts[1], 20_000);
+  const pending = store.load(previous);
+  assert.equal(store.hasMonth(current), false);
+  await store.load(current);
+  slowMonth.resolve(monthData(history.slice(0, 1)));
+  await pending;
+  assert.equal(store.hasMonth(current), true);
+  assert.deepEqual(store.transactions, history.slice(-2));
+  await store.load(previous);
+  assert.deepEqual(store.transactions, history.slice(0, 1));
+  assert.equal(calls.length, 4);
+  assert.deepEqual(await store.allTransactions(), history.slice().reverse());
+  assert.equal(calls.length, 104);
+  assert.deepEqual(store.transactions, history.slice(0, 1));
+});

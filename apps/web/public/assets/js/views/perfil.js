@@ -173,7 +173,7 @@ function chartStylePanel() {
 }
 
 function dataPanel() {
-  const { user, transactions, categories, accounts } = store;
+  const { user, transactionCount, categories, accounts } = store;
   const since = new Date(user.createdAt);
   const memberSince = Number.isNaN(since.getTime())
     ? '—'
@@ -197,7 +197,7 @@ function dataPanel() {
     `miembro desde el ${memberSince}`,
     h('div', { class: 'data-panel' }, [
       h('div', { class: 'pstat-grid' }, [
-        stat('movimientos', String(transactions.length)),
+        stat('movimientos', String(transactionCount)),
         stat('categorías', String(categories.length)),
         stat('cuentas', String(accounts.length)),
       ]),
@@ -218,7 +218,7 @@ function dataPanel() {
               runAction(null, async () =>
                 downloadText(
                   `flowmoney-${isoDate(Date.now())}.json`,
-                  JSON.stringify(await api.get('/finance/backup'), null, 2),
+                  JSON.stringify(await api.get('/finance/backup')),
                   'application/json;charset=utf-8',
                 ),
               ),
@@ -235,8 +235,14 @@ function dataPanel() {
           'button',
           {
             class: 'btn btn-ghost sm',
-            disabled: transactions.length === 0,
-            onclick: () => exportTransactionsCsv(transactions, `flowmoney-movimientos-${isoDate(Date.now())}.csv`),
+            disabled: transactionCount === 0,
+            onclick: (event) =>
+              runAction(event.currentTarget, async () =>
+                exportTransactionsCsv(
+                  await store.allTransactions(),
+                  `flowmoney-movimientos-${isoDate(Date.now())}.csv`,
+                ),
+              ),
           },
           'Exportar CSV',
         ),

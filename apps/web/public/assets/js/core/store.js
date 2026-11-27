@@ -14,6 +14,27 @@ class Store {
   #revision = 0;
   #replacement = Promise.resolve();
   #syncError = null;
+  #requestedMonth = null;
+  #loadedMonth = null;
+
+  hasMonth({ month, year }) {
+    return [this.#loadedMonth, this.#requestedMonth].every(
+      (period) => period?.month === month && period?.year === year,
+    );
+  }
+
+  get transactionCount() {
+    return this.#state.transactionSummary?.total ?? this.transactions.length;
+  }
+  get unassignedCount() {
+    return this.#state.transactionSummary?.unassigned ?? this.transactions.filter((t) => t.accountId == null).length;
+  }
+  get categoryCounts() {
+    if (this.#state.transactionSummary) return this.#state.transactionSummary.byCategory;
+    const counts = {};
+    for (const t of this.transactions) counts[t.categoryId] = (counts[t.categoryId] ?? 0) + 1;
+    return counts;
+  }
 
   subscribe(fn) {
     this.#listeners.add(fn);
@@ -26,10 +47,10 @@ class Store {
     this.#listeners.forEach((fn) => fn(this.#state));
   }
 
-  async #mutate(send, apply) {
+  async #mutate(send, apply, { refreshMonth = false } = {}) {
     const revision = this.#revision;
     const result = await send();
-    if (revision === this.#revision) apply(result);
+    if (revision === this.#revision && !(refreshMonth && this.#requestedMonth)) apply(result);
     else {
       // Otra respuesta o una carga completa ya modificó la caché. El resultado
       // antiguo no se puede mezclar con IDs o importes de una versión distinta.
@@ -92,20 +113,32 @@ class Store {
   }
 
   // ---- Carga ----
-  async load() {
+  async allTransactions(currency = this.user.currency, revision = this.#revision) {
+    const transactions = [];
+    let cursor = null;
+    do {
+      const page = await api.get(
+        `/transactions/page?limit=200&currency=${currency}${cursor ? `&beforeId=${cursor}` : ''}`,
+      );
+      if (revision !== this.#revision) throw Error('Los datos cambiaron. Vuelve a solicitar la exportación.');
+      transactions.push(...page.items);
+      cursor = page.nextCursor;
+    } while (cursor !== null);
+    return transactions;
+  }
+
+  async load(period = this.#requestedMonth) {
     const revision = ++this.#revision;
+    this.#requestedMonth = period;
     try {
-      const data = await api.get('/bootstrap?transactions=none');
+      const path = period
+        ? `/bootstrap/month?month=${period.month}&year=${period.year}`
+        : '/bootstrap?transactions=none';
+      const data = await api.get(path);
       if (revision !== this.#revision) return;
-      let cursor = null;
-      do {
-        const page = await api.get(
-          `/transactions/page?limit=200&currency=${data.user.currency}${cursor ? `&beforeId=${cursor}` : ''}`,
-        );
-        if (revision !== this.#revision) return;
-        data.transactions.push(...page.items);
-        cursor = page.nextCursor;
-      } while (cursor !== null);
+      if (!period) data.transactions = await this.allTransactions(data.user.currency, revision);
+      if (revision !== this.#revision) return;
+      this.#loadedMonth = period;
       setCurrency(data.user.currency);
       this.#syncError = null;
       this.#commit(data);
@@ -132,18 +165,21 @@ class Store {
     return this.#mutate(
       () => api.post('/transactions', payload),
       (tx) => this.#commit({ transactions: [tx, ...this.transactions] }),
+      { refreshMonth: true },
     );
   }
   async updateTransaction(id, payload) {
     return this.#mutate(
       () => api.put(`/transactions/${id}`, payload),
       (tx) => this.#commit({ transactions: replaceById(this.transactions, tx) }),
+      { refreshMonth: true },
     );
   }
   async deleteTransaction(id) {
     return this.#mutate(
       () => api.del(`/transactions/${id}`),
       () => this.#commit({ transactions: withoutId(this.transactions, id) }),
+      { refreshMonth: true },
     );
   }
 
@@ -218,7 +254,7 @@ class Store {
     const apply = ({ convertedData, ...user }) => {
       setCurrency(user.currency);
       if (convertedData) this.#syncError = null;
-      this.#commit({ ...convertedData, user });
+      this.#commit({ ...(convertedData && { ...convertedData, transactionSummary: null }), user });
     };
     if (payload.currency !== this.user?.currency)
       return this.#replace(async () => apply(await api.put('/profile', payload)));

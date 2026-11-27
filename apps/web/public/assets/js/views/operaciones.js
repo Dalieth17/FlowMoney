@@ -174,6 +174,10 @@ function scheduleForm(existing) {
     },
   );
 }
+const MAX_BACKUP_BYTES = 20 * 1024 * 1024;
+// Las descargas anteriores llevaban sangría y BOM. Limitar el archivo antes de leerlo en memoria.
+const MAX_BACKUP_FILE_BYTES = 2 * MAX_BACKUP_BYTES;
+
 function backupPanel() {
   const file = input('file', '', { accept: '.json,application/json' });
   const preview = h('div', { 'aria-live': 'polite' });
@@ -188,8 +192,10 @@ function backupPanel() {
     try {
       const selected = file.files[0];
       if (!selected) return;
-      if (selected.size > 20 * 1024 * 1024) throw Error('El archivo supera 20 MB');
+      if (selected.size > MAX_BACKUP_FILE_BYTES) throw Error('El archivo supera 40 MiB');
       const data = JSON.parse((await selected.text()).replace(/^\uFEFF/, ''));
+      if (selected.size > MAX_BACKUP_BYTES && new Blob([JSON.stringify(data)]).size > MAX_BACKUP_BYTES)
+        throw Error('El respaldo supera 20 MiB en JSON compacto');
       const result = await api.post('/finance/backup/preview', data);
       if (current !== selection) return;
       pending = data;
@@ -230,7 +236,7 @@ function backupPanel() {
         try {
           downloadText(
             `flowmoney-respaldo-${isoDate(Date.now())}.json`,
-            JSON.stringify(await api.get('/finance/backup'), null, 2),
+            JSON.stringify(await api.get('/finance/backup')),
             'application/json',
           );
         } catch (e) {

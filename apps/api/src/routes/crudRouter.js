@@ -5,7 +5,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const validate = require('../middleware/validate');
 const { idParamSchema } = require('../validation/schemas');
 
-function crudRouter(service, schema) {
+function crudRouter(service, schema, updateSchema = schema) {
   const router = express.Router();
   const withId = validate(idParamSchema, 'params');
 
@@ -27,7 +27,7 @@ function crudRouter(service, schema) {
   router.put(
     '/:id',
     withId,
-    validate(schema),
+    validate(updateSchema),
     asyncHandler(async (req, res) => {
       res.json(await service.update(req.userId, req.valid.params.id, req.valid.body));
     }),

@@ -41,7 +41,7 @@ export async function render(root) {
   const sum = (list) => list.reduce((acc, r) => acc + Math.round(r.balance * 100), 0) / 100;
   const total = sum(rows);
   const savings = sum(rows.filter((r) => r.account.type === 'SAVINGS'));
-  const unassigned = store.transactions.filter((t) => t.accountId == null).length;
+  const unassigned = store.unassignedCount;
 
   mount(
     root,

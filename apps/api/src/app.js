@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const config = require('./config');
 const buildApiRouter = require('./routes');
+const { MAX_BACKUP_BYTES, MAX_RESTORE_BYTES } = require('./services/backupLimits');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 function createApp({ serveWeb = config.web.enabled, webRoot = config.web.root } = {}) {
@@ -13,7 +14,8 @@ function createApp({ serveWeb = config.web.enabled, webRoot = config.web.root } 
   app.set('trust proxy', config.trustProxy);
 
   app.use(helmet());
-  app.use('/api/finance/backup', express.json({ limit: '20mb' }));
+  app.post('/api/finance/backup/preview', express.json({ limit: MAX_BACKUP_BYTES }));
+  app.post('/api/finance/backup/restore', express.json({ limit: MAX_RESTORE_BYTES }));
   app.use('/api/transactions/import', express.json({ limit: '1mb' }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());

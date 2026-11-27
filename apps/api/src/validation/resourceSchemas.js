@@ -47,6 +47,21 @@ const transactionSchema = z.object({
   note: z.string().trim().max(200, 'Nota demasiado larga').optional().default(''),
 });
 
+// La copia leída debe compararse literalmente, sin aplicar trims, redondeos ni valores por defecto.
+const transactionUpdateSchema = transactionSchema.extend({
+  expected: z
+    .object({
+      description: z.string().max(120),
+      amount: z.number().finite(),
+      type: z.enum(TRANSACTION_TYPES),
+      categoryId: z.number().int().positive(),
+      accountId: z.number().int().positive().nullable(),
+      date: z.number().int(),
+      note: z.string().max(200),
+    })
+    .optional(),
+});
+
 const budgetSchema = z.object({
   categoryId: positiveId('Elige una categoría'),
   month: z.coerce.number().int().min(0, 'Mes no válido').max(11, 'Mes no válido'),
@@ -92,9 +107,9 @@ module.exports = {
   categorySchema,
   accountSchema,
   transactionSchema,
+  transactionUpdateSchema,
   budgetSchema,
   copyBudgetSchema,
   transactionQuerySchema,
   monthlyReportQuery,
 };
-

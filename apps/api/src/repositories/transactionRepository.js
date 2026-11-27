@@ -16,6 +16,29 @@ const toTransaction = (row) => ({
   operationId: row.operation_id,
 });
 
+async function listMonth(userId, { month, year }, db) {
+  const [rows] = await db.query(
+    `SELECT ${COLUMNS} FROM transactions WHERE user_id = ? AND date >= ? AND date < ? ORDER BY date DESC, id DESC`,
+    [userId, Date.UTC(year, month, 1, 5), Date.UTC(year, month + 1, 1, 5)],
+  );
+  return rows.map(toTransaction);
+}
+
+async function summaryByUser(userId, db) {
+  const [rows] = await db.query(
+    `SELECT category_id, COUNT(*) AS n, COUNT(*) - COUNT(account_id) AS unassigned
+     FROM transactions WHERE user_id = ? GROUP BY category_id`,
+    [userId],
+  );
+  const summary = { total: 0, unassigned: 0, byCategory: {} };
+  for (const row of rows) {
+    summary.total += Number(row.n);
+    summary.unassigned += Number(row.unassigned);
+    summary.byCategory[row.category_id] = Number(row.n);
+  }
+  return summary;
+}
+
 async function listByUser(userId, db = pool) {
   const [rows] = await db.query(`SELECT ${COLUMNS} FROM transactions WHERE user_id = ? ORDER BY date DESC, id DESC`, [
     userId,
@@ -105,4 +128,15 @@ async function listForImport(userId, from, to, db = pool) {
   );
   return rows.map(toTransaction);
 }
-module.exports = { listByUser, listPage, listForImport, findOwned, create, update, remove, removeAllByUser };
+module.exports = {
+  listMonth,
+  summaryByUser,
+  listByUser,
+  listPage,
+  listForImport,
+  findOwned,
+  create,
+  update,
+  remove,
+  removeAllByUser,
+};

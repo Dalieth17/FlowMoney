@@ -19,6 +19,12 @@ const finance = require('../repositories/financeRepository');
 const users = require('../repositories/userRepository');
 const { verifyPassword } = require('../utils/password');
 const HttpError = require('../utils/httpError');
+const { MAX_BACKUP_BYTES } = require('./backupLimits');
+
+function checkBackupSize(input) {
+  if (input && Buffer.byteLength(JSON.stringify(input)) > MAX_BACKUP_BYTES)
+    throw new HttpError(413, 'El respaldo supera 20 MiB en JSON compacto. Utiliza una copia de MySQL.');
+}
 
 function normalize(input) {
   if (
@@ -150,6 +156,7 @@ function normalize(input) {
 }
 const digest = (data) => crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
 function preview(input) {
+  checkBackupSize(input);
   const data = normalize(input);
   return {
     digest: digest(data),
@@ -180,9 +187,8 @@ async function snapshot(userId, db) {
 }
 async function exportData(userId) {
   const data = await withUserTransaction(userId, (db) => snapshot(userId, db));
+  checkBackupSize(data);
   normalize(data);
-  if (Buffer.byteLength(JSON.stringify(data), 'utf8') > 20 * 1024 * 1024)
-    throw HttpError.badRequest('El respaldo supera 20 MB; utiliza una copia de MySQL');
   return data;
 }
 async function clear(userId, db) {
@@ -195,6 +201,7 @@ async function clear(userId, db) {
   await accounts.removeAllByUser(userId, db);
 }
 async function restore(userId, input, confirmation, password) {
+  checkBackupSize(input);
   const data = normalize(input);
   if (confirmation !== digest(data)) throw HttpError.badRequest('Vuelve a revisar la vista previa del respaldo');
   return withUserTransaction(userId, async (db) => {

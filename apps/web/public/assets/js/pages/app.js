@@ -1,7 +1,7 @@
 // Punto de entrada del panel (app.html): carga los datos, registra las vistas y arranca el router.
 import { h, clear } from '../ui/dom.js';
 import { store } from '../core/store.js';
-import { defineRoutes, mountRouter, render, shiftMonth, goToCurrentMonth } from '../core/router.js';
+import { defineRoutes, mountRouter, getPeriod, render, shiftMonth, goToCurrentMonth } from '../core/router.js';
 import { monthLabel } from '../core/format.js';
 import { openMovementForm } from '../forms/movementForm.js';
 import { mountThemeSwitches, THEME_EVENT } from '../core/theme.js';
@@ -17,15 +17,30 @@ import * as perfil from '../views/perfil.js';
 import * as operaciones from '../views/operaciones.js';
 import * as metas from '../views/metas.js';
 
+function monthlyView(view) {
+  return (root, period) => {
+    if (store.hasMonth(period)) return view.render(root, period);
+    const loading = h('p', { role: 'status' }, 'Cargando movimientos del mes…');
+    root.replaceChildren(loading);
+    store.load(period).catch((err) => {
+      if (!root.contains(loading)) return;
+      root.replaceChildren(
+        h('p', { role: 'alert' }, err.message),
+        h('button', { class: 'btn btn-ghost sm', onclick: render }, 'Reintentar'),
+      );
+    });
+  };
+}
+
 // monthScoped: la vista depende del mes elegido (muestra el selector de mes).
 const ROUTES = [
   { id: 'metas', title: 'Metas de ahorro', monthScoped: false, render: metas.render },
   { id: 'operaciones', title: 'Operaciones', monthScoped: false, render: operaciones.render },
-  { id: 'resumen', title: 'Resumen', monthScoped: true, render: resumen.render },
-  { id: 'movimientos', title: 'Movimientos', monthScoped: true, render: movimientos.render },
+  { id: 'resumen', title: 'Resumen', monthScoped: true, render: monthlyView(resumen) },
+  { id: 'movimientos', title: 'Movimientos', monthScoped: true, render: monthlyView(movimientos) },
   { id: 'cuentas', title: 'Cuentas', monthScoped: false, render: cuentas.render },
   { id: 'categorias', title: 'Categorías', monthScoped: false, render: categorias.render },
-  { id: 'presupuestos', title: 'Presupuestos', monthScoped: true, render: presupuestos.render },
+  { id: 'presupuestos', title: 'Presupuestos', monthScoped: true, render: monthlyView(presupuestos) },
   { id: 'reportes', title: 'Reportes', monthScoped: true, render: reportes.render },
   { id: 'perfil', title: 'Perfil y configuración', monthScoped: false, render: perfil.render },
 ];
@@ -63,7 +78,7 @@ async function init() {
   $('reload-data').addEventListener('click', () => runAction($('reload-data'), () => store.load()));
 
   try {
-    await store.load();
+    await store.load(getPeriod());
   } catch (err) {
     // 401 ya redirigió al login; cualquier otro error se muestra con opción de reintentar.
     if (err.status !== 401) renderLoadError(err);

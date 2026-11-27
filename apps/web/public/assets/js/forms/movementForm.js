@@ -13,6 +13,15 @@ export function openMovementForm(existing) {
     return toast('Gestiona la transferencia o consulta el ajuste en Operaciones', 'warn');
   }
   const editing = Boolean(existing);
+  const expected = editing && {
+    description: existing.description,
+    amount: existing.amount,
+    type: existing.type,
+    categoryId: existing.categoryId,
+    accountId: existing.accountId ?? null,
+    date: existing.date,
+    note: existing.note ?? '',
+  };
   let type = existing?.type ?? 'EXPENSE';
   let categoryTouched = editing; // al editar no pisamos la categoría elegida
 
@@ -125,6 +134,7 @@ export function openMovementForm(existing) {
   });
 
   // ---- Envío ----
+  const conflict = h('div', { class: 'field-hint', role: 'alert', hidden: true });
   const submit = h('button', { type: 'submit', class: 'btn btn-primary' }, editing ? 'Guardar cambios' : 'Guardar');
   const remove = editing
     ? h(
@@ -149,6 +159,7 @@ export function openMovementForm(existing) {
     h('div', { class: 'form-row' }, [field('Monto', amount), field('Fecha', date)]),
     h('div', { class: 'form-row' }, [field('Categoría', category), field('Cuenta', account)]),
     field('Nota', note),
+    conflict,
     h('div', { class: 'modal-actions' }, [
       remove,
       h('div', { class: 'spacer' }),
@@ -172,16 +183,25 @@ export function openMovementForm(existing) {
       type,
       categoryId: Number(category.value),
       accountId: account.value ? Number(account.value) : null,
-      date: timestamp,
+      date: editing && date.value === isoDate(expected.date) ? expected.date : timestamp,
       note: note.value.trim(),
     };
-    const ok = await runAction(submit, () =>
-      editing ? store.updateTransaction(existing.id, payload) : store.addTransaction(payload),
-    );
-    if (ok) {
+    await runAction(submit, async () => {
+      if (editing) {
+        try {
+          await store.updateTransaction(existing.id, { ...payload, expected });
+        } catch (err) {
+          if (err.status !== 409) throw err;
+          conflict.hidden = false;
+          conflict.textContent = `${err.message} Tu borrador sigue aquí. Puedes copiar tus cambios antes de volver a cargar los datos.`;
+          return;
+        }
+      } else {
+        await store.addTransaction(payload);
+      }
       modal.close();
       toast(editing ? 'Cambios guardados' : 'Movimiento registrado');
-    }
+    });
   });
 
   const modal = openModal(editing ? 'Editar movimiento' : 'Nuevo movimiento', form);

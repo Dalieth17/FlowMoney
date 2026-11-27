@@ -116,13 +116,60 @@ test('conciliación requiere confirmación y envía el saldo esperado de la vist
   assert.equal(calls[0].body.actualBalance, 503);
 });
 
-test('respaldo muestra vista previa, confirma y restaura el archivo revisado', async () => {
+test('Perfil y Operaciones descargan el respaldo en JSON compacto', async (t) => {
+  const { render: renderProfile } = await import('../public/assets/js/views/perfil.js');
+  await reset();
+  const data = { version: 3, currency: 'COP', accounts };
+  t.mock.method(api, 'get', async (path) => {
+    assert.equal(path, '/finance/backup');
+    return data;
+  });
+  const downloads = t.mock.method(URL, 'createObjectURL', () => 'blob:respaldo');
+  const click = (label) => [...root.querySelectorAll('button')].find((b) => b.textContent === label).click();
+  click('Descargar respaldo completo');
+  await nextTurn();
+  renderProfile(root);
+  click('Exportar JSON');
+  await nextTurn();
+  assert.equal(downloads.mock.callCount(), 2);
+  for (const call of downloads.mock.calls) {
+    const [file] = call.arguments;
+    assert.equal((await file.text()).replace(/^\uFEFF/, ''), JSON.stringify(data));
+  }
+});
+
+test('previsualiza y restaura una descarga anterior cuya sangría y BOM superan 20 MiB', async () => {
   await reset();
   const form = section('Respaldos y restauración').querySelector('form');
   const file = form.querySelector('input[type=file]');
-  const data = { version: 2, currency: 'COP' };
+  const tx = {
+    amount: 10,
+    description: '月'.repeat(100),
+    type: 'EXPENSE',
+    date: Date.UTC(2026, 0, 1),
+    categoryId: 1,
+    accountId: 1,
+    note: '月'.repeat(180),
+    kind: 'NORMAL',
+    operationId: null,
+  };
+  const data = {
+    version: 2,
+    currency: 'COP',
+    accounts: [{ id: 1, name: 'Banco', type: 'BANK', initialBalance: 0 }],
+    categories: [{ id: 1, name: 'Otros', icon: 'x', color: '#112233', isDefault: false }],
+    transactions: Array.from({ length: 20000 }, (_, i) => ({ id: i + 1, ...tx })),
+    budgets: [],
+    operations: [],
+    schedules: [],
+    occurrences: [],
+  };
+  const text = '\uFEFF' + JSON.stringify(data, null, 2);
+  const size = Buffer.byteLength(text);
+  assert.ok(size > 20 * 1024 * 1024);
+  assert.ok(Buffer.byteLength(JSON.stringify(data)) <= 20 * 1024 * 1024);
   Object.defineProperty(file, 'files', {
-    value: [{ size: 100, text: async () => JSON.stringify(data) }],
+    value: [{ size, text: async () => text }],
     configurable: true,
   });
   file.dispatchEvent(new window.Event('change'));
@@ -137,6 +184,17 @@ test('respaldo muestra vista previa, confirma y restaura el archivo revisado', a
   assert.deepEqual(calls[1].body.backup, data);
   assert.equal(calls[1].body.digest, 'a'.repeat(64));
   assert.equal(control(form, 'Tu contraseña para confirmar').value, '');
+});
+
+test('descarta un archivo demasiado grande antes de leerlo', async (t) => {
+  await reset();
+  const file = section('Respaldos y restauración').querySelector('input[type=file]');
+  const read = t.mock.fn();
+  Object.defineProperty(file, 'files', { value: [{ size: 40 * 1024 * 1024 + 1, text: read }] });
+  file.dispatchEvent(new window.Event('change'));
+  await nextTurn();
+  assert.equal(read.mock.callCount(), 0);
+  assert.equal(calls.length, 0);
 });
 
 for (const failure of [false, true]) {

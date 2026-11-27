@@ -52,6 +52,24 @@ test('reportes SQL: límites colombianos, centavos, filtros, comisiones y aislam
       note: '',
     })
     .expect(201);
+  const monthPath = '/api/bootstrap/month?month=0&year=2025';
+  const { body: january } = await u.agent.get(monthPath).expect(200);
+  assert.ok(january.transactions.length >= 4);
+  assert.ok(january.transactions.every((t) => t.date >= Date.UTC(2025, 0, 1, 5) && t.date < Date.UTC(2025, 1, 1, 5)));
+  assert.ok(january.transactions.some((t) => t.amount === 100.1));
+  assert.ok(january.transactions.some((t) => t.amount === 20));
+  const { body: full } = await u.agent.get('/api/transactions').expect(200);
+  assert.equal(january.transactions.length, full.length - 2);
+  assert.equal(january.transactionSummary.total, full.length);
+  assert.equal(january.transactionSummary.unassigned, full.filter((t) => t.accountId === null).length);
+  assert.equal(
+    january.transactionSummary.byCategory[categoryId],
+    full.filter((t) => t.categoryId === categoryId).length,
+  );
+  const { body: otherMonth } = await other.agent.get(monthPath).expect(200);
+  assert.deepEqual(otherMonth.transactions, []);
+  assert.deepEqual(otherMonth.transactionSummary, { total: 0, unassigned: 0, byCategory: {} });
+  await u.agent.get('/api/bootstrap/month?month=12&year=2025').expect(400);
   const { body: r } = await u.agent.get('/api/reports/monthly?month=0&year=2025').expect(200);
   assert.deepEqual(r.summary, { income: 100.3, expense: 29, balance: 71.3, savingRate: 71 });
   assert.equal(r.history.length, 6);

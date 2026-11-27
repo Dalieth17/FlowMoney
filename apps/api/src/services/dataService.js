@@ -8,13 +8,22 @@ const transactionRepository = require('../repositories/transactionRepository');
 const budgetRepository = require('../repositories/budgetRepository');
 
 /** Todo lo que el panel necesita, en una sola respuesta. */
-async function bootstrap(userId, { includeTransactions = true } = {}) {
+async function bootstrap(userId, { includeTransactions = true, period } = {}) {
   return withUserTransaction(userId, async (db) => {
     const user = await profileService.getProfile(userId, db);
     const categories = await categoryRepository.listByUser(userId, db);
     const accounts = await accountRepository.listByUser(userId, db);
-    const transactions = includeTransactions ? await transactionRepository.listByUser(userId, db) : [];
     const budgets = await budgetRepository.listByUser(userId, db);
+    if (period)
+      return {
+        user,
+        categories,
+        accounts,
+        budgets,
+        transactions: await transactionRepository.listMonth(userId, period, db),
+        transactionSummary: await transactionRepository.summaryByUser(userId, db),
+      };
+    const transactions = includeTransactions ? await transactionRepository.listByUser(userId, db) : [];
     return { user, categories, accounts, transactions, budgets };
   });
 }

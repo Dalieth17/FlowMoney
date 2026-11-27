@@ -31,6 +31,7 @@ export function go(id) {
 
 export function shiftMonth(delta) {
   const d = new Date(nav.year, nav.month + delta, 1);
+  if (d.getFullYear() < 2000 || d.getFullYear() > 2100) return;
   nav.month = d.getMonth();
   nav.year = d.getFullYear();
   render();

@@ -30,13 +30,30 @@ function create(userId, data) {
   });
 }
 
-function update(userId, id, data) {
+const fieldLabels = {
+  description: 'Descripción',
+  amount: 'Monto',
+  date: 'Fecha',
+  type: 'Tipo',
+  categoryId: 'Categoría',
+  accountId: 'Cuenta',
+  note: 'Nota',
+};
+
+function update(userId, id, { expected, ...data }) {
   return withUserTransaction(userId, async (conn) => {
     const before = await transactionRepository.findOwned(id, userId, conn, { lock: true });
     if (!before) {
       throw HttpError.notFound('Movimiento no encontrado');
     }
     if (before.operationId) throw HttpError.conflict('Gestiona este movimiento desde Operaciones');
+    if (expected) {
+      const changed = Object.keys(fieldLabels).filter((field) => before[field] !== expected[field]);
+      if (changed.length) {
+        const labels = changed.map((field) => fieldLabels[field]).join(', ');
+        throw HttpError.conflict(`Otra pestaña modificó este movimiento. Campos con cambios: ${labels}.`);
+      }
+    }
     await assertReferencesOwned(userId, data, conn);
     const tx = await transactionRepository.update(id, userId, data, conn);
     await historyRepository.record(userId, id, 'UPDATE', before, tx, conn);

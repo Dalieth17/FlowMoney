@@ -14,7 +14,7 @@ const transactionRepository = require('../repositories/transactionRepository');
 const historyRepository = require('../repositories/historyRepository');
 const validate = require('../middleware/validate');
 const { transactionQuerySchema, idParamSchema } = require('../validation/schemas');
-const { categorySchema, accountSchema, transactionSchema } = require('../validation/schemas');
+const { categorySchema, accountSchema, transactionSchema, transactionUpdateSchema } = require('../validation/schemas');
 const { withUserTransaction } = require('../db/pool');
 const users = require('../repositories/userRepository');
 const HttpError = require('../utils/httpError');
@@ -47,6 +47,13 @@ function buildApiRouter() {
   router.use('/goals', require('./goals.routes'));
   router.use('/finance', require('./finance.routes'));
   router.get(
+    '/bootstrap/month',
+    validate(monthlyReportQuery.pick({ month: true, year: true }), 'query'),
+    asyncHandler(async (req, res) => {
+      res.json(await dataService.bootstrap(req.userId, { period: req.valid.query }));
+    }),
+  );
+  router.get(
     '/bootstrap',
     asyncHandler(async (req, res) => {
       res.json(await dataService.bootstrap(req.userId, { includeTransactions: req.query.transactions !== 'none' }));
@@ -77,7 +84,7 @@ function buildApiRouter() {
       res.json(page);
     }),
   );
-  router.use('/transactions', crudRouter(transactionService, transactionSchema));
+  router.use('/transactions', crudRouter(transactionService, transactionSchema, transactionUpdateSchema));
   router.get(
     '/transactions/:id/history',
     validate(idParamSchema, 'params'),

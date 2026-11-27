@@ -1,8 +1,11 @@
 import { h } from './dom.js';
 
 /** Solo se ofrece cuando toda la cuenta está vacía, no al cambiar a un mes sin actividad. */
-export function gettingStartedCard({ accounts, transactions, budgets }, onAddMovement) {
-  if (transactions.length || budgets.length || accounts.some((a) => Number(a.initialBalance) !== 0)) return null;
+export function gettingStartedCard(
+  { accounts, transactions, budgets, transactionCount = transactions.length },
+  onAddMovement,
+) {
+  if (transactionCount || budgets.length || accounts.some((a) => Number(a.initialBalance) !== 0)) return null;
 
   const step = (number, title, detail, action) =>
     h('li', { class: 'getting-started-step' }, [
